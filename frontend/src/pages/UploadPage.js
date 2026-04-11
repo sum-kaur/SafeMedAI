@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText, Image, X, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Upload, FileText, Image, X, Loader2, CheckCircle, AlertTriangle, Camera } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -12,6 +12,7 @@ export default function UploadPage() {
   const { patientId } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -105,7 +106,7 @@ export default function UploadPage() {
                   Drag & drop files here
                 </p>
                 <p className="text-sm mb-4" style={{ color: 'var(--sma-text-muted)' }}>or click to browse</p>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap justify-center">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium" style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-text-secondary)' }}>
                     <Image className="w-4 h-4" /> JPG, PNG
                   </div>
@@ -122,6 +123,31 @@ export default function UploadPage() {
                   accept=".jpg,.jpeg,.png,.heic,.pdf"
                   onChange={handleFileSelect}
                 />
+              </div>
+
+              {/* Camera Capture Button */}
+              <div className="mt-4">
+                <Button
+                  data-testid="camera-capture-btn"
+                  onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
+                  variant="outline"
+                  className="w-full h-14 text-base rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5"
+                  style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}
+                >
+                  <Camera className="w-5 h-5 mr-2" /> Take Photo with Camera
+                </Button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  data-testid="camera-input"
+                  className="hidden"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                />
+                <p className="text-xs mt-2 text-center" style={{ color: 'var(--sma-text-muted)' }}>
+                  Use your phone camera to capture a discharge summary directly
+                </p>
               </div>
 
               {/* Selected Files */}

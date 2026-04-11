@@ -536,6 +536,100 @@ class SafeMedAITester:
             self.log_result("PUT /settings/notifications", False, 
                           f"Expected 200, got {response.status_code if response else 'No response'}")
 
+    def test_multiple_engines_endpoints(self):
+        """Test multiple scoring engines endpoints - ITERATION 3"""
+        print("\n🔧 Testing Multiple Scoring Engines Endpoints...")
+        
+        # First ensure user has medical_practitioner role for admin access
+        role_response = self.make_request('PUT', 'users/role', {'role': 'medical_practitioner'})
+        if not (role_response and role_response.status_code == 200):
+            self.log_result("Multiple engines setup", False, "Could not set medical_practitioner role")
+            return
+        
+        # Test GET /admin/engines
+        response = self.make_request('GET', 'admin/engines')
+        if response and response.status_code == 200:
+            engines_data = response.json()
+            engines = engines_data.get('engines', [])
+            active_engine = engines_data.get('active_engine')
+            
+            # Check for required engines
+            engine_names = [e['name'] for e in engines]
+            required_engines = ['ACB', 'DBI', 'SEDLOAD']
+            
+            if all(engine in engine_names for engine in required_engines):
+                self.log_result("GET /admin/engines", True, f"Found all 3 engines: {engine_names}, active: {active_engine}")
+                
+                # Test each engine has medication count
+                for engine in engines:
+                    if 'medication_count' in engine and engine['medication_count'] > 0:
+                        self.log_result(f"Engine {engine['name']} medication count", True, f"{engine['medication_count']} medications")
+                    else:
+                        self.log_result(f"Engine {engine['name']} medication count", False, "No medication count")
+            else:
+                missing = [e for e in required_engines if e not in engine_names]
+                self.log_result("GET /admin/engines", False, f"Missing engines: {missing}")
+        else:
+            self.log_result("GET /admin/engines", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Test switching engines
+        for engine in ['DBI', 'SEDLOAD', 'ACB']:
+            response = self.make_request('PUT', 'admin/engines/active', {'engine': engine})
+            if response and response.status_code == 200:
+                result = response.json()
+                if result.get('active_engine') == engine:
+                    self.log_result(f"PUT /admin/engines/active ({engine})", True, f"Switched to {engine}")
+                else:
+                    self.log_result(f"PUT /admin/engines/active ({engine})", False, "Engine not switched")
+            else:
+                self.log_result(f"PUT /admin/engines/active ({engine})", False, 
+                              f"Expected 200, got {response.status_code if response else 'No response'}")
+            
+            # Test engine-specific config
+            response = self.make_request('GET', f'admin/scoring-config?engine={engine}')
+            if response and response.status_code == 200:
+                config = response.json()
+                if 'medications' in config and 'full_name' in config:
+                    med_count = len(config['medications'])
+                    self.log_result(f"GET /admin/scoring-config?engine={engine}", True, 
+                                  f"{engine} config: {med_count} medications, {config['full_name']}")
+                else:
+                    self.log_result(f"GET /admin/scoring-config?engine={engine}", False, "Missing config fields")
+            else:
+                self.log_result(f"GET /admin/scoring-config?engine={engine}", False, 
+                              f"Expected 200, got {response.status_code if response else 'No response'}")
+
+    def test_email_endpoints(self):
+        """Test email notification endpoints - ITERATION 3"""
+        print("\n📧 Testing Email Endpoints...")
+        
+        # Test GET /email/status
+        response = self.make_request('GET', 'email/status')
+        if response and response.status_code == 200:
+            status = response.json()
+            configured = status.get('configured', True)  # Should be False since RESEND_API_KEY is empty
+            if configured == False:
+                self.log_result("GET /email/status", True, "Email not configured (expected)")
+            else:
+                self.log_result("GET /email/status", False, f"Expected configured=false, got {configured}")
+        else:
+            self.log_result("GET /email/status", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Test POST /email/test
+        response = self.make_request('POST', 'email/test', {})
+        if response and response.status_code == 200:
+            test_result = response.json()
+            status = test_result.get('status')
+            if status == 'skipped':
+                self.log_result("POST /email/test", True, "Email test skipped (graceful fallback)")
+            else:
+                self.log_result("POST /email/test", False, f"Expected status=skipped, got {status}")
+        else:
+            self.log_result("POST /email/test", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
     def run_all_tests(self):
         """Run all test suites"""
         print("🧪 Starting SafeMedAI Backend API Tests")
@@ -557,12 +651,16 @@ class SafeMedAITester:
         self.test_dashboard_endpoints()
         self.test_seed_endpoint()
         
-        # NEW ITERATION 2 FEATURES
+        # ITERATION 2 FEATURES
         self.test_pdf_report_endpoints()
         self.test_admin_scoring_config_endpoints()  # Test admin features before changing role
         self.test_patient_update_endpoints()
         self.test_audit_log_endpoints()
         self.test_notification_settings_endpoints()
+        
+        # ITERATION 3 FEATURES
+        self.test_multiple_engines_endpoints()
+        self.test_email_endpoints()
         
         # Test user role change last
         self.test_user_endpoints()

@@ -15,6 +15,14 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 from fpdf import FPDF
 import io
+import asyncio
+
+# Resend email (graceful if not configured)
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+if RESEND_API_KEY:
+    import resend
+    resend.api_key = RESEND_API_KEY
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -88,59 +96,121 @@ async def get_current_user(request: Request):
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
-# ======================== ACB SCORING ENGINE ========================
-SCORING_ENGINE = os.environ.get("SCORING_ENGINE", "ACB")
+# ======================== MULTI-ENGINE SCORING ========================
+ACTIVE_ENGINE = os.environ.get("SCORING_ENGINE", "ACB")
 
-DEFAULT_ACB_MEDICATIONS = {
-    "amitriptyline": 3, "atropine": 3, "chlorpheniramine": 3, "chlorpromazine": 3,
-    "clomipramine": 3, "clozapine": 3, "desipramine": 3, "dicyclomine": 3,
-    "diphenhydramine": 3, "doxepin": 3, "hydroxyzine": 3, "hyoscine": 3,
-    "imipramine": 3, "meclizine": 3, "nortriptyline": 3, "olanzapine": 3,
-    "orphenadrine": 3, "oxybutynin": 3, "paroxetine": 3, "perphenazine": 3,
-    "promethazine": 3, "quetiapine": 3, "thioridazine": 3, "tolterodine": 3,
-    "trifluoperazine": 3, "trimipramine": 3, "scopolamine": 3,
-    "amantadine": 2, "baclofen": 2, "carbamazepine": 2, "cetirizine": 2,
-    "cimetidine": 2, "cyclobenzaprine": 2, "loperamide": 2, "loratadine": 2,
-    "meperidine": 2, "nifedipine": 2, "ranitidine": 2,
-    "alprazolam": 1, "aripiprazole": 1, "atenolol": 1, "codeine": 1,
-    "colchicine": 1, "diazepam": 1, "digoxin": 1, "fentanyl": 1,
-    "furosemide": 1, "haloperidol": 1, "hydralazine": 1, "isosorbide": 1,
-    "metoprolol": 1, "morphine": 1, "prednisone": 1, "risperidone": 1,
-    "theophylline": 1, "tramadol": 1, "trazodone": 1, "warfarin": 1,
+ENGINES_REGISTRY = {
+    "ACB": {
+        "name": "ACB",
+        "full_name": "Anticholinergic Cognitive Burden",
+        "description": "Scores medications by their anticholinergic properties. Higher ACB burden is linked to cognitive decline, confusion, and falls in older adults.",
+        "medications": {
+            "amitriptyline": 3, "atropine": 3, "chlorpheniramine": 3, "chlorpromazine": 3,
+            "clomipramine": 3, "clozapine": 3, "desipramine": 3, "dicyclomine": 3,
+            "diphenhydramine": 3, "doxepin": 3, "hydroxyzine": 3, "hyoscine": 3,
+            "imipramine": 3, "meclizine": 3, "nortriptyline": 3, "olanzapine": 3,
+            "orphenadrine": 3, "oxybutynin": 3, "paroxetine": 3, "perphenazine": 3,
+            "promethazine": 3, "quetiapine": 3, "thioridazine": 3, "tolterodine": 3,
+            "trifluoperazine": 3, "trimipramine": 3, "scopolamine": 3,
+            "amantadine": 2, "baclofen": 2, "carbamazepine": 2, "cetirizine": 2,
+            "cimetidine": 2, "cyclobenzaprine": 2, "loperamide": 2, "loratadine": 2,
+            "meperidine": 2, "nifedipine": 2, "ranitidine": 2,
+            "alprazolam": 1, "aripiprazole": 1, "atenolol": 1, "codeine": 1,
+            "colchicine": 1, "diazepam": 1, "digoxin": 1, "fentanyl": 1,
+            "furosemide": 1, "haloperidol": 1, "hydralazine": 1, "isosorbide": 1,
+            "metoprolol": 1, "morphine": 1, "prednisone": 1, "risperidone": 1,
+            "theophylline": 1, "tramadol": 1, "trazodone": 1, "warfarin": 1,
+        },
+        "thresholds": {"low": [0, 2], "medium": [3, 5], "high": [6, 999]},
+        "score_labels": {3: "definite", 2: "clinically_relevant", 1: "potential"},
+    },
+    "DBI": {
+        "name": "DBI",
+        "full_name": "Drug Burden Index",
+        "description": "Measures total drug burden from anticholinergic AND sedative medications combined. Higher DBI predicts impaired physical and cognitive function.",
+        "medications": {
+            "amitriptyline": 3, "doxepin": 3, "oxybutynin": 3, "chlorpromazine": 3,
+            "diazepam": 3, "temazepam": 3, "nitrazepam": 3, "oxazepam": 3,
+            "clonazepam": 3, "morphine": 3, "oxycodone": 3, "fentanyl": 3,
+            "quetiapine": 2, "olanzapine": 2, "risperidone": 2, "haloperidol": 2,
+            "mirtazapine": 2, "trazodone": 2, "pregabalin": 2, "gabapentin": 2,
+            "zolpidem": 2, "zopiclone": 2, "codeine": 2, "tramadol": 2,
+            "cetirizine": 2, "diphenhydramine": 2, "promethazine": 2,
+            "alprazolam": 1, "lorazepam": 1, "paroxetine": 1, "sertraline": 1,
+            "citalopram": 1, "amantadine": 1, "baclofen": 1, "carbamazepine": 1,
+            "prednisone": 1, "metoprolol": 1, "clonidine": 1,
+        },
+        "thresholds": {"low": [0, 3], "medium": [4, 7], "high": [8, 999]},
+        "score_labels": {3: "high_burden", 2: "moderate_burden", 1: "low_burden"},
+    },
+    "SEDLOAD": {
+        "name": "SEDLOAD",
+        "full_name": "Sedative Load",
+        "description": "Quantifies cumulative sedative exposure. High sedative load in elderly patients increases risk of falls, fractures, and excessive sedation.",
+        "medications": {
+            "diazepam": 3, "temazepam": 3, "nitrazepam": 3, "clonazepam": 3,
+            "phenobarbital": 3, "chloral hydrate": 3, "morphine": 3, "oxycodone": 3,
+            "fentanyl": 3, "methadone": 3, "chlorpromazine": 3, "thioridazine": 3,
+            "quetiapine": 2, "olanzapine": 2, "zolpidem": 2, "zopiclone": 2,
+            "mirtazapine": 2, "trazodone": 2, "doxepin": 2, "amitriptyline": 2,
+            "pregabalin": 2, "gabapentin": 2, "codeine": 2, "tramadol": 2,
+            "promethazine": 2, "hydroxyzine": 2, "diphenhydramine": 2,
+            "alprazolam": 1, "lorazepam": 1, "oxazepam": 1, "risperidone": 1,
+            "haloperidol": 1, "aripiprazole": 1, "cetirizine": 1, "loratadine": 1,
+            "clonidine": 1, "propranolol": 1, "baclofen": 1,
+        },
+        "thresholds": {"low": [0, 3], "medium": [4, 8], "high": [9, 999]},
+        "score_labels": {3: "primary_sedative", 2: "secondary_sedative", 1: "mild_sedating"},
+    },
 }
 
-DEFAULT_ACB_THRESHOLDS = {"low": [0, 2], "medium": [3, 5], "high": [6, 999]}
-
-# In-memory cache refreshed from DB
-_scoring_cache = {"medications": dict(DEFAULT_ACB_MEDICATIONS), "thresholds": dict(DEFAULT_ACB_THRESHOLDS)}
+# In-memory scoring caches per engine
+_scoring_caches = {}
 
 async def load_scoring_config():
-    config = await db.scoring_config.find_one({"engine": SCORING_ENGINE}, {"_id": 0})
-    if config:
-        _scoring_cache["medications"] = config.get("medications", dict(DEFAULT_ACB_MEDICATIONS))
-        _scoring_cache["thresholds"] = config.get("thresholds", dict(DEFAULT_ACB_THRESHOLDS))
-    else:
-        await db.scoring_config.insert_one({
-            "engine": SCORING_ENGINE,
-            "medications": dict(DEFAULT_ACB_MEDICATIONS),
-            "thresholds": dict(DEFAULT_ACB_THRESHOLDS),
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        })
+    for engine_name, defaults in ENGINES_REGISTRY.items():
+        config = await db.scoring_config.find_one({"engine": engine_name}, {"_id": 0})
+        if config:
+            _scoring_caches[engine_name] = {
+                "medications": config.get("medications", dict(defaults["medications"])),
+                "thresholds": config.get("thresholds", dict(defaults["thresholds"])),
+            }
+        else:
+            _scoring_caches[engine_name] = {
+                "medications": dict(defaults["medications"]),
+                "thresholds": dict(defaults["thresholds"]),
+            }
+            await db.scoring_config.update_one(
+                {"engine": engine_name},
+                {"$set": {
+                    "engine": engine_name,
+                    "medications": dict(defaults["medications"]),
+                    "thresholds": dict(defaults["thresholds"]),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }},
+                upsert=True
+            )
+    logger.info(f"Loaded {len(_scoring_caches)} scoring engines")
 
-def calculate_acb_score(medications: list):
-    acb_meds = _scoring_cache["medications"]
-    thresholds = _scoring_cache["thresholds"]
+def calculate_risk_score(medications: list, engine_name: str = None):
+    engine = engine_name or ACTIVE_ENGINE
+    cache = _scoring_caches.get(engine, _scoring_caches.get("ACB", {}))
+    meds_table = cache.get("medications", {})
+    thresholds = cache.get("thresholds", {"low": [0, 2], "medium": [3, 5], "high": [6, 999]})
+    defaults = ENGINES_REGISTRY.get(engine, ENGINES_REGISTRY["ACB"])
+    score_labels = defaults.get("score_labels", {3: "definite", 2: "clinically_relevant", 1: "potential"})
+
     total_score = 0
     risk_factors = []
     for med in medications:
         name = med.get("name", "").lower().strip()
-        for acb_med, score in acb_meds.items():
-            if acb_med in name:
+        for tbl_med, score in meds_table.items():
+            if tbl_med in name:
                 total_score += score
                 risk_factors.append({
                     "medication": med.get("name", name),
-                    "acb_score": score,
-                    "level": "definite" if score == 3 else "clinically_relevant" if score == 2 else "potential"
+                    "score": score,
+                    "level": score_labels.get(score, "unknown")
                 })
                 break
     risk_level = "low"
@@ -150,7 +220,42 @@ def calculate_acb_score(medications: list):
             risk_level = level
             break
     return {"total_score": total_score, "risk_level": risk_level, "risk_factors": risk_factors,
-            "medication_count": len(medications), "flagged_count": len(risk_factors)}
+            "medication_count": len(medications), "flagged_count": len(risk_factors),
+            "scoring_engine": engine}
+
+# ======================== EMAIL SERVICE ========================
+async def send_risk_notification_email(user_email: str, user_name: str, patient_name: str, risk_level: str, total_score: int, engine: str):
+    if not RESEND_API_KEY:
+        logger.info(f"Email not configured: would notify {user_email} about {risk_level} risk for {patient_name}")
+        return {"status": "skipped", "reason": "RESEND_API_KEY not configured"}
+    risk_colors = {"high": "#BA5A45", "medium": "#D9944C", "low": "#4E876C"}
+    color = risk_colors.get(risk_level, "#5C6661")
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+      <div style="text-align:center;padding:16px;background:#3B7062;border-radius:8px 8px 0 0;">
+        <h1 style="color:#fff;margin:0;font-size:22px;">SafeMedAI Alert</h1>
+      </div>
+      <div style="padding:24px;background:#FAF9F6;border:1px solid #E6E4DE;border-top:none;border-radius:0 0 8px 8px;">
+        <p style="color:#1F2421;font-size:16px;">Hello {user_name},</p>
+        <div style="background:{color}15;border:2px solid {color};border-radius:8px;padding:16px;margin:16px 0;text-align:center;">
+          <p style="color:{color};font-size:24px;font-weight:bold;margin:0;">{risk_level.upper()} RISK</p>
+          <p style="color:{color};margin:4px 0 0 0;">{engine} Score: {total_score}</p>
+        </div>
+        <p style="color:#5C6661;">A medication risk assessment for <strong>{patient_name}</strong> has been completed with a <strong>{risk_level}</strong> risk level.</p>
+        <p style="color:#5C6661;">Please log in to SafeMedAI to review the full assessment, recommendations, and next steps.</p>
+        <hr style="border:none;border-top:1px solid #E6E4DE;margin:20px 0;">
+        <p style="color:#8A938E;font-size:11px;text-align:center;">This is a decision support notification only. It does not replace professional medical judgment. SafeMedAI.</p>
+      </div>
+    </div>"""
+    try:
+        import resend
+        params = {"from": SENDER_EMAIL, "to": [user_email], "subject": f"SafeMedAI: {risk_level.upper()} Risk Alert - {patient_name}", "html": html}
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Email sent to {user_email}: {result}")
+        return {"status": "sent", "email_id": result.get("id") if isinstance(result, dict) else str(result)}
+    except Exception as e:
+        logger.error(f"Email send failed: {e}")
+        return {"status": "error", "error": str(e)}
 
 def generate_recommendations(risk_result: dict, role: str):
     risk_level = risk_result["risk_level"]
@@ -444,11 +549,11 @@ async def process_document(document_id: str, request: Request):
         await db.parsed_summaries.insert_one(summary)
         await db.documents.update_one({"document_id": document_id}, {"$set": {"status": "processed", "summary_id": summary_id}})
         medications = parsed.get("medications", [])
-        risk = calculate_acb_score(medications)
+        risk = calculate_risk_score(medications)
         result_id = f"risk_{uuid.uuid4().hex[:12]}"
         risk_result = {
             "result_id": result_id, "patient_id": doc["patient_id"],
-            "document_ids": [document_id], "scoring_engine": SCORING_ENGINE,
+            "document_ids": [document_id], "scoring_engine": risk["scoring_engine"],
             **risk,
             "explanation": generate_explanation(risk),
             "recommendations_practitioner": generate_recommendations(risk, "medical_practitioner"),
@@ -466,11 +571,34 @@ async def process_document(document_id: str, request: Request):
                 "type": "risk_assessment",
                 "severity": risk["risk_level"],
                 "title": f"{'High' if risk['risk_level']=='high' else 'Medium'} medication risk detected",
-                "message": f"ACB score of {risk['total_score']} detected for this patient. {risk['flagged_count']} medications flagged.",
+                "message": f"{risk['scoring_engine']} score of {risk['total_score']} detected for this patient. {risk['flagged_count']} medications flagged.",
                 "read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             await db.alerts.insert_one(alert)
+            # Send email notification
+            notif_settings = await db.notification_settings.find_one({"user_id": user["user_id"]}, {"_id": 0})
+            should_email = False
+            if notif_settings:
+                if risk["risk_level"] == "high" and notif_settings.get("email_high_risk"):
+                    should_email = True
+                elif risk["risk_level"] == "medium" and notif_settings.get("email_medium_risk"):
+                    should_email = True
+            else:
+                should_email = risk["risk_level"] == "high"
+            if should_email and user.get("email"):
+                patient_data = await db.patients.find_one({"patient_id": doc["patient_id"]}, {"_id": 0})
+                email_result = await send_risk_notification_email(
+                    user["email"], user.get("name", "User"),
+                    patient_data.get("name", "Patient") if patient_data else "Patient",
+                    risk["risk_level"], risk["total_score"], risk["scoring_engine"]
+                )
+                await db.audit_logs.insert_one({
+                    "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+                    "action": "email_notification", "resource_type": "risk_result", "resource_id": result_id,
+                    "details": f"Email notification: {email_result.get('status')} to {user['email']} for {risk['risk_level']} risk",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
         summary.pop("_id", None)
         risk_result.pop("_id", None)
         return {"summary": summary, "risk_result": risk_result}
@@ -787,11 +915,11 @@ async def seed_data(request: Request):
             "confidence": sd["confidence"],
             "created_at": datetime.now(timezone.utc).isoformat()
         })
-        risk = calculate_acb_score(sd["meds"])
+        risk = calculate_risk_score(sd["meds"])
         result_id = f"risk_seed_{uuid.uuid4().hex[:8]}"
         risk_result = {
             "result_id": result_id, "patient_id": p["patient_id"],
-            "document_ids": [doc_id], "scoring_engine": SCORING_ENGINE,
+            "document_ids": [doc_id], "scoring_engine": risk["scoring_engine"],
             **risk,
             "explanation": generate_explanation(risk),
             "recommendations_practitioner": generate_recommendations(risk, "medical_practitioner"),
@@ -975,76 +1103,122 @@ async def generate_pdf_report(result_id: str, request: Request):
     )
 
 # ======================== ADMIN SCORING CONFIG ========================
-@api_router.get("/admin/scoring-config")
-async def get_scoring_config(request: Request):
+@api_router.get("/admin/engines")
+async def list_engines(request: Request):
     user = await get_current_user(request)
     if user.get("role") not in ["admin", "medical_practitioner"]:
         raise HTTPException(status_code=403, detail="Admin or practitioner access required")
-    config = await db.scoring_config.find_one({"engine": SCORING_ENGINE}, {"_id": 0})
+    engines = []
+    for name, info in ENGINES_REGISTRY.items():
+        cache = _scoring_caches.get(name, {})
+        engines.append({
+            "name": name, "full_name": info["full_name"], "description": info["description"],
+            "medication_count": len(cache.get("medications", {})),
+            "is_active": name == ACTIVE_ENGINE,
+        })
+    return {"engines": engines, "active_engine": ACTIVE_ENGINE}
+
+@api_router.put("/admin/engines/active")
+async def set_active_engine(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") not in ["admin", "medical_practitioner"]:
+        raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    body = await request.json()
+    engine_name = body.get("engine")
+    if engine_name not in ENGINES_REGISTRY:
+        raise HTTPException(status_code=400, detail=f"Unknown engine: {engine_name}. Available: {list(ENGINES_REGISTRY.keys())}")
+    global ACTIVE_ENGINE
+    ACTIVE_ENGINE = engine_name
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "switch_engine", "resource_type": "scoring_config", "resource_id": engine_name,
+        "details": f"Switched active scoring engine to {engine_name} ({ENGINES_REGISTRY[engine_name]['full_name']})",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": f"Active engine set to {engine_name}", "active_engine": engine_name}
+
+@api_router.get("/admin/scoring-config")
+async def get_scoring_config(request: Request, engine: str = None):
+    user = await get_current_user(request)
+    if user.get("role") not in ["admin", "medical_practitioner"]:
+        raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    eng = engine or ACTIVE_ENGINE
+    config = await db.scoring_config.find_one({"engine": eng}, {"_id": 0})
     if not config:
-        config = {"engine": SCORING_ENGINE, "medications": dict(DEFAULT_ACB_MEDICATIONS), "thresholds": dict(DEFAULT_ACB_THRESHOLDS)}
+        defaults = ENGINES_REGISTRY.get(eng, ENGINES_REGISTRY["ACB"])
+        config = {"engine": eng, "medications": dict(defaults["medications"]), "thresholds": dict(defaults["thresholds"])}
+    info = ENGINES_REGISTRY.get(eng, {})
+    config["full_name"] = info.get("full_name", eng)
+    config["description"] = info.get("description", "")
+    config["score_labels"] = info.get("score_labels", {})
     return config
 
 @api_router.put("/admin/scoring-config/thresholds")
-async def update_thresholds(body: ThresholdUpdate, request: Request):
+async def update_thresholds(body: ThresholdUpdate, request: Request, engine: str = None):
     user = await get_current_user(request)
     if user.get("role") not in ["admin", "medical_practitioner"]:
         raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    eng = engine or ACTIVE_ENGINE
     new_thresholds = {"low": body.low, "medium": body.medium, "high": body.high}
     await db.scoring_config.update_one(
-        {"engine": SCORING_ENGINE},
+        {"engine": eng},
         {"$set": {"thresholds": new_thresholds, "updated_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True
     )
-    _scoring_cache["thresholds"] = new_thresholds
+    if eng in _scoring_caches:
+        _scoring_caches[eng]["thresholds"] = new_thresholds
     await db.audit_logs.insert_one({
         "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
-        "action": "update_thresholds", "resource_type": "scoring_config", "resource_id": SCORING_ENGINE,
-        "details": f"Updated ACB thresholds: {json.dumps(new_thresholds)}",
+        "action": "update_thresholds", "resource_type": "scoring_config", "resource_id": eng,
+        "details": f"Updated {eng} thresholds: {json.dumps(new_thresholds)}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     return {"message": "Thresholds updated", "thresholds": new_thresholds}
 
 @api_router.post("/admin/scoring-config/medications")
-async def add_medication_entry(body: MedicationEntry, request: Request):
+async def add_medication_entry(body: MedicationEntry, request: Request, engine: str = None):
     user = await get_current_user(request)
     if user.get("role") not in ["admin", "medical_practitioner"]:
         raise HTTPException(status_code=403, detail="Admin or practitioner access required")
     if body.score < 1 or body.score > 3:
         raise HTTPException(status_code=400, detail="Score must be 1, 2, or 3")
+    eng = engine or ACTIVE_ENGINE
     name_lower = body.name.lower().strip()
     await db.scoring_config.update_one(
-        {"engine": SCORING_ENGINE},
+        {"engine": eng},
         {"$set": {f"medications.{name_lower}": body.score, "updated_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True
     )
-    _scoring_cache["medications"][name_lower] = body.score
+    if eng in _scoring_caches:
+        _scoring_caches[eng]["medications"][name_lower] = body.score
     await db.audit_logs.insert_one({
         "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
         "action": "add_medication", "resource_type": "scoring_config", "resource_id": name_lower,
-        "details": f"Added/updated medication: {body.name} with ACB score {body.score}",
+        "details": f"Added/updated medication: {body.name} with score {body.score} in {eng}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    return {"message": f"Medication '{body.name}' set to ACB score {body.score}"}
+    return {"message": f"Medication '{body.name}' set to score {body.score} in {eng}"}
 
 @api_router.delete("/admin/scoring-config/medications/{name}")
-async def remove_medication_entry(name: str, request: Request):
+async def remove_medication_entry(name: str, request: Request, engine: str = None):
     user = await get_current_user(request)
     if user.get("role") not in ["admin", "medical_practitioner"]:
         raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    eng = engine or ACTIVE_ENGINE
     name_lower = name.lower().strip()
     await db.scoring_config.update_one(
-        {"engine": SCORING_ENGINE},
+        {"engine": eng},
         {"$unset": {f"medications.{name_lower}": ""}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
     )
-    _scoring_cache["medications"].pop(name_lower, None)
+    if eng in _scoring_caches:
+        _scoring_caches[eng].get("medications", {}).pop(name_lower, None)
     await db.audit_logs.insert_one({
         "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
         "action": "remove_medication", "resource_type": "scoring_config", "resource_id": name_lower,
-        "details": f"Removed medication: {name} from ACB scoring table",
+        "details": f"Removed medication: {name} from {eng} scoring table",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    return {"message": f"Medication '{name}' removed from scoring table"}
+    return {"message": f"Medication '{name}' removed from {eng} scoring table"}
 
 # ======================== AUDIT LOGS ========================
 @api_router.get("/audit-logs")
@@ -1080,6 +1254,28 @@ async def update_notification_settings(body: NotificationSettings, request: Requ
         {"user_id": user["user_id"]}, {"$set": updates}, upsert=True
     )
     return {"message": "Settings updated", **updates}
+
+# ======================== EMAIL TEST ========================
+@api_router.post("/email/test")
+async def send_test_email(request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    recipient = body.get("email", user.get("email"))
+    if not recipient:
+        raise HTTPException(status_code=400, detail="No email address available")
+    result = await send_risk_notification_email(recipient, user.get("name", "User"), "Test Patient", "medium", 4, ACTIVE_ENGINE)
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "test_email", "resource_type": "email", "resource_id": recipient,
+        "details": f"Test email sent to {recipient}: {result.get('status')}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return result
+
+@api_router.get("/email/status")
+async def email_status(request: Request):
+    await get_current_user(request)
+    return {"configured": bool(RESEND_API_KEY), "sender": SENDER_EMAIL}
 
 # ======================== APP CONFIG ========================
 app.include_router(api_router)

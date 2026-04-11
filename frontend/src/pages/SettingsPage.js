@@ -82,8 +82,9 @@ function NotificationSettings() {
       </h2>
       <div className="space-y-6">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Email Notifications (Stub)</p>
-          <div className="space-y-4">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Email Notifications</p>
+          <EmailStatusBadge />
+          <div className="space-y-4 mt-3">
             <SettingRow label="High risk assessments" desc="Receive email when a high-risk result is generated" checked={settings?.email_high_risk} onChange={() => toggle('email_high_risk')} testId="email-high-risk" />
             <SettingRow label="Medium risk assessments" desc="Receive email when a medium-risk result is generated" checked={settings?.email_medium_risk} onChange={() => toggle('email_medium_risk')} testId="email-medium-risk" />
           </div>
@@ -113,6 +114,43 @@ function SettingRow({ label, desc, checked, onChange, testId }) {
         <p className="text-xs" style={{ color: 'var(--sma-text-muted)' }}>{desc}</p>
       </div>
       <Switch data-testid={testId} checked={checked || false} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function EmailStatusBadge() {
+  const [status, setStatus] = useState(null);
+  const [testing, setTesting] = useState(false);
+  useEffect(() => {
+    axios.get(`${API}/email/status`, { withCredentials: true }).then(r => setStatus(r.data)).catch(() => {});
+  }, []);
+  const sendTest = async () => {
+    setTesting(true);
+    try {
+      const res = await axios.post(`${API}/email/test`, {}, { withCredentials: true });
+      if (res.data.status === 'sent') toast.success('Test email sent successfully!');
+      else if (res.data.status === 'skipped') toast.info('Email not configured. Add RESEND_API_KEY to enable.');
+      else toast.error('Email send failed: ' + (res.data.error || 'unknown'));
+    } catch (err) {
+      toast.error('Failed to send test email');
+    } finally {
+      setTesting(false);
+    }
+  };
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg mb-2" style={{ backgroundColor: status?.configured ? 'var(--sma-risk-low-bg)' : 'var(--sma-risk-med-bg)' }} data-testid="email-status-badge">
+      <div className="flex-1">
+        <p className="text-xs font-semibold" style={{ color: status?.configured ? 'var(--sma-risk-low-text)' : 'var(--sma-risk-med-text)' }}>
+          {status?.configured ? 'Email delivery active' : 'Email not configured'}
+        </p>
+        <p className="text-[10px]" style={{ color: status?.configured ? 'var(--sma-risk-low-text)' : 'var(--sma-risk-med-text)', opacity: 0.7 }}>
+          {status?.configured ? `Sender: ${status.sender}` : 'Add RESEND_API_KEY to backend .env to enable email delivery'}
+        </p>
+      </div>
+      <Button data-testid="send-test-email-btn" variant="ghost" size="sm" onClick={sendTest} disabled={testing} className="h-7 text-xs rounded-full"
+        style={{ color: status?.configured ? 'var(--sma-risk-low-text)' : 'var(--sma-risk-med-text)' }}>
+        {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Test'}
+      </Button>
     </div>
   );
 }

@@ -114,8 +114,8 @@ export default function LandingPage() {
             <div className="p-8 rounded-xl shadow-sm transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid="family-feature-card">
               <div className="relative rounded-lg overflow-hidden mb-6 h-48">
                 <img
-                  src="https://images.unsplash.com/photo-1627037118218-571762f08458?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHxlbGRlcmx5JTIwcGF0aWVudCUyMHdpdGglMjBmYW1pbHklMjBzbWlsaW5nfGVufDB8fHx8MTc3NTg4NzI0OXww&ixlib=rb-4.1.0&q=85"
-                  alt="Smiling elderly woman"
+                  src="https://images.unsplash.com/photo-1676280622193-b43637498e82?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxjYXVjYXNpYW4lMjBlbGRlcmx5JTIwbW90aGVyJTIwYWR1bHQlMjBkYXVnaHRlciUyMHNtaWxpbmclMjBjYXJpbmd8ZW58MHx8fHwxNzc1ODg5ODQ0fDA&ixlib=rb-4.1.0&q=85"
+                  alt="Caucasian mother and adult daughter smiling together"
                   className="w-full h-full object-cover"
                 />
               </div>
