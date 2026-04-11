@@ -409,6 +409,36 @@ async def logout(request: Request):
     response.delete_cookie(key="session_token", path="/")
     return response
 
+@api_router.post("/auth/demo-login")
+async def demo_login(request: Request):
+    body = await request.json()
+    role = body.get("role", "medical_practitioner")
+    if role not in ["medical_practitioner", "family_carer"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    demo_email = f"demo_{role}@safemedai.app"
+    demo_name = "Dr Demo Practitioner" if role == "medical_practitioner" else "Demo Family Carer"
+    existing = await db.users.find_one({"email": demo_email}, {"_id": 0})
+    if existing:
+        user_id = existing["user_id"]
+        await db.users.update_one({"email": demo_email}, {"$set": {"role": role}})
+    else:
+        user_id = f"demo_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id, "email": demo_email, "name": demo_name,
+            "picture": "", "role": role,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    session_token = f"demo_sess_{uuid.uuid4().hex}"
+    await db.user_sessions.insert_one({
+        "user_id": user_id, "session_token": session_token,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    response = JSONResponse(content=user)
+    response.set_cookie(key="session_token", value=session_token, httponly=True, secure=True, samesite="none", path="/", max_age=7*24*3600)
+    return response
+
 # ======================== USER ROUTES ========================
 @api_router.put("/users/role")
 async def update_role(body: RoleUpdate, request: Request):

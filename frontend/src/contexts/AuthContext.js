@@ -44,8 +44,19 @@ export function AuthProvider({ children }) {
 
   const updateUser = (data) => setUser(data);
 
+  const demoLogin = async (role) => {
+    try {
+      const res = await axios.post(`${API}/auth/demo-login`, { role }, { withCredentials: true });
+      setUser(res.data);
+      return res.data;
+    } catch (err) {
+      console.error('Demo login failed:', err);
+      throw err;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, checkAuth, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, checkAuth, updateUser, demoLogin }}>
       {children}
     </AuthContext.Provider>
   );

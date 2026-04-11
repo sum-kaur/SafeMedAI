@@ -1,16 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Shield, Heart, ArrowRight, FileText, Brain, Users } from 'lucide-react';
+import { Shield, Heart, ArrowRight, FileText, Brain, Users, Loader2 } from 'lucide-react';
 
 export default function LandingPage() {
-  const { user, login } = useAuth();
+  const { user, login, demoLogin } = useAuth();
+  const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState(null);
 
   const handleGetStarted = () => {
     if (user) {
       window.location.href = user.role ? '/dashboard' : '/select-role';
     } else {
       login();
+    }
+  };
+
+  const handleDemoLogin = async (role) => {
+    setDemoLoading(role);
+    try {
+      await demoLogin(role);
+      navigate('/dashboard', { replace: true });
+    } catch {
+      setDemoLoading(null);
     }
   };
 
@@ -56,6 +69,34 @@ export default function LandingPage() {
               >
                 Get Started <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
+            </div>
+            {/* Demo Login */}
+            <div className="mt-6 p-4 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Try a demo account instantly</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  data-testid="demo-practitioner-btn"
+                  onClick={() => handleDemoLogin('medical_practitioner')}
+                  disabled={!!demoLoading}
+                  variant="outline"
+                  className="flex-1 h-12 rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5"
+                  style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}
+                >
+                  {demoLoading === 'medical_practitioner' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Brain className="w-4 h-4 mr-2" />}
+                  Practitioner Demo
+                </Button>
+                <Button
+                  data-testid="demo-family-btn"
+                  onClick={() => handleDemoLogin('family_carer')}
+                  disabled={!!demoLoading}
+                  variant="outline"
+                  className="flex-1 h-12 rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5"
+                  style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}
+                >
+                  {demoLoading === 'family_carer' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Heart className="w-4 h-4 mr-2" />}
+                  Family / Carer Demo
+                </Button>
+              </div>
             </div>
             <p className="mt-4 text-xs" style={{ color: 'var(--sma-text-muted)' }}>
               Decision support only. Does not replace professional medical judgment.
