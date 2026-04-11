@@ -1,0 +1,121 @@
+{
+  "project_name": "SafeMedAI",
+  "theme_archetype": {
+    "theme": "Light",
+    "archetype": "1 (Organic & Earthy)",
+    "reasoning": "Patients and seniors need warmth, calm, and trust. A clinical or dark tech UI feels alienating. We use grounded, tactile colors to reassure users during high-stress post-discharge periods."
+  },
+  "typography": {
+    "primary_heading_font": "Outfit",
+    "secondary_body_font": "Work Sans",
+    "rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[#1F2421]",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-[#1F2421]",
+      "h3": "text-xl sm:text-2xl font-medium text-[#1F2421]",
+      "body": "text-base sm:text-lg leading-relaxed text-[#5C6661]",
+      "labels": "text-sm uppercase tracking-[0.2em] font-semibold text-[#3B7062]"
+    }
+  },
+  "colors": {
+    "background": {
+      "page": "#FAF9F6",
+      "surface": "#FFFFFF",
+      "surface_alt": "#F3F1EC"
+    },
+    "text": {
+      "primary": "#1F2421",
+      "secondary": "#5C6661",
+      "muted": "#8A938E",
+      "inverse": "#FFFFFF"
+    },
+    "brand": {
+      "primary": "#3B7062",
+      "primary_hover": "#2D5A4E",
+      "accent": "#C97A5E"
+    },
+    "risk_levels": {
+      "low": {
+        "bg": "#E8F0EC",
+        "border": "#4E876C",
+        "text": "#2A4D3D"
+      },
+      "medium": {
+        "bg": "#FDF3E7",
+        "border": "#D9944C",
+        "text": "#7A5024"
+      },
+      "high": {
+        "bg": "#FCEEEB",
+        "border": "#BA5A45",
+        "text": "#753223"
+      }
+    },
+    "borders": {
+      "default": "#E6E4DE",
+      "focus": "#3B7062"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous Spacing (p-6 to p-12) for senior accessibility. Prevent accidental clicks by adding ample negative space.",
+    "practitioner_portal": {
+      "grid_mode": "Control Room Grid",
+      "gap": "gap-6",
+      "columns": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+      "behavior": "Dense, scanable data. Every widget stretches to fill height (`h-full`)."
+    },
+    "family_portal": {
+      "grid_mode": "Bento Grid",
+      "gap": "gap-8",
+      "columns": "grid-cols-1 md:grid-cols-2",
+      "behavior": "Simple, large touch targets, single-column focus for mobile."
+    },
+    "containers": "All bordered containers must have internal padding of at least p-6."
+  },
+  "surfaces_and_micro_themes": {
+    "default_cards": "Tactile Neumorphism: Flat #FFFFFF background, subtle ambient shadow `shadow-sm`, AND a sharp 1px border `border-[#E6E4DE]` to ground it and ensure visibility for seniors.",
+    "headers": "Solid Background `#FAF9F6` with a hard bottom border. DO NOT use Glassmorphism for this medical app to prevent visual refraction of text.",
+    "interactive_elements": "Hover states must lift slightly `-translate-y-0.5` and darken border color. Active states must increase contrast."
+  },
+  "components": {
+    "file_upload": "Massive drag-and-drop zone (`min-h-[300px]`), dashed border `border-2 border-dashed border-[#3B7062]/40`, large skeuomorphic icons (Camera / Document), button size `h-14`.",
+    "risk_badge": "Large, bold typography. Must not rely on color alone (include text 'LOW', 'MEDIUM', 'HIGH' and an associated icon: Check, Warning, Alert).",
+    "medication_table": "Shadcn Table heavily customized: alternating row colors `even:bg-[#F3F1EC]` for reading ease, `p-4` cell padding, minimum font size `text-base`.",
+    "chat_interface": "Distinct speech bubbles. Family/Patient bubbles: `#3B7062` with white text. AI bubbles: `#F3F1EC` with dark text. Input field must be `min-h-[60px]` with a massive submit button."
+  },
+  "motion": {
+    "transitions": "Subtle and purposeful. `transition-all duration-200 ease-in-out`.",
+    "accessibility": "Respect `prefers-reduced-motion`. No infinite looping animations. Entrances should be simple fade-ins (`opacity-0 to opacity-100`)."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "sizing": "Minimum `w-6 h-6` for inline, `w-12 h-12` for empty states/upload zones."
+  },
+  "accessibility_requirements": {
+    "contrast": "Ensure all text meets APCA/WCAG AA standards. Avoid gray-on-gray.",
+    "touch_targets": "Minimum 44x44px for all interactive elements.",
+    "testing": "All interactive elements MUST include `data-testid` (e.g., `data-testid='upload-discharge-btn'`)."
+  },
+  "media": {
+    "hero_landing": {
+      "url": "https://images.unsplash.com/photo-1766808982775-f171b60fbb9e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxlbGRlcmx5JTIwcGF0aWVudCUyMHdpdGglMjBmYW1pbHklMjBzbWlsaW5nfGVufDB8fHx8MTc3NTg4NzI0OXww&ixlib=rb-4.1.0&q=85",
+      "description": "Grandmother laughing with grandchildren. Use on the main landing page to evoke family reassurance and care."
+    },
+    "practitioner_marketing": {
+      "url": "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Confident male doctor using a tablet. Use for the Practitioner portal login or marketing section."
+    },
+    "family_marketing": {
+      "url": "https://images.unsplash.com/photo-1627037118218-571762f08458?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwzfHxlbGRlcmx5JTIwcGF0aWVudCUyMHdpdGglMjBmYW1pbHklMjBzbWlsaW5nfGVufDB8fHx8MTc3NTg4NzI0OXww&ixlib=rb-4.1.0&q=85",
+      "description": "Smiling elderly woman. Use for patient profile placeholder or family portal onboarding."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the Organic & Earthy color palette. No neon or default SaaS blue.",
+    "Build Shadcn components but override their default borders and radii to match the Tactile Neumorphism surface strategy (1px warm gray borders, soft shadows).",
+    "Ensure the Family/Carer portal is drastically simpler than the Practitioner portal. Use the Bento Grid for Family, Control Room Grid for Practitioners.",
+    "Add 'data-testid' to every button, form input, and interactive card.",
+    "Never use generic sans-serif (Inter/Roboto) for headings. Use Outfit for headings and Work Sans for body.",
+    "Implement the drag-and-drop file upload using the specified colors and massive skeuomorphic icons to help seniors.",
+    "Always render the images provided in the media section; do not use placeholders."
+  ]
+}
