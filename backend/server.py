@@ -651,7 +651,8 @@ async def seed_data(request: Request):
     user = await get_current_user(request)
     existing = await db.patients.count_documents({"created_by": user["user_id"]})
     if existing > 0:
-        return {"message": "Seed data already exists", "patient_count": existing}
+        existing_patients = await db.patients.find({"created_by": user["user_id"]}, {"_id": 0, "patient_id": 1}).to_list(100)
+        return {"message": "Demo data already loaded", "patients": [p["patient_id"] for p in existing_patients]}
     patients = [
         {
             "patient_id": f"pat_seed_{uuid.uuid4().hex[:8]}", "name": "Margaret Thompson",
