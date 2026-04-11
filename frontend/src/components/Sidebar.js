@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Shield, LayoutDashboard, Users, Bell, LogOut, MessageCircle } from 'lucide-react';
+import { Shield, LayoutDashboard, Users, Bell, LogOut, Settings, Sliders } from 'lucide-react';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -17,6 +17,8 @@ export default function Sidebar() {
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/patients', icon: Users, label: isPractitioner ? 'Patients' : 'My Patients' },
     { to: '/alerts', icon: Bell, label: 'Alerts' },
+    ...(isPractitioner ? [{ to: '/admin', icon: Sliders, label: 'Scoring Config' }] : []),
+    { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   const linkClass = (isActive) =>

@@ -13,6 +13,8 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+from fpdf import FPDF
+import io
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -89,7 +91,7 @@ async def get_current_user(request: Request):
 # ======================== ACB SCORING ENGINE ========================
 SCORING_ENGINE = os.environ.get("SCORING_ENGINE", "ACB")
 
-ACB_MEDICATIONS = {
+DEFAULT_ACB_MEDICATIONS = {
     "amitriptyline": 3, "atropine": 3, "chlorpheniramine": 3, "chlorpromazine": 3,
     "clomipramine": 3, "clozapine": 3, "desipramine": 3, "dicyclomine": 3,
     "diphenhydramine": 3, "doxepin": 3, "hydroxyzine": 3, "hyoscine": 3,
@@ -107,14 +109,32 @@ ACB_MEDICATIONS = {
     "theophylline": 1, "tramadol": 1, "trazodone": 1, "warfarin": 1,
 }
 
-ACB_THRESHOLDS = {"low": (0, 2), "medium": (3, 5), "high": (6, 999)}
+DEFAULT_ACB_THRESHOLDS = {"low": [0, 2], "medium": [3, 5], "high": [6, 999]}
+
+# In-memory cache refreshed from DB
+_scoring_cache = {"medications": dict(DEFAULT_ACB_MEDICATIONS), "thresholds": dict(DEFAULT_ACB_THRESHOLDS)}
+
+async def load_scoring_config():
+    config = await db.scoring_config.find_one({"engine": SCORING_ENGINE}, {"_id": 0})
+    if config:
+        _scoring_cache["medications"] = config.get("medications", dict(DEFAULT_ACB_MEDICATIONS))
+        _scoring_cache["thresholds"] = config.get("thresholds", dict(DEFAULT_ACB_THRESHOLDS))
+    else:
+        await db.scoring_config.insert_one({
+            "engine": SCORING_ENGINE,
+            "medications": dict(DEFAULT_ACB_MEDICATIONS),
+            "thresholds": dict(DEFAULT_ACB_THRESHOLDS),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
 
 def calculate_acb_score(medications: list):
+    acb_meds = _scoring_cache["medications"]
+    thresholds = _scoring_cache["thresholds"]
     total_score = 0
     risk_factors = []
     for med in medications:
         name = med.get("name", "").lower().strip()
-        for acb_med, score in ACB_MEDICATIONS.items():
+        for acb_med, score in acb_meds.items():
             if acb_med in name:
                 total_score += score
                 risk_factors.append({
@@ -124,7 +144,8 @@ def calculate_acb_score(medications: list):
                 })
                 break
     risk_level = "low"
-    for level, (lo, hi) in ACB_THRESHOLDS.items():
+    for level, bounds in thresholds.items():
+        lo, hi = bounds[0], bounds[1]
         if lo <= total_score <= hi:
             risk_level = level
             break
@@ -204,6 +225,22 @@ class PatientUpdate(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
+
+class ThresholdUpdate(BaseModel):
+    low: List[int]
+    medium: List[int]
+    high: List[int]
+
+class MedicationEntry(BaseModel):
+    name: str
+    score: int
+
+class NotificationSettings(BaseModel):
+    email_high_risk: Optional[bool] = True
+    email_medium_risk: Optional[bool] = False
+    in_app_high_risk: Optional[bool] = True
+    in_app_medium_risk: Optional[bool] = True
+    in_app_low_risk: Optional[bool] = False
 
 # ======================== AUTH ROUTES ========================
 @api_router.post("/auth/session")
@@ -795,6 +832,255 @@ async def get_report(result_id: str, request: Request):
         }
     }
 
+@api_router.get("/reports/{result_id}/pdf")
+async def generate_pdf_report(result_id: str, request: Request):
+    user = await get_current_user(request)
+    result = await db.risk_results.find_one({"result_id": result_id}, {"_id": 0})
+    if not result:
+        raise HTTPException(status_code=404, detail="Result not found")
+    patient = await db.patients.find_one({"patient_id": result["patient_id"]}, {"_id": 0})
+    summary = await db.parsed_summaries.find_one({"patient_id": result["patient_id"]}, {"_id": 0}, sort=[("created_at", -1)])
+    role = user.get("role", "family_carer")
+    recommendations = result.get(f"recommendations_{role}", result.get("recommendations_family", []))
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=20)
+
+    # Title
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 12, "SafeMedAI Risk Assessment Report", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(120, 120, 120)
+    pdf.cell(0, 6, f"Generated: {datetime.now(timezone.utc).strftime('%d %B %Y %H:%M UTC')} | By: {user.get('name', 'Unknown')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
+
+    # Patient Details
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Patient Details", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, f"Name: {patient.get('name', 'N/A')}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Date of Birth: {patient.get('dob', 'N/A')} | Gender: {patient.get('gender', 'N/A')}", new_x="LMARGIN", new_y="NEXT")
+    if patient.get('allergies'):
+        pdf.cell(0, 6, f"Allergies: {', '.join(patient['allergies'])}", new_x="LMARGIN", new_y="NEXT")
+    if patient.get('gp_details'):
+        pdf.cell(0, 6, f"GP: {patient['gp_details']}", new_x="LMARGIN", new_y="NEXT")
+    if patient.get('emergency_contact'):
+        pdf.cell(0, 6, f"Emergency Contact: {patient['emergency_contact']}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
+
+    # Risk Score
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Risk Assessment", new_x="LMARGIN", new_y="NEXT")
+    rl = result.get('risk_level', 'unknown').upper()
+    if result.get('risk_level') == 'high':
+        pdf.set_fill_color(252, 238, 235)
+    elif result.get('risk_level') == 'medium':
+        pdf.set_fill_color(253, 243, 231)
+    else:
+        pdf.set_fill_color(232, 240, 236)
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(60, 12, f"  {rl} RISK", new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, f"ACB Score: {result.get('total_score', 0)} | Scoring Engine: {result.get('scoring_engine', 'ACB')} | Confidence: {round((result.get('confidence', 0)) * 100)}%", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"Medications: {result.get('medication_count', 0)} total, {result.get('flagged_count', 0)} flagged", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
+
+    # Explanation
+    if result.get('explanation'):
+        pdf.set_font("Helvetica", "", 10)
+        pdf.multi_cell(0, 5, result['explanation'])
+    pdf.ln(6)
+
+    # Medications Table
+    if summary and summary.get('medications'):
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.cell(0, 10, "Medications", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_fill_color(59, 112, 98)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(55, 7, "  Medication", fill=True)
+        pdf.cell(30, 7, "  Dose", fill=True)
+        pdf.cell(35, 7, "  Frequency", fill=True)
+        pdf.cell(25, 7, "  ACB", fill=True)
+        pdf.cell(25, 7, "  Status", fill=True)
+        pdf.ln()
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Helvetica", "", 9)
+        flagged_names = {rf['medication'].lower(): rf['acb_score'] for rf in result.get('risk_factors', [])}
+        for i, med in enumerate(summary['medications']):
+            if i % 2 == 1:
+                pdf.set_fill_color(243, 241, 236)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+            acb = flagged_names.get(med.get('name', '').lower(), 0)
+            status = "New" if med.get('is_new') else "Ceased" if med.get('is_ceased') else "Cont."
+            pdf.cell(55, 6, f"  {med.get('name', '')[:25]}", fill=True)
+            pdf.cell(30, 6, f"  {med.get('dose', '-')}", fill=True)
+            pdf.cell(35, 6, f"  {med.get('frequency', '-')[:18]}", fill=True)
+            pdf.cell(25, 6, f"  {acb if acb else '-'}", fill=True)
+            pdf.cell(25, 6, f"  {status}", fill=True)
+            pdf.ln()
+        pdf.ln(6)
+
+    # Recommendations
+    if recommendations:
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.cell(0, 10, "Recommendations", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Helvetica", "", 10)
+        for rec in recommendations:
+            prefix = "[URGENT]" if rec['type'] == 'urgent' else "[ACTION]" if rec['type'] == 'action' else "[INFO]"
+            pdf.multi_cell(0, 5, f" {prefix} {rec['text']}")
+            pdf.ln(2)
+        pdf.ln(4)
+
+    # Discharge Info
+    if summary:
+        if summary.get('diagnosis') or summary.get('discharge_instructions'):
+            pdf.set_font("Helvetica", "B", 14)
+            pdf.cell(0, 10, "Discharge Summary", new_x="LMARGIN", new_y="NEXT")
+            pdf.set_font("Helvetica", "", 10)
+            if summary.get('diagnosis'):
+                pdf.multi_cell(0, 5, f"Diagnosis: {summary['diagnosis']}")
+                pdf.ln(2)
+            if summary.get('discharge_instructions'):
+                pdf.multi_cell(0, 5, f"Instructions: {summary['discharge_instructions']}")
+                pdf.ln(2)
+            if summary.get('follow_up'):
+                pdf.multi_cell(0, 5, f"Follow-Up: {summary['follow_up']}")
+            pdf.ln(6)
+
+    # Disclaimer
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(120, 120, 120)
+    pdf.multi_cell(0, 4, "DISCLAIMER: This report provides decision support information only and does not replace professional medical judgment. Always consult a qualified healthcare professional for medical advice. SafeMedAI does not make diagnoses or treatment decisions.")
+
+    # Audit log
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "export_pdf", "resource_type": "risk_result", "resource_id": result_id,
+        "details": f"PDF report exported for patient {patient.get('name', 'Unknown')}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+
+    buf = io.BytesIO()
+    pdf.output(buf)
+    buf.seek(0)
+    filename = f"SafeMedAI_Report_{patient.get('name', 'Patient').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return Response(
+        content=buf.read(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+# ======================== ADMIN SCORING CONFIG ========================
+@api_router.get("/admin/scoring-config")
+async def get_scoring_config(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") not in ["admin", "medical_practitioner"]:
+        raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    config = await db.scoring_config.find_one({"engine": SCORING_ENGINE}, {"_id": 0})
+    if not config:
+        config = {"engine": SCORING_ENGINE, "medications": dict(DEFAULT_ACB_MEDICATIONS), "thresholds": dict(DEFAULT_ACB_THRESHOLDS)}
+    return config
+
+@api_router.put("/admin/scoring-config/thresholds")
+async def update_thresholds(body: ThresholdUpdate, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") not in ["admin", "medical_practitioner"]:
+        raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    new_thresholds = {"low": body.low, "medium": body.medium, "high": body.high}
+    await db.scoring_config.update_one(
+        {"engine": SCORING_ENGINE},
+        {"$set": {"thresholds": new_thresholds, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    _scoring_cache["thresholds"] = new_thresholds
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "update_thresholds", "resource_type": "scoring_config", "resource_id": SCORING_ENGINE,
+        "details": f"Updated ACB thresholds: {json.dumps(new_thresholds)}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Thresholds updated", "thresholds": new_thresholds}
+
+@api_router.post("/admin/scoring-config/medications")
+async def add_medication_entry(body: MedicationEntry, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") not in ["admin", "medical_practitioner"]:
+        raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    if body.score < 1 or body.score > 3:
+        raise HTTPException(status_code=400, detail="Score must be 1, 2, or 3")
+    name_lower = body.name.lower().strip()
+    await db.scoring_config.update_one(
+        {"engine": SCORING_ENGINE},
+        {"$set": {f"medications.{name_lower}": body.score, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    _scoring_cache["medications"][name_lower] = body.score
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "add_medication", "resource_type": "scoring_config", "resource_id": name_lower,
+        "details": f"Added/updated medication: {body.name} with ACB score {body.score}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": f"Medication '{body.name}' set to ACB score {body.score}"}
+
+@api_router.delete("/admin/scoring-config/medications/{name}")
+async def remove_medication_entry(name: str, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") not in ["admin", "medical_practitioner"]:
+        raise HTTPException(status_code=403, detail="Admin or practitioner access required")
+    name_lower = name.lower().strip()
+    await db.scoring_config.update_one(
+        {"engine": SCORING_ENGINE},
+        {"$unset": {f"medications.{name_lower}": ""}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    _scoring_cache["medications"].pop(name_lower, None)
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "remove_medication", "resource_type": "scoring_config", "resource_id": name_lower,
+        "details": f"Removed medication: {name} from ACB scoring table",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": f"Medication '{name}' removed from scoring table"}
+
+# ======================== AUDIT LOGS ========================
+@api_router.get("/audit-logs")
+async def get_audit_logs(request: Request, limit: int = 50, offset: int = 0):
+    user = await get_current_user(request)
+    query = {}
+    if user.get("role") != "admin":
+        query["user_id"] = user["user_id"]
+    logs = await db.audit_logs.find(query, {"_id": 0}).sort("created_at", -1).skip(offset).to_list(limit)
+    total = await db.audit_logs.count_documents(query)
+    return {"logs": logs, "total": total}
+
+# ======================== NOTIFICATION SETTINGS ========================
+@api_router.get("/settings/notifications")
+async def get_notification_settings(request: Request):
+    user = await get_current_user(request)
+    settings = await db.notification_settings.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not settings:
+        settings = {
+            "user_id": user["user_id"],
+            "email_high_risk": True, "email_medium_risk": False,
+            "in_app_high_risk": True, "in_app_medium_risk": True, "in_app_low_risk": False
+        }
+    return settings
+
+@api_router.put("/settings/notifications")
+async def update_notification_settings(body: NotificationSettings, request: Request):
+    user = await get_current_user(request)
+    updates = body.model_dump()
+    updates["user_id"] = user["user_id"]
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.notification_settings.update_one(
+        {"user_id": user["user_id"]}, {"$set": updates}, upsert=True
+    )
+    return {"message": "Settings updated", **updates}
+
 # ======================== APP CONFIG ========================
 app.include_router(api_router)
 
@@ -818,6 +1104,8 @@ async def startup():
     await db.patients.create_index("patient_id", unique=True)
     await db.documents.create_index("document_id", unique=True)
     await db.risk_results.create_index("result_id", unique=True)
+    await db.audit_logs.create_index("created_at")
+    await load_scoring_config()
     logger.info("SafeMedAI backend started")
 
 @app.on_event("shutdown")

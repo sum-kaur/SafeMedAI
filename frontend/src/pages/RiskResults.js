@@ -15,6 +15,7 @@ export default function RiskResults() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const isPractitioner = user?.role === 'medical_practitioner';
 
   useEffect(() => { fetchResults(); }, [patientId]);
@@ -51,6 +52,29 @@ export default function RiskResults() {
   );
 
   const { risk_result, parsed_summary, recommendations } = data;
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      const res = await axios.get(`${API}/reports/${risk_result.result_id}/pdf`, {
+        withCredentials: true,
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `SafeMedAI_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF download failed:', err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const riskStyle = {
     high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle, label: 'HIGH RISK' },
     medium: { bg: 'var(--sma-risk-med-bg)', border: 'var(--sma-risk-med-border)', text: 'var(--sma-risk-med-text)', icon: Shield, label: 'MEDIUM RISK' },
@@ -66,9 +90,22 @@ export default function RiskResults() {
         <div className="max-w-5xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Risk Assessment</h1>
-            <Button data-testid="ask-about-results-btn" onClick={() => navigate(`/chat/${patientId}`)} className="h-11 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-accent)', color: 'var(--sma-text-inverse)' }}>
-              <MessageCircle className="w-4 h-4 mr-2" /> Ask Questions
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                data-testid="download-pdf-btn"
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                variant="outline"
+                className="h-11 rounded-full font-medium"
+                style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}
+              >
+                {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
+                {downloading ? 'Generating...' : 'Download PDF'}
+              </Button>
+              <Button data-testid="ask-about-results-btn" onClick={() => navigate(`/chat/${patientId}`)} className="h-11 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-accent)', color: 'var(--sma-text-inverse)' }}>
+                <MessageCircle className="w-4 h-4 mr-2" /> Ask Questions
+              </Button>
+            </div>
           </div>
 
           {/* Risk Score Card */}

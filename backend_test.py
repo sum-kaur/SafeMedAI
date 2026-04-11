@@ -367,6 +367,175 @@ class SafeMedAITester:
             self.log_result("POST /seed", False, 
                           f"Expected 200, got {response.status_code if response else 'No response'}")
 
+    def test_pdf_report_endpoints(self):
+        """Test PDF report generation endpoints"""
+        print("\n📄 Testing PDF Report Endpoints...")
+        
+        if not hasattr(self, 'result_id'):
+            self.log_result("PDF report tests", False, "No result_id available")
+            return
+        
+        # Test PDF report generation
+        response = self.make_request('GET', f'reports/{self.result_id}/pdf')
+        if response and response.status_code == 200:
+            # Check if response is PDF content
+            content_type = response.headers.get('content-type', '')
+            if 'application/pdf' in content_type:
+                self.log_result("GET /reports/{result_id}/pdf", True, f"PDF generated ({len(response.content)} bytes)")
+            else:
+                self.log_result("GET /reports/{result_id}/pdf", False, f"Wrong content type: {content_type}")
+        else:
+            self.log_result("GET /reports/{result_id}/pdf", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
+    def test_admin_scoring_config_endpoints(self):
+        """Test admin scoring configuration endpoints"""
+        print("\n⚙️ Testing Admin Scoring Config Endpoints...")
+        
+        # First ensure user has medical_practitioner role for admin access
+        role_response = self.make_request('PUT', 'users/role', {'role': 'medical_practitioner'})
+        if not (role_response and role_response.status_code == 200):
+            self.log_result("Admin tests setup", False, "Could not set medical_practitioner role")
+            return
+        
+        # Test get scoring config
+        response = self.make_request('GET', 'admin/scoring-config')
+        if response and response.status_code == 200:
+            config = response.json()
+            if 'medications' in config and 'thresholds' in config:
+                self.log_result("GET /admin/scoring-config", True, "Scoring config retrieved")
+            else:
+                self.log_result("GET /admin/scoring-config", False, "Missing config fields")
+        elif response and response.status_code == 403:
+            self.log_result("GET /admin/scoring-config", False, "Access denied - role issue")
+        else:
+            self.log_result("GET /admin/scoring-config", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Test update thresholds
+        threshold_data = {
+            "low": [0, 2],
+            "medium": [3, 5], 
+            "high": [6, 999]
+        }
+        response = self.make_request('PUT', 'admin/scoring-config/thresholds', threshold_data)
+        if response and response.status_code == 200:
+            result = response.json()
+            if 'message' in result:
+                self.log_result("PUT /admin/scoring-config/thresholds", True, "Thresholds updated")
+            else:
+                self.log_result("PUT /admin/scoring-config/thresholds", False, "Invalid response")
+        elif response and response.status_code == 403:
+            self.log_result("PUT /admin/scoring-config/thresholds", False, "Access denied - role issue")
+        else:
+            self.log_result("PUT /admin/scoring-config/thresholds", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Test add medication
+        med_data = {"name": "test_medication", "score": 2}
+        response = self.make_request('POST', 'admin/scoring-config/medications', med_data)
+        if response and response.status_code == 200:
+            result = response.json()
+            if 'message' in result:
+                self.log_result("POST /admin/scoring-config/medications", True, "Medication added")
+            else:
+                self.log_result("POST /admin/scoring-config/medications", False, "Invalid response")
+        elif response and response.status_code == 403:
+            self.log_result("POST /admin/scoring-config/medications", False, "Access denied - role issue")
+        else:
+            self.log_result("POST /admin/scoring-config/medications", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Test remove medication
+        response = self.make_request('DELETE', 'admin/scoring-config/medications/test_medication')
+        if response and response.status_code == 200:
+            result = response.json()
+            if 'message' in result:
+                self.log_result("DELETE /admin/scoring-config/medications/{name}", True, "Medication removed")
+            else:
+                self.log_result("DELETE /admin/scoring-config/medications/{name}", False, "Invalid response")
+        elif response and response.status_code == 403:
+            self.log_result("DELETE /admin/scoring-config/medications/{name}", False, "Access denied - role issue")
+        else:
+            self.log_result("DELETE /admin/scoring-config/medications/{name}", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
+    def test_patient_update_endpoints(self):
+        """Test patient profile editing endpoints"""
+        print("\n👤 Testing Patient Update Endpoints...")
+        
+        if not hasattr(self, 'patient_id'):
+            self.log_result("Patient update tests", False, "No patient_id available")
+            return
+        
+        # Test patient update
+        update_data = {
+            "name": "Updated Test Patient",
+            "emergency_contact": "Updated Contact - 0400 111 111",
+            "medical_history": "Updated medical history"
+        }
+        response = self.make_request('PUT', f'patients/{self.patient_id}', update_data)
+        if response and response.status_code == 200:
+            patient = response.json()
+            if patient.get('name') == 'Updated Test Patient':
+                self.log_result("PUT /patients/{patient_id}", True, "Patient updated successfully")
+            else:
+                self.log_result("PUT /patients/{patient_id}", False, "Patient not updated properly")
+        else:
+            self.log_result("PUT /patients/{patient_id}", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
+    def test_audit_log_endpoints(self):
+        """Test audit log endpoints"""
+        print("\n📋 Testing Audit Log Endpoints...")
+        
+        # Test get audit logs
+        response = self.make_request('GET', 'audit-logs')
+        if response and response.status_code == 200:
+            audit_data = response.json()
+            if 'logs' in audit_data and 'total' in audit_data:
+                self.log_result("GET /audit-logs", True, f"Audit logs retrieved ({audit_data['total']} total)")
+            else:
+                self.log_result("GET /audit-logs", False, "Invalid audit log response")
+        else:
+            self.log_result("GET /audit-logs", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
+    def test_notification_settings_endpoints(self):
+        """Test notification settings endpoints"""
+        print("\n🔔 Testing Notification Settings Endpoints...")
+        
+        # Test get notification settings
+        response = self.make_request('GET', 'settings/notifications')
+        if response and response.status_code == 200:
+            settings = response.json()
+            if 'user_id' in settings:
+                self.log_result("GET /settings/notifications", True, "Notification settings retrieved")
+            else:
+                self.log_result("GET /settings/notifications", False, "Invalid settings response")
+        else:
+            self.log_result("GET /settings/notifications", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Test update notification settings
+        settings_data = {
+            "email_high_risk": True,
+            "email_medium_risk": False,
+            "in_app_high_risk": True,
+            "in_app_medium_risk": True,
+            "in_app_low_risk": False
+        }
+        response = self.make_request('PUT', 'settings/notifications', settings_data)
+        if response and response.status_code == 200:
+            result = response.json()
+            if 'message' in result:
+                self.log_result("PUT /settings/notifications", True, "Notification settings updated")
+            else:
+                self.log_result("PUT /settings/notifications", False, "Invalid update response")
+        else:
+            self.log_result("PUT /settings/notifications", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
     def run_all_tests(self):
         """Run all test suites"""
         print("🧪 Starting SafeMedAI Backend API Tests")
@@ -379,7 +548,6 @@ class SafeMedAITester:
         
         # Run all test suites
         self.test_auth_endpoints()
-        self.test_user_endpoints()
         self.test_patient_endpoints()
         self.test_upload_endpoints()
         self.test_processing_endpoints()
@@ -388,6 +556,16 @@ class SafeMedAITester:
         self.test_alerts_endpoints()
         self.test_dashboard_endpoints()
         self.test_seed_endpoint()
+        
+        # NEW ITERATION 2 FEATURES
+        self.test_pdf_report_endpoints()
+        self.test_admin_scoring_config_endpoints()  # Test admin features before changing role
+        self.test_patient_update_endpoints()
+        self.test_audit_log_endpoints()
+        self.test_notification_settings_endpoints()
+        
+        # Test user role change last
+        self.test_user_endpoints()
         
         # Print summary
         print(f"\n📊 Test Summary:")
