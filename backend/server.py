@@ -810,6 +810,14 @@ async def get_dashboard_stats(request: Request):
     unread_alerts = await db.alerts.count_documents({"patient_id": {"$in": patient_ids}, "read": False})
     recent_results = risk_results[:5]
     recent_patients = patients[:5]
+    # Enrich recent patients with latest risk level
+    for p in recent_patients:
+        latest = await db.risk_results.find_one(
+            {"patient_id": p["patient_id"]}, {"_id": 0, "risk_level": 1, "total_score": 1, "scoring_engine": 1},
+            sort=[("created_at", -1)]
+        )
+        p["latest_risk_level"] = latest.get("risk_level") if latest else None
+        p["latest_risk_score"] = latest.get("total_score") if latest else None
     return {
         "total_patients": total_patients, "total_documents": total_docs,
         "high_risk": high_risk, "medium_risk": medium_risk, "low_risk": low_risk,

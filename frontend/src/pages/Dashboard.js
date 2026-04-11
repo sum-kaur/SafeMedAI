@@ -159,21 +159,55 @@ export default function Dashboard() {
                     </Button>
                   </div>
                   <div className="space-y-3">
-                    {stats.recent_patients.map((p) => (
-                      <button
-                        key={p.patient_id}
-                        data-testid={`patient-card-${p.patient_id}`}
-                        onClick={() => navigate(`/patients/${p.patient_id}`)}
-                        className="w-full flex items-center justify-between p-4 rounded-lg transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-left"
-                        style={{ backgroundColor: 'var(--sma-surface-alt)', border: '1px solid var(--sma-border)' }}
-                      >
-                        <div>
-                          <p className="font-medium" style={{ color: 'var(--sma-text-primary)' }}>{p.name}</p>
-                          <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>DOB: {p.dob || 'Not set'}</p>
-                        </div>
-                        <ArrowRight className="w-5 h-5" style={{ color: 'var(--sma-text-muted)' }} />
-                      </button>
-                    ))}
+                    {stats.recent_patients.map((p) => {
+                      const isHighRisk = p.latest_risk_level === 'high';
+                      const isMedRisk = p.latest_risk_level === 'medium';
+                      return (
+                        <button
+                          key={p.patient_id}
+                          data-testid={`patient-card-${p.patient_id}`}
+                          onClick={() => navigate(`/patients/${p.patient_id}`)}
+                          className="w-full flex items-center justify-between p-4 rounded-lg transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-left"
+                          style={{
+                            backgroundColor: isHighRisk ? 'var(--sma-risk-high-bg)' : 'var(--sma-surface-alt)',
+                            border: isHighRisk ? '2px solid var(--sma-risk-high-border)' : '1px solid var(--sma-border)',
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {isHighRisk && (
+                              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--sma-risk-high-border)' }} data-testid={`high-risk-flag-${p.patient_id}`}>
+                                <AlertTriangle className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium" style={{ color: isHighRisk ? 'var(--sma-risk-high-text)' : 'var(--sma-text-primary)' }}>{p.name}</p>
+                                {isHighRisk && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
+                                    High Risk
+                                  </span>
+                                )}
+                                {isMedRisk && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: 'var(--sma-risk-med-border)', color: 'white' }}>
+                                    Medium
+                                  </span>
+                                )}
+                                {p.latest_risk_level === 'low' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: 'var(--sma-risk-low-border)', color: 'white' }}>
+                                    Low
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm" style={{ color: isHighRisk ? 'var(--sma-risk-high-text)' : 'var(--sma-text-muted)' }}>
+                                DOB: {p.dob || 'Not set'}
+                                {p.latest_risk_score != null && <> | Score: {p.latest_risk_score}</>}
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowRight className="w-5 h-5 flex-shrink-0" style={{ color: isHighRisk ? 'var(--sma-risk-high-text)' : 'var(--sma-text-muted)' }} />
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
