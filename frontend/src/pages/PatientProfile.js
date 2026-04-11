@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, BarChart3, MessageCircle, FileText, AlertTriangle, CheckCircle, Shield, Loader2, Phone, Stethoscope, Pencil, X, Save } from 'lucide-react';
+import { Upload, BarChart3, MessageCircle, FileText, AlertTriangle, CheckCircle, Shield, Loader2, Phone, Stethoscope, Pencil, X, Save, Download, UserPlus, Trash2, Clock, Users } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -19,8 +21,13 @@ export default function PatientProfile() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({});
+  const [relationships, setRelationships] = useState([]);
+  const [relOpen, setRelOpen] = useState(false);
+  const [relForm, setRelForm] = useState({ user_email: '', relationship_type: 'carer' });
+  const [addingRel, setAddingRel] = useState(false);
+  const [exportingMeds, setExportingMeds] = useState(false);
 
-  useEffect(() => { fetchPatient(); }, [patientId]);
+  useEffect(() => { fetchPatient(); fetchRelationships(); }, [patientId]);
 
   const fetchPatient = async () => {
     try {
@@ -60,6 +67,46 @@ export default function PatientProfile() {
     }
   };
 
+  const fetchRelationships = async () => {
+    try {
+      const res = await axios.get(`${API}/care-relationships/${patientId}`, { withCredentials: true });
+      setRelationships(res.data);
+    } catch (err) { /* ignore if no rels */ }
+  };
+
+  const handleAddRelationship = async () => {
+    if (!relForm.user_email.trim()) { toast.error('Email required'); return; }
+    setAddingRel(true);
+    try {
+      await axios.post(`${API}/care-relationships`, { patient_id: patientId, ...relForm }, { withCredentials: true });
+      toast.success('Care relationship added');
+      setRelOpen(false);
+      setRelForm({ user_email: '', relationship_type: 'carer' });
+      fetchRelationships();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to add');
+    } finally { setAddingRel(false); }
+  };
+
+  const handleRemoveRelationship = async (relId) => {
+    try {
+      await axios.delete(`${API}/care-relationships/${relId}`, { withCredentials: true });
+      toast.success('Relationship removed');
+      fetchRelationships();
+    } catch (err) { toast.error('Failed to remove'); }
+  };
+
+  const handleExportMeds = async () => {
+    setExportingMeds(true);
+    try {
+      const res = await axios.get(`${API}/export/medications/${patientId}`, { withCredentials: true, responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a'); link.href = url; link.setAttribute('download', `medications_${patientId}.csv`);
+      document.body.appendChild(link); link.click(); link.remove();
+    } catch (err) { toast.error('Export failed'); }
+    finally { setExportingMeds(false); }
+  };
+
   const riskStyle = (level) => ({
     high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle },
     medium: { bg: 'var(--sma-risk-med-bg)', border: 'var(--sma-risk-med-border)', text: 'var(--sma-risk-med-text)', icon: Shield },
@@ -95,9 +142,14 @@ export default function PatientProfile() {
                 <Upload className="w-4 h-4 mr-2" /> Upload Summary
               </Button>
               {risk_results?.length > 0 && (
-                <Button data-testid="view-results-btn" onClick={() => navigate(`/results/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
-                  <BarChart3 className="w-4 h-4 mr-2" /> View Results
-                </Button>
+                <>
+                  <Button data-testid="view-results-btn" onClick={() => navigate(`/results/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
+                    <BarChart3 className="w-4 h-4 mr-2" /> View Results
+                  </Button>
+                  <Button data-testid="view-history-btn" onClick={() => navigate(`/history/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-text-secondary)', color: 'var(--sma-text-secondary)' }}>
+                    <Clock className="w-4 h-4 mr-2" /> History
+                  </Button>
+                </>
               )}
               <Button data-testid="chat-btn" onClick={() => navigate(`/chat/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}>
                 <MessageCircle className="w-4 h-4 mr-2" /> Ask Questions
@@ -228,6 +280,85 @@ export default function PatientProfile() {
               </div>
             </div>
           </div>
+
+          {/* Care Relationships */}
+          <div className="mt-6 rounded-xl shadow-sm p-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium flex items-center gap-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+                <Users className="w-5 h-5" style={{ color: 'var(--sma-brand)' }} /> Care Team
+              </h2>
+              <Dialog open={relOpen} onOpenChange={setRelOpen}>
+                <DialogTrigger asChild>
+                  <Button data-testid="add-relationship-btn" size="sm" className="h-8 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
+                    <UserPlus className="w-3.5 h-3.5 mr-1" /> Link User
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-sm" data-testid="add-relationship-dialog">
+                  <DialogHeader><DialogTitle style={{ fontFamily: 'Outfit' }}>Link User to Patient</DialogTitle></DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    <div>
+                      <Label>User Email</Label>
+                      <Input data-testid="rel-email-input" value={relForm.user_email} onChange={(e) => setRelForm({ ...relForm, user_email: e.target.value })} placeholder="user@example.com" className="mt-1" />
+                      <p className="text-xs mt-1" style={{ color: 'var(--sma-text-muted)' }}>The user must have a SafeMedAI account</p>
+                    </div>
+                    <div>
+                      <Label>Relationship</Label>
+                      <Select value={relForm.relationship_type} onValueChange={(v) => setRelForm({ ...relForm, relationship_type: v })}>
+                        <SelectTrigger className="mt-1" data-testid="rel-type-select"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="carer">Family Carer</SelectItem>
+                          <SelectItem value="spouse">Spouse / Partner</SelectItem>
+                          <SelectItem value="child">Adult Child</SelectItem>
+                          <SelectItem value="gp">General Practitioner</SelectItem>
+                          <SelectItem value="pharmacist">Pharmacist</SelectItem>
+                          <SelectItem value="nurse">Nurse</SelectItem>
+                          <SelectItem value="specialist">Specialist</SelectItem>
+                          <SelectItem value="coordinator">Care Coordinator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button data-testid="confirm-add-rel-btn" onClick={handleAddRelationship} disabled={addingRel} className="w-full h-10 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
+                      {addingRel ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Link User'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {relationships.length === 0 ? (
+              <p className="text-sm text-center py-4" style={{ color: 'var(--sma-text-muted)' }}>No care team members linked. Click "Link User" to add practitioners or carers.</p>
+            ) : (
+              <div className="space-y-2">
+                {relationships.map((rel) => (
+                  <div key={rel.relationship_id} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--sma-surface-alt)' }} data-testid={`rel-${rel.relationship_id}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--sma-risk-low-bg)' }}>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--sma-brand)' }}>{rel.user_info?.name?.[0] || '?'}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--sma-text-primary)' }}>{rel.user_info?.name || 'Unknown'}</p>
+                        <p className="text-xs" style={{ color: 'var(--sma-text-muted)' }}>
+                          {rel.user_info?.email} | <span className="capitalize">{rel.relationship_type?.replace('_', ' ')}</span>
+                          {rel.user_info?.role && <> | <span className="capitalize">{rel.user_info.role.replace('_', ' ')}</span></>}
+                        </p>
+                      </div>
+                    </div>
+                    <button onClick={() => handleRemoveRelationship(rel.relationship_id)} className="p-1.5 rounded hover:bg-red-50 cursor-pointer" data-testid={`remove-rel-${rel.relationship_id}`}>
+                      <Trash2 className="w-4 h-4" style={{ color: 'var(--sma-risk-high-text)' }} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Data Export */}
+          {(documents?.length > 0 || risk_results?.length > 0) && (
+            <div className="mt-6 flex gap-3 flex-wrap">
+              <Button data-testid="export-meds-csv-btn" onClick={handleExportMeds} disabled={exportingMeds} variant="outline" className="h-10 rounded-full" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
+                {exportingMeds ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} Export Medications CSV
+              </Button>
+            </div>
+          )}
 
           <div className="mt-6 p-4 rounded-lg text-xs text-center" style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-text-muted)' }}>
             This tool provides decision support only and does not replace professional medical judgment.

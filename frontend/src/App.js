@@ -16,6 +16,7 @@ import ChatPage from "@/pages/ChatPage";
 import AlertsPage from "@/pages/AlertsPage";
 import AdminPage from "@/pages/AdminPage";
 import SettingsPage from "@/pages/SettingsPage";
+import ReportHistory from "@/pages/ReportHistory";
 
 function AppRouter() {
   const location = useLocation();
@@ -36,6 +37,7 @@ function AppRouter() {
       <Route path="/alerts" element={<ProtectedRoute requireRole><AlertsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute requireRole><AdminPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute requireRole><SettingsPage /></ProtectedRoute>} />
+      <Route path="/history/:patientId" element={<ProtectedRoute requireRole><ReportHistory /></ProtectedRoute>} />
     </Routes>
   );
 }

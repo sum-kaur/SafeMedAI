@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, AlertTriangle, Bell, ArrowRight, Plus, CheckCircle, Loader2, Shield } from 'lucide-react';
+import { Users, FileText, AlertTriangle, Bell, ArrowRight, Plus, CheckCircle, Loader2, Shield, Download } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const isPractitioner = user?.role === 'medical_practitioner';
 
   useEffect(() => {
@@ -45,6 +46,18 @@ export default function Dashboard() {
     }
   };
 
+  const handleExportPatients = async () => {
+    setExporting(true);
+    try {
+      const res = await axios.get(`${API}/export/patients`, { withCredentials: true, responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a'); link.href = url; link.setAttribute('download', `patients_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link); link.click(); link.remove();
+      toast.success('Patients exported');
+    } catch (err) { toast.error('Export failed'); }
+    finally { setExporting(false); }
+  };
+
   const riskColor = (level) => ({
     high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)' },
     medium: { bg: 'var(--sma-risk-med-bg)', border: 'var(--sma-risk-med-border)', text: 'var(--sma-risk-med-text)' },
@@ -66,6 +79,19 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex gap-3">
+              {stats?.total_patients > 0 && (
+                <Button
+                  data-testid="export-patients-btn"
+                  onClick={handleExportPatients}
+                  disabled={exporting}
+                  variant="outline"
+                  className="h-11 px-5 rounded-full font-medium"
+                  style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}
+                >
+                  {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+                  Export CSV
+                </Button>
+              )}
               {stats?.total_patients === 0 && (
                 <Button
                   data-testid="seed-demo-btn"

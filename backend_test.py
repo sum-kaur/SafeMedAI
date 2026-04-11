@@ -630,6 +630,168 @@ class SafeMedAITester:
             self.log_result("POST /email/test", False, 
                           f"Expected 200, got {response.status_code if response else 'No response'}")
 
+    def test_report_history_endpoints(self):
+        """Test report history and comparison endpoints - ITERATION 4"""
+        print("\n📈 Testing Report History Endpoints...")
+        
+        if not hasattr(self, 'patient_id'):
+            self.log_result("Report history tests", False, "No patient_id available")
+            return
+        
+        # Test GET /risk-results/{patient_id}/history
+        response = self.make_request('GET', f'risk-results/{self.patient_id}/history')
+        if response and response.status_code == 200:
+            history = response.json()
+            if isinstance(history, list):
+                self.log_result("GET /risk-results/{patient_id}/history", True, f"Returns {len(history)} historical results")
+                
+                # If we have at least 2 results, test comparison
+                if len(history) >= 2:
+                    result_a = history[0]['result_id']
+                    result_b = history[1]['result_id']
+                    
+                    # Test GET /risk-results/{patient_id}/compare
+                    response = self.make_request('GET', f'risk-results/{self.patient_id}/compare?result_a={result_a}&result_b={result_b}')
+                    if response and response.status_code == 200:
+                        comparison = response.json()
+                        required_fields = ['result_a', 'result_b', 'score_change', 'level_change', 'medication_diff']
+                        if all(field in comparison for field in required_fields):
+                            self.log_result("GET /risk-results/{patient_id}/compare", True, "Comparison data returned")
+                        else:
+                            missing = [f for f in required_fields if f not in comparison]
+                            self.log_result("GET /risk-results/{patient_id}/compare", False, f"Missing fields: {missing}")
+                    else:
+                        self.log_result("GET /risk-results/{patient_id}/compare", False, 
+                                      f"Expected 200, got {response.status_code if response else 'No response'}")
+                else:
+                    self.log_result("GET /risk-results/{patient_id}/compare", False, "Need at least 2 results for comparison")
+            else:
+                self.log_result("GET /risk-results/{patient_id}/history", False, "Response is not a list")
+        else:
+            self.log_result("GET /risk-results/{patient_id}/history", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+
+    def test_csv_export_endpoints(self):
+        """Test CSV export endpoints - ITERATION 4"""
+        print("\n📊 Testing CSV Export Endpoints...")
+        
+        # Test GET /export/patients
+        response = self.make_request('GET', 'export/patients')
+        if response and response.status_code == 200:
+            content_type = response.headers.get('content-type', '')
+            if 'text/csv' in content_type or 'application/csv' in content_type:
+                self.log_result("GET /export/patients", True, f"CSV exported ({len(response.content)} bytes)")
+            else:
+                self.log_result("GET /export/patients", False, f"Wrong content type: {content_type}")
+        else:
+            self.log_result("GET /export/patients", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        if hasattr(self, 'patient_id'):
+            # Test GET /export/risk-results/{patient_id}
+            response = self.make_request('GET', f'export/risk-results/{self.patient_id}')
+            if response and response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                if 'text/csv' in content_type or 'application/csv' in content_type:
+                    self.log_result("GET /export/risk-results/{patient_id}", True, f"Risk results CSV exported ({len(response.content)} bytes)")
+                else:
+                    self.log_result("GET /export/risk-results/{patient_id}", False, f"Wrong content type: {content_type}")
+            else:
+                self.log_result("GET /export/risk-results/{patient_id}", False, 
+                              f"Expected 200, got {response.status_code if response else 'No response'}")
+            
+            # Test GET /export/medications/{patient_id}
+            response = self.make_request('GET', f'export/medications/{self.patient_id}')
+            if response and response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                if 'text/csv' in content_type or 'application/csv' in content_type:
+                    self.log_result("GET /export/medications/{patient_id}", True, f"Medications CSV exported ({len(response.content)} bytes)")
+                else:
+                    self.log_result("GET /export/medications/{patient_id}", False, f"Wrong content type: {content_type}")
+            else:
+                self.log_result("GET /export/medications/{patient_id}", False, 
+                              f"Expected 200, got {response.status_code if response else 'No response'}")
+        else:
+            self.log_result("CSV export patient tests", False, "No patient_id available")
+
+    def test_care_relationships_endpoints(self):
+        """Test care relationships endpoints - ITERATION 4"""
+        print("\n👥 Testing Care Relationships Endpoints...")
+        
+        if not hasattr(self, 'patient_id'):
+            self.log_result("Care relationships tests", False, "No patient_id available")
+            return
+        
+        # Test GET /care-relationships/{patient_id}
+        response = self.make_request('GET', f'care-relationships/{self.patient_id}')
+        if response and response.status_code == 200:
+            relationships = response.json()
+            if isinstance(relationships, list):
+                self.log_result("GET /care-relationships/{patient_id}", True, f"Returns {len(relationships)} relationships")
+            else:
+                self.log_result("GET /care-relationships/{patient_id}", False, "Response is not a list")
+        else:
+            self.log_result("GET /care-relationships/{patient_id}", False, 
+                          f"Expected 200, got {response.status_code if response else 'No response'}")
+        
+        # Create a test relationship
+        relationship_data = {
+            "patient_id": self.patient_id,
+            "user_email": f"test.carer.{int(time.time())}@example.com",
+            "relationship_type": "carer"
+        }
+        
+        # First create a test user for the relationship
+        timestamp = int(time.time())
+        carer_user_id = f"test-carer-{timestamp}"
+        carer_email = relationship_data["user_email"]
+        
+        mongo_script = f"""
+        use('test_database');
+        db.users.insertOne({{
+          user_id: '{carer_user_id}',
+          email: '{carer_email}',
+          name: 'Test Carer',
+          picture: '',
+          role: 'family_carer',
+          created_at: new Date().toISOString()
+        }});
+        """
+        
+        try:
+            import subprocess
+            result = subprocess.run(['mongosh', '--eval', mongo_script], 
+                                  capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                # Test POST /care-relationships
+                response = self.make_request('POST', 'care-relationships', relationship_data)
+                if response and response.status_code == 200:
+                    relationship = response.json()
+                    if 'relationship_id' in relationship:
+                        self.relationship_id = relationship['relationship_id']
+                        self.log_result("POST /care-relationships", True, f"Relationship created: {self.relationship_id}")
+                        
+                        # Test DELETE /care-relationships/{id}
+                        response = self.make_request('DELETE', f'care-relationships/{self.relationship_id}')
+                        if response and response.status_code == 200:
+                            result = response.json()
+                            if 'message' in result:
+                                self.log_result("DELETE /care-relationships/{id}", True, "Relationship deleted")
+                            else:
+                                self.log_result("DELETE /care-relationships/{id}", False, "Invalid delete response")
+                        else:
+                            self.log_result("DELETE /care-relationships/{id}", False, 
+                                          f"Expected 200, got {response.status_code if response else 'No response'}")
+                    else:
+                        self.log_result("POST /care-relationships", False, "No relationship_id in response")
+                else:
+                    self.log_result("POST /care-relationships", False, 
+                                  f"Expected 200, got {response.status_code if response else 'No response'}")
+            else:
+                self.log_result("Care relationships setup", False, "Could not create test carer user")
+        except Exception as e:
+            self.log_result("Care relationships setup", False, f"Error creating test carer: {str(e)}")
+
     def run_all_tests(self):
         """Run all test suites"""
         print("🧪 Starting SafeMedAI Backend API Tests")
@@ -661,6 +823,11 @@ class SafeMedAITester:
         # ITERATION 3 FEATURES
         self.test_multiple_engines_endpoints()
         self.test_email_endpoints()
+        
+        # ITERATION 4 FEATURES
+        self.test_report_history_endpoints()
+        self.test_csv_export_endpoints()
+        self.test_care_relationships_endpoints()
         
         # Test user role change last
         self.test_user_endpoints()

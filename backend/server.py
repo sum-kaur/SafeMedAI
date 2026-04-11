@@ -16,6 +16,8 @@ from datetime import datetime, timezone, timedelta
 from fpdf import FPDF
 import io
 import asyncio
+import csv
+from io import StringIO
 
 # Resend email (graceful if not configured)
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
@@ -346,6 +348,11 @@ class NotificationSettings(BaseModel):
     in_app_high_risk: Optional[bool] = True
     in_app_medium_risk: Optional[bool] = True
     in_app_low_risk: Optional[bool] = False
+
+class CareRelationshipCreate(BaseModel):
+    patient_id: str
+    user_email: str
+    relationship_type: str = "carer"
 
 # ======================== AUTH ROUTES ========================
 @api_router.post("/auth/session")
@@ -1276,6 +1283,176 @@ async def send_test_email(request: Request):
 async def email_status(request: Request):
     await get_current_user(request)
     return {"configured": bool(RESEND_API_KEY), "sender": SENDER_EMAIL}
+
+# ======================== REPORT HISTORY & COMPARISON ========================
+@api_router.get("/risk-results/{patient_id}/history")
+async def get_risk_history(patient_id: str, request: Request):
+    user = await get_current_user(request)
+    results = await db.risk_results.find({"patient_id": patient_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    for r in results:
+        summary = await db.parsed_summaries.find_one(
+            {"document_id": {"$in": r.get("document_ids", [])}}, {"_id": 0, "medications": 1, "diagnosis": 1, "discharge_date": 1}
+        )
+        r["summary_snippet"] = summary if summary else None
+    return results
+
+@api_router.get("/risk-results/{patient_id}/compare")
+async def compare_risk_results(patient_id: str, request: Request, result_a: str = Query(...), result_b: str = Query(...)):
+    user = await get_current_user(request)
+    role = user.get("role", "family_carer")
+    a = await db.risk_results.find_one({"result_id": result_a, "patient_id": patient_id}, {"_id": 0})
+    b = await db.risk_results.find_one({"result_id": result_b, "patient_id": patient_id}, {"_id": 0})
+    if not a or not b:
+        raise HTTPException(status_code=404, detail="One or both results not found")
+    sum_a = await db.parsed_summaries.find_one({"document_id": {"$in": a.get("document_ids", [])}}, {"_id": 0})
+    sum_b = await db.parsed_summaries.find_one({"document_id": {"$in": b.get("document_ids", [])}}, {"_id": 0})
+    recs_a = a.get(f"recommendations_{role}", a.get("recommendations_family", []))
+    recs_b = b.get(f"recommendations_{role}", b.get("recommendations_family", []))
+    # Compute medication diff
+    meds_a = {m["name"].lower(): m for m in (sum_a or {}).get("medications", [])}
+    meds_b = {m["name"].lower(): m for m in (sum_b or {}).get("medications", [])}
+    added = [meds_b[k] for k in meds_b if k not in meds_a]
+    removed = [meds_a[k] for k in meds_a if k not in meds_b]
+    unchanged = [meds_b[k] for k in meds_b if k in meds_a]
+    return {
+        "result_a": a, "result_b": b,
+        "summary_a": sum_a, "summary_b": sum_b,
+        "recommendations_a": recs_a, "recommendations_b": recs_b,
+        "medication_diff": {"added": added, "removed": removed, "unchanged": unchanged},
+        "score_change": (b.get("total_score", 0) - a.get("total_score", 0)),
+        "level_change": {"from": a.get("risk_level"), "to": b.get("risk_level")},
+    }
+
+# ======================== DATA EXPORT (CSV) ========================
+@api_router.get("/export/patients")
+async def export_patients_csv(request: Request):
+    user = await get_current_user(request)
+    patients = await db.patients.find(
+        {"$or": [{"created_by": user["user_id"]}, {"linked_users": user["user_id"]}]}, {"_id": 0}
+    ).to_list(500)
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["Patient ID", "Name", "DOB", "Gender", "Emergency Contact", "GP Details", "Allergies", "Medical History", "Created"])
+    for p in patients:
+        writer.writerow([
+            p.get("patient_id"), p.get("name"), p.get("dob", ""), p.get("gender", ""),
+            p.get("emergency_contact", ""), p.get("gp_details", ""),
+            "; ".join(p.get("allergies", [])), p.get("medical_history", ""), p.get("created_at", "")
+        ])
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "export_csv", "resource_type": "patients", "resource_id": "all",
+        "details": f"Exported {len(patients)} patients to CSV",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return Response(content=buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="SafeMedAI_Patients_{datetime.now().strftime("%Y%m%d")}.csv"'})
+
+@api_router.get("/export/risk-results/{patient_id}")
+async def export_risk_results_csv(patient_id: str, request: Request):
+    user = await get_current_user(request)
+    results = await db.risk_results.find({"patient_id": patient_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    patient = await db.patients.find_one({"patient_id": patient_id}, {"_id": 0})
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["Result ID", "Date", "Scoring Engine", "Total Score", "Risk Level", "Medications Total", "Flagged", "Confidence", "Flagged Medications"])
+    for r in results:
+        flagged = "; ".join([f"{rf.get('medication')}(score:{rf.get('score',rf.get('acb_score','?'))})" for rf in r.get("risk_factors", [])])
+        writer.writerow([
+            r.get("result_id"), r.get("created_at", ""), r.get("scoring_engine", ""),
+            r.get("total_score", 0), r.get("risk_level", ""), r.get("medication_count", 0),
+            r.get("flagged_count", 0), round((r.get("confidence", 0)) * 100), flagged
+        ])
+    name = patient.get("name", "Patient") if patient else "Patient"
+    return Response(content=buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="SafeMedAI_RiskHistory_{name.replace(" ","_")}_{datetime.now().strftime("%Y%m%d")}.csv"'})
+
+@api_router.get("/export/medications/{patient_id}")
+async def export_medications_csv(patient_id: str, request: Request):
+    user = await get_current_user(request)
+    summaries = await db.parsed_summaries.find({"patient_id": patient_id}, {"_id": 0}).sort("created_at", -1).to_list(20)
+    patient = await db.patients.find_one({"patient_id": patient_id}, {"_id": 0})
+    buf = StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["Assessment Date", "Medication", "Dose", "Frequency", "Route", "New", "Ceased", "Changed"])
+    for s in summaries:
+        date = s.get("discharge_date") or s.get("created_at", "")
+        for m in s.get("medications", []):
+            writer.writerow([
+                date, m.get("name", ""), m.get("dose", ""), m.get("frequency", ""),
+                m.get("route", ""), m.get("is_new", False), m.get("is_ceased", False), m.get("is_changed", False)
+            ])
+    name = patient.get("name", "Patient") if patient else "Patient"
+    return Response(content=buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="SafeMedAI_Medications_{name.replace(" ","_")}_{datetime.now().strftime("%Y%m%d")}.csv"'})
+
+# ======================== CARE RELATIONSHIPS ========================
+@api_router.get("/care-relationships/{patient_id}")
+async def get_care_relationships(patient_id: str, request: Request):
+    user = await get_current_user(request)
+    rels = await db.care_relationships.find({"patient_id": patient_id}, {"_id": 0}).to_list(50)
+    for r in rels:
+        linked_user = await db.users.find_one({"user_id": r["linked_user_id"]}, {"_id": 0, "name": 1, "email": 1, "role": 1, "picture": 1})
+        r["user_info"] = linked_user
+    return rels
+
+@api_router.post("/care-relationships")
+async def create_care_relationship(body: CareRelationshipCreate, request: Request):
+    user = await get_current_user(request)
+    patient = await db.patients.find_one({"patient_id": body.patient_id}, {"_id": 0})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    target_user = await db.users.find_one({"email": body.user_email}, {"_id": 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail=f"No user found with email {body.user_email}. They must sign up first.")
+    if target_user["user_id"] == user["user_id"]:
+        raise HTTPException(status_code=400, detail="Cannot create relationship with yourself")
+    existing = await db.care_relationships.find_one(
+        {"patient_id": body.patient_id, "linked_user_id": target_user["user_id"]}, {"_id": 0}
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="This user is already linked to this patient")
+    rel_id = f"rel_{uuid.uuid4().hex[:12]}"
+    rel = {
+        "relationship_id": rel_id, "patient_id": body.patient_id,
+        "linked_user_id": target_user["user_id"],
+        "relationship_type": body.relationship_type,
+        "created_by": user["user_id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.care_relationships.insert_one(rel)
+    await db.patients.update_one(
+        {"patient_id": body.patient_id},
+        {"$addToSet": {"linked_users": target_user["user_id"]}}
+    )
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "add_care_relationship", "resource_type": "care_relationship", "resource_id": rel_id,
+        "details": f"Linked {target_user.get('name', body.user_email)} as {body.relationship_type} for patient {patient.get('name')}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    rel.pop("_id", None)
+    rel["user_info"] = {"name": target_user.get("name"), "email": target_user.get("email"), "role": target_user.get("role")}
+    return rel
+
+@api_router.delete("/care-relationships/{relationship_id}")
+async def remove_care_relationship(relationship_id: str, request: Request):
+    user = await get_current_user(request)
+    rel = await db.care_relationships.find_one({"relationship_id": relationship_id}, {"_id": 0})
+    if not rel:
+        raise HTTPException(status_code=404, detail="Relationship not found")
+    await db.care_relationships.delete_one({"relationship_id": relationship_id})
+    await db.patients.update_one(
+        {"patient_id": rel["patient_id"]},
+        {"$pull": {"linked_users": rel["linked_user_id"]}}
+    )
+    await db.audit_logs.insert_one({
+        "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
+        "action": "remove_care_relationship", "resource_type": "care_relationship", "resource_id": relationship_id,
+        "details": f"Removed care relationship {relationship_id} for patient {rel['patient_id']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Relationship removed"}
 
 # ======================== APP CONFIG ========================
 app.include_router(api_router)

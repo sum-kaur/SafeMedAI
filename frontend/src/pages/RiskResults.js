@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -91,6 +91,15 @@ export default function RiskResults() {
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Risk Assessment</h1>
             <div className="flex gap-3">
+              <Button
+                data-testid="view-history-btn"
+                onClick={() => navigate(`/history/${patientId}`)}
+                variant="outline"
+                className="h-11 rounded-full font-medium"
+                style={{ borderColor: 'var(--sma-text-secondary)', color: 'var(--sma-text-secondary)' }}
+              >
+                <Clock className="w-4 h-4 mr-2" /> History
+              </Button>
               <Button
                 data-testid="download-pdf-btn"
                 onClick={handleDownloadPdf}
