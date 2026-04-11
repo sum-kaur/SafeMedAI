@@ -1,53 +1,49 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import LandingPage from "@/pages/LandingPage";
+import AuthCallback from "@/pages/AuthCallback";
+import RoleSelection from "@/pages/RoleSelection";
+import Dashboard from "@/pages/Dashboard";
+import PatientsPage from "@/pages/PatientsPage";
+import PatientProfile from "@/pages/PatientProfile";
+import UploadPage from "@/pages/UploadPage";
+import RiskResults from "@/pages/RiskResults";
+import ChatPage from "@/pages/ChatPage";
+import AlertsPage from "@/pages/AlertsPage";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+function AppRouter() {
+  const location = useLocation();
+  // CRITICAL: Check for session_id synchronously during render to prevent race conditions
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback />;
+  }
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/select-role" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute requireRole><Dashboard /></ProtectedRoute>} />
+      <Route path="/patients" element={<ProtectedRoute requireRole><PatientsPage /></ProtectedRoute>} />
+      <Route path="/patients/:patientId" element={<ProtectedRoute requireRole><PatientProfile /></ProtectedRoute>} />
+      <Route path="/upload/:patientId" element={<ProtectedRoute requireRole><UploadPage /></ProtectedRoute>} />
+      <Route path="/results/:patientId" element={<ProtectedRoute requireRole><RiskResults /></ProtectedRoute>} />
+      <Route path="/chat/:patientId" element={<ProtectedRoute requireRole><ChatPage /></ProtectedRoute>} />
+      <Route path="/alerts" element={<ProtectedRoute requireRole><AlertsPage /></ProtectedRoute>} />
+    </Routes>
   );
-};
+}
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRouter />
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
