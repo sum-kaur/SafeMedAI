@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, AlertTriangle, Bell, ArrowRight, Plus, CheckCircle, Loader2, Shield, Download, Upload, MessageCircle, BarChart3, Phone, Stethoscope, Heart, Pill } from 'lucide-react';
+import { Users, FileText, AlertTriangle, Bell, ArrowRight, Plus, CheckCircle, Loader2, Shield, Download, Upload, MessageCircle, BarChart3, Phone, Stethoscope, Heart, Pill, ExternalLink, BookOpen } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -124,7 +124,20 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
               );
             })}
           </div>
-          <RecentPatientsList stats={stats} navigate={navigate} />
+          {/* Practitioner Patient Cards with Upload/Analysis/Score */}
+          {stats?.recent_patients?.length > 0 && (
+            <div className="space-y-5 mb-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-medium" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Recent Patients</h2>
+                <Button data-testid="view-all-patients-btn" variant="ghost" onClick={() => navigate('/patients')} className="text-sm" style={{ color: 'var(--sma-brand)' }}>
+                  View All <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+              {stats.recent_patients.map((p) => (
+                <PractitionerPatientCard key={p.patient_id} patient={p} navigate={navigate} />
+              ))}
+            </div>
+          )}
           {stats?.total_patients === 0 && (
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
@@ -150,7 +163,7 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Family Dashboard</h1>
-          <p className="text-base mt-1" style={{ color: 'var(--sma-text-secondary)' }}>Welcome back, {user?.name?.split(' ')[0]}. Here's what needs your attention.</p>
+          <p className="text-base mt-1" style={{ color: 'var(--sma-text-secondary)' }}>Here's what needs your attention.</p>
         </div>
         <div className="flex gap-3">
           {stats?.total_patients === 0 && (
@@ -269,6 +282,84 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
   );
 }
 
+/* ======================== PRACTITIONER PATIENT CARD ======================== */
+function PractitionerPatientCard({ patient: p, navigate }) {
+  const hasRisk = !!p.latest_risk_level;
+  const c = riskColor(p.latest_risk_level);
+  const RIcon = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
+  const isHighMed = p.latest_risk_level === 'high' || p.latest_risk_level === 'medium';
+
+  return (
+    <div className="rounded-xl shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--sma-surface)', border: hasRisk && isHighMed ? `2px solid ${c.border}` : '1px solid var(--sma-border)' }} data-testid={`practitioner-patient-card-${p.patient_id}`}>
+      {/* Risk Banner */}
+      {hasRisk && (
+        <div className="px-6 py-3 flex items-center gap-3" style={{ backgroundColor: c.bg, borderBottom: `1px solid ${c.border}` }}>
+          <RIcon className="w-5 h-5" style={{ color: c.text }} />
+          <div className="flex items-center gap-3 flex-1">
+            <span className="text-sm font-bold uppercase" style={{ color: c.text }}>{p.latest_risk_level} Risk</span>
+            <span className="text-sm" style={{ color: c.text }}>|</span>
+            <span className="text-sm font-semibold" style={{ color: c.text }}>Score: {p.latest_risk_score}</span>
+            <span className="text-sm" style={{ color: c.text }}>|</span>
+            <span className="text-xs" style={{ color: c.text }}>{p.latest_risk_level === 'high' ? 'Urgent review required' : p.latest_risk_level === 'medium' ? 'Review recommended' : 'Standard follow-up'}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)' }}>
+              <span className="text-sm font-semibold" style={{ color: hasRisk ? c.text : 'var(--sma-brand)' }}>{p.name?.[0]}</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</h3>
+              <p className="text-xs" style={{ color: 'var(--sma-text-muted)' }}>DOB: {p.dob || 'N/A'} {p.gender ? `| ${p.gender}` : ''}</p>
+            </div>
+          </div>
+          <Button data-testid={`prac-view-profile-${p.patient_id}`} onClick={() => navigate(`/patients/${p.patient_id}`)} variant="ghost" size="sm" className="text-xs rounded-full" style={{ color: 'var(--sma-brand)' }}>
+            Full Profile <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </div>
+
+        {/* Action Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          <Button data-testid={`prac-upload-${p.patient_id}`} onClick={() => navigate(`/upload/${p.patient_id}`)} className="h-10 rounded-lg font-medium text-xs" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>
+            <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Document
+          </Button>
+          <Button data-testid={`prac-results-${p.patient_id}`} onClick={() => navigate(`/results/${p.patient_id}`)} variant="outline" className="h-10 rounded-lg font-medium text-xs" style={{ borderColor: hasRisk ? c.border : 'var(--sma-border)', color: hasRisk ? c.text : 'var(--sma-text-secondary)' }}>
+            <BarChart3 className="w-3.5 h-3.5 mr-1.5" /> {hasRisk ? 'View Score' : 'No Score'}
+          </Button>
+          <Button data-testid={`prac-chat-${p.patient_id}`} onClick={() => navigate(`/chat/${p.patient_id}`)} variant="outline" className="h-10 rounded-lg font-medium text-xs" style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}>
+            <MessageCircle className="w-3.5 h-3.5 mr-1.5" /> Clinical Q&A
+          </Button>
+          <Button data-testid={`prac-history-${p.patient_id}`} onClick={() => navigate(`/history/${p.patient_id}`)} variant="outline" className="h-10 rounded-lg font-medium text-xs" style={{ borderColor: 'var(--sma-text-muted)', color: 'var(--sma-text-secondary)' }}>
+            <FileText className="w-3.5 h-3.5 mr-1.5" /> History
+          </Button>
+        </div>
+
+        {/* Deprescribing Guidelines Link - for medium/high risk */}
+        {isHighMed && (
+          <a
+            href="https://kiktools.amsterdamumc.org/falls/decision-tree/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid={`deprescribing-link-${p.patient_id}`}
+            className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5"
+            style={{ backgroundColor: '#EDE9FE', border: '1px solid #C4B5FD' }}
+          >
+            <BookOpen className="w-5 h-5 flex-shrink-0" style={{ color: '#5B21B6' }} />
+            <div className="flex-1">
+              <p className="text-xs font-semibold" style={{ color: '#5B21B6' }}>Medication Withdrawal Guidelines</p>
+              <p className="text-[10px]" style={{ color: '#7C3AED' }}>Amsterdam UMC CAREFREE decision tree for deprescribing fall-risk medications</p>
+            </div>
+            <ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#5B21B6' }} />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ======================== FAMILY PATIENT CARD ======================== */
 function FamilyPatientCard({ patient: p, navigate }) {
   const hasRisk = !!p.latest_risk_level;
@@ -358,50 +449,6 @@ function FamilyPatientCard({ patient: p, navigate }) {
 }
 
 /* ======================== SHARED COMPONENTS ======================== */
-function RecentPatientsList({ stats, navigate }) {
-  if (!stats?.recent_patients?.length) return null;
-  return (
-    <div className="rounded-xl shadow-sm p-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-medium" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Recent Patients</h2>
-        <Button data-testid="view-all-patients-btn" variant="ghost" onClick={() => navigate('/patients')} className="text-sm" style={{ color: 'var(--sma-brand)' }}>
-          View All <ArrowRight className="w-4 h-4 ml-1" />
-        </Button>
-      </div>
-      <div className="space-y-3">
-        {stats.recent_patients.map((p) => {
-          const isHighRisk = p.latest_risk_level === 'high';
-          const isMedRisk = p.latest_risk_level === 'medium';
-          return (
-            <button key={p.patient_id} data-testid={`patient-card-${p.patient_id}`} onClick={() => navigate(`/patients/${p.patient_id}`)}
-              className="w-full flex items-center justify-between p-4 rounded-lg transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-left"
-              style={{ backgroundColor: isHighRisk ? 'var(--sma-risk-high-bg)' : 'var(--sma-surface-alt)', border: isHighRisk ? '2px solid var(--sma-risk-high-border)' : '1px solid var(--sma-border)' }}>
-              <div className="flex items-center gap-3">
-                {isHighRisk && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--sma-risk-high-border)' }} data-testid={`high-risk-flag-${p.patient_id}`}>
-                    <AlertTriangle className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium" style={{ color: isHighRisk ? 'var(--sma-risk-high-text)' : 'var(--sma-text-primary)' }}>{p.name}</p>
-                    {isHighRisk && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>High Risk</span>}
-                    {isMedRisk && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ backgroundColor: 'var(--sma-risk-med-border)', color: 'white' }}>Medium</span>}
-                    {p.latest_risk_level === 'low' && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ backgroundColor: 'var(--sma-risk-low-border)', color: 'white' }}>Low</span>}
-                  </div>
-                  <p className="text-sm" style={{ color: isHighRisk ? 'var(--sma-risk-high-text)' : 'var(--sma-text-muted)' }}>
-                    DOB: {p.dob || 'Not set'}{p.latest_risk_score != null && <> | Score: {p.latest_risk_score}</>}
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="w-5 h-5 flex-shrink-0" style={{ color: isHighRisk ? 'var(--sma-risk-high-text)' : 'var(--sma-text-muted)' }} />
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function Disclaimer() {
   return (
