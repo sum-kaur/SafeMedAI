@@ -125,7 +125,13 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
             })}
           </div>
           <RecentPatientsList stats={stats} navigate={navigate} />
-          {stats?.total_patients === 0 && <EmptyState onSeed={null} />}
+          {stats?.total_patients === 0 && (
+            <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
+              <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
+              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No patients yet</h3>
+              <p className="mb-4" style={{ color: 'var(--sma-text-secondary)' }}>Add a patient or load demo data to get started</p>
+            </div>
+          )}
           <Disclaimer />
         </>
       )}
