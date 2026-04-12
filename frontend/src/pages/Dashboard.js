@@ -153,7 +153,7 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
             </Button>
           )}
           <Button data-testid="add-patient-btn" onClick={() => navigate('/patients')} className="h-11 px-5 rounded-full font-medium hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-            <Plus className="w-4 h-4 mr-2" /> Add Patient
+            <Plus className="w-4 h-4 mr-2" /> Add Family Member
           </Button>
         </div>
       </div>
@@ -221,10 +221,10 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
           {stats?.total_patients === 0 && (
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Heart className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-accent)' }} />
-              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No patients added yet</h3>
+              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No family members added yet</h3>
               <p className="mb-4 text-sm" style={{ color: 'var(--sma-text-secondary)' }}>Add your loved one's details and upload their hospital discharge summary to get started</p>
               <Button data-testid="family-add-patient-btn" onClick={() => navigate('/patients')} className="h-12 px-6 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                <Plus className="w-4 h-4 mr-2" /> Add Your First Patient
+                <Plus className="w-4 h-4 mr-2" /> Add Your First Family Member
               </Button>
             </div>
           )}
