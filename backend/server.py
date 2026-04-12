@@ -320,6 +320,7 @@ class PatientCreate(BaseModel):
     gender: Optional[str] = None
     emergency_contact: Optional[str] = None
     gp_details: Optional[str] = None
+    gp_phone: Optional[str] = None
     allergies: Optional[List[str]] = []
     medical_history: Optional[str] = None
 
@@ -329,6 +330,7 @@ class PatientUpdate(BaseModel):
     gender: Optional[str] = None
     emergency_contact: Optional[str] = None
     gp_details: Optional[str] = None
+    gp_phone: Optional[str] = None
     allergies: Optional[List[str]] = None
     medical_history: Optional[str] = None
 
@@ -468,6 +470,7 @@ async def create_patient(body: PatientCreate, request: Request):
     doc = {
         "patient_id": patient_id, "name": body.name, "dob": body.dob, "gender": body.gender,
         "emergency_contact": body.emergency_contact, "gp_details": body.gp_details,
+        "gp_phone": body.gp_phone,
         "allergies": body.allergies or [], "medical_history": body.medical_history,
         "created_by": user["user_id"], "linked_users": [user["user_id"]],
         "created_at": datetime.now(timezone.utc).isoformat()

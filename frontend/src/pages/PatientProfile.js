@@ -39,6 +39,7 @@ export default function PatientProfile() {
         gender: res.data.patient?.gender || '',
         emergency_contact: res.data.patient?.emergency_contact || '',
         gp_details: res.data.patient?.gp_details || '',
+        gp_phone: res.data.patient?.gp_phone || '',
         allergies: (res.data.patient?.allergies || []).join(', '),
         medical_history: res.data.patient?.medical_history || '',
       });
@@ -186,6 +187,7 @@ export default function PatientProfile() {
                     <div><Label className="text-xs">Gender</Label><Input data-testid="edit-gender-input" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="mt-1 h-9" /></div>
                     <div><Label className="text-xs">Emergency Contact</Label><Input data-testid="edit-emergency-input" value={form.emergency_contact} onChange={e => setForm({ ...form, emergency_contact: e.target.value })} className="mt-1 h-9" /></div>
                     <div><Label className="text-xs">GP / Doctor</Label><Input data-testid="edit-gp-input" value={form.gp_details} onChange={e => setForm({ ...form, gp_details: e.target.value })} className="mt-1 h-9" /></div>
+                    <div><Label className="text-xs">GP Contact Number</Label><Input data-testid="edit-gp-phone-input" type="tel" value={form.gp_phone} onChange={e => setForm({ ...form, gp_phone: e.target.value })} placeholder="e.g. 03 9123 4567" className="mt-1 h-9" /></div>
                     <div><Label className="text-xs">Allergies (comma-separated)</Label><Input data-testid="edit-allergies-input" value={form.allergies} onChange={e => setForm({ ...form, allergies: e.target.value })} className="mt-1 h-9" placeholder="e.g. Penicillin, Sulfa" /></div>
                     <div><Label className="text-xs">Medical History</Label><Textarea data-testid="edit-history-input" value={form.medical_history} onChange={e => setForm({ ...form, medical_history: e.target.value })} className="mt-1" rows={3} /></div>
                   </div>
@@ -200,7 +202,11 @@ export default function PatientProfile() {
                     {patient?.gp_details && (
                       <div className="flex items-start gap-3">
                         <Stethoscope className="w-4 h-4 mt-1 flex-shrink-0" style={{ color: 'var(--sma-text-muted)' }} />
-                        <div><p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--sma-text-muted)' }}>GP / Doctor</p><p className="text-sm" style={{ color: 'var(--sma-text-primary)' }}>{patient.gp_details}</p></div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--sma-text-muted)' }}>GP / Doctor</p>
+                          <p className="text-sm" style={{ color: 'var(--sma-text-primary)' }}>{patient.gp_details}</p>
+                          {patient.gp_phone && <p className="text-sm mt-0.5" style={{ color: 'var(--sma-brand)' }}>{patient.gp_phone}</p>}
+                        </div>
                       </div>
                     )}
                     {patient?.allergies?.length > 0 && (
