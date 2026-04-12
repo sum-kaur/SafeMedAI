@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,8 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function PatientsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isFamily = user?.role === 'family_carer';
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -57,21 +60,21 @@ export default function PatientsPage() {
       <main className="flex-1 p-8">
         <div className="max-w-5xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Patients</h1>
+            <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'My Family' : 'Patients'}</h1>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button data-testid="create-patient-btn" className="h-11 px-5 rounded-full font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                  <Plus className="w-4 h-4 mr-2" /> Add Patient
+                  <Plus className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One' : 'Add Patient'}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md" data-testid="create-patient-dialog">
                 <DialogHeader>
-                  <DialogTitle style={{ fontFamily: 'Outfit' }}>New Patient</DialogTitle>
+                  <DialogTitle style={{ fontFamily: 'Outfit' }}>{isFamily ? 'Add Loved One' : 'New Patient'}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
-                    <Input id="name" data-testid="patient-name-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Enter patient full name" className="mt-1" />
+                    <Input id="name" data-testid="patient-name-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={isFamily ? "Enter loved one's full name" : "Enter patient full name"} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="dob">Date of Birth</Label>
@@ -90,7 +93,7 @@ export default function PatientsPage() {
                     <Input id="gp" data-testid="patient-gp-input" value={form.gp_details} onChange={e => setForm({ ...form, gp_details: e.target.value })} placeholder="Doctor name and practice" className="mt-1" />
                   </div>
                   <Button data-testid="save-patient-btn" onClick={handleCreate} disabled={creating} className="w-full h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Patient'}
+                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : isFamily ? 'Add Loved One' : 'Create Patient'}
                   </Button>
                 </div>
               </DialogContent>
@@ -100,7 +103,7 @@ export default function PatientsPage() {
           <div className="mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--sma-text-muted)' }} />
-              <Input data-testid="search-patients-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search patients..." className="pl-10 h-11 rounded-lg" style={{ borderColor: 'var(--sma-border)' }} />
+              <Input data-testid="search-patients-input" value={search} onChange={e => setSearch(e.target.value)} placeholder={isFamily ? "Search loved ones..." : "Search patients..."} className="pl-10 h-11 rounded-lg" style={{ borderColor: 'var(--sma-border)' }} />
             </div>
           </div>
 
@@ -109,8 +112,8 @@ export default function PatientsPage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
-              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No patients found</h3>
-              <p style={{ color: 'var(--sma-text-secondary)' }}>Create a new patient to get started</p>
+              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'No loved ones found' : 'No patients found'}</h3>
+              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one to get started' : 'Create a new patient to get started'}</p>
             </div>
           ) : (
             <div className="space-y-3">

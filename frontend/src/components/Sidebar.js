@@ -15,7 +15,7 @@ export default function Sidebar() {
 
   const links = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/patients', icon: Users, label: isPractitioner ? 'Patients' : 'My Patients' },
+    { to: '/patients', icon: Users, label: isPractitioner ? 'Patients' : 'My Family' },
     { to: '/alerts', icon: Bell, label: 'Alerts' },
     ...(isPractitioner ? [{ to: '/admin', icon: Sliders, label: 'Scoring Config' }] : []),
     { to: '/settings', icon: Settings, label: 'Settings' },
