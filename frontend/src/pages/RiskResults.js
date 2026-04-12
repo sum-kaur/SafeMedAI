@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock, ExternalLink, BookOpen } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -219,12 +219,21 @@ export default function RiskResults() {
                       action: { bg: 'var(--sma-risk-med-bg)', text: 'var(--sma-risk-med-text)', icon: ArrowRight },
                       flag: { bg: 'var(--sma-risk-med-bg)', text: 'var(--sma-risk-med-text)', icon: Shield },
                       info: { bg: 'var(--sma-risk-low-bg)', text: 'var(--sma-risk-low-text)', icon: Info },
+                      resource: { bg: '#EDE9FE', text: '#5B21B6', icon: BookOpen },
                     }[rec.type] || { bg: 'var(--sma-surface-alt)', text: 'var(--sma-text-secondary)', icon: Info };
                     const RecIcon = recColors.icon;
                     return (
                       <div key={i} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: recColors.bg }} data-testid={`recommendation-${i}`}>
                         <RecIcon className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: recColors.text }} />
-                        <p className="text-sm font-medium" style={{ color: recColors.text }}>{rec.text}</p>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium" style={{ color: recColors.text }}>{rec.text}</p>
+                          {rec.url && (
+                            <a href={rec.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5"
+                              style={{ backgroundColor: recColors.text, color: 'white' }} data-testid={`resource-link-${i}`}>
+                              <ExternalLink className="w-3 h-3" /> Open Withdrawal Guidelines
+                            </a>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -232,6 +241,45 @@ export default function RiskResults() {
               </div>
             </div>
           </div>
+
+          {/* Clinical Withdrawal Guidelines - Practitioner Only */}
+          {isPractitioner && risk_result.risk_level !== 'low' && (
+            <div className="rounded-xl shadow-sm p-6 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '2px solid #8B5CF6' }} data-testid="withdrawal-guidelines-section">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#EDE9FE' }}>
+                  <BookOpen className="w-6 h-6" style={{ color: '#5B21B6' }} />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-medium mb-1" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+                    Medication Withdrawal Decision Tree
+                  </h2>
+                  <p className="text-sm mb-3" style={{ color: 'var(--sma-text-secondary)' }}>
+                    Amsterdam UMC CAREFREE evidence-based guidelines for withdrawing fall-risk medications. Covers benzodiazepines, antidepressants, antipsychotics, opioids, antiepileptics, diuretics, antihypertensives, sedative antihistamines, and overactive bladder medications.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {(risk_result.risk_factors || []).map((rf, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: '#EDE9FE', color: '#5B21B6' }}>
+                        {rf.medication}
+                      </span>
+                    ))}
+                  </div>
+                  <a
+                    href="https://kiktools.amsterdamumc.org/falls/decision-tree/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="withdrawal-guidelines-link"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    style={{ backgroundColor: '#5B21B6', color: 'white' }}
+                  >
+                    <ExternalLink className="w-4 h-4" /> Open Withdrawal Guidelines
+                  </a>
+                  <p className="text-xs mt-3" style={{ color: 'var(--sma-text-muted)' }}>
+                    Source: Amsterdam UMC CAREFREE / ADFICE_IT Project. Clinician review required before any medication changes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Discharge Info */}
           {parsed_summary && (

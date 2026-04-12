@@ -270,6 +270,7 @@ def generate_recommendations(risk_result: dict, role: str):
                 {"type": "action", "text": "Review anticholinergic burden - deprescribing assessment needed (clinician review required)"},
                 {"type": "action", "text": "Assess for anticholinergic side effects: confusion, falls risk, urinary retention, dry mouth"},
                 {"type": "flag", "text": "Multiple high-ACB medications identified - polypharmacy review indicated"},
+                {"type": "resource", "text": "Refer to Amsterdam UMC medication withdrawal decision tree for evidence-based tapering guidance", "url": "https://kiktools.amsterdamumc.org/falls/decision-tree/"},
             ]
         elif risk_level == "medium":
             recs = [
@@ -277,6 +278,7 @@ def generate_recommendations(risk_result: dict, role: str):
                 {"type": "action", "text": "Consider pharmacist medication reconciliation at next visit"},
                 {"type": "flag", "text": "Monitor for anticholinergic side effects"},
                 {"type": "info", "text": "Review if all current medications are still clinically indicated"},
+                {"type": "resource", "text": "Consult Amsterdam UMC withdrawal guidelines for fall-risk medication classes", "url": "https://kiktools.amsterdamumc.org/falls/decision-tree/"},
             ]
         else:
             recs = [
