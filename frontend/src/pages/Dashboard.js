@@ -158,6 +158,13 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
   const medRiskPatients = stats?.recent_patients?.filter(p => p.latest_risk_level === 'medium') || [];
   const hasAlerts = highRiskPatients.length > 0 || medRiskPatients.length > 0;
 
+  // Auto-redirect to upload if family user has exactly 1 patient
+  React.useEffect(() => {
+    if (!loading && stats?.recent_patients?.length === 1) {
+      navigate(`/upload/${stats.recent_patients[0].patient_id}`, { replace: true });
+    }
+  }, [loading, stats, navigate]);
+
   return (
     <>
       <div className="flex items-center justify-between mb-8">
