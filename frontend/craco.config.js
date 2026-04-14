@@ -61,6 +61,16 @@ let webpackConfig = {
 };
 
 webpackConfig.devServer = (devServerConfig) => {
+  // Proxy /api requests to the backend so cookies are same-origin (fixes SameSite cookie issues)
+  devServerConfig.proxy = [
+    {
+      context: ['/api'],
+      target: process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000',
+      changeOrigin: true,
+      secure: false,
+    },
+  ];
+
   // Add health check endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
     const originalSetupMiddlewares = devServerConfig.setupMiddlewares;
