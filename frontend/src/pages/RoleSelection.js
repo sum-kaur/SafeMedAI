@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function RoleSelection() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, demoLogin } = useAuth();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const hasExistingRole = !!user?.role;
@@ -50,6 +50,8 @@ export default function RoleSelection() {
     },
   ];
 
+  const isDemoUser = user?.email?.endsWith('@safemedai.app');
+
   const handleSelect = async (roleId) => {
     if (roleId === currentRole) {
       navigate('/dashboard', { replace: true });
@@ -57,10 +59,16 @@ export default function RoleSelection() {
     }
     setSaving(true);
     try {
-      const res = await axios.put(`${API}/users/role`, { role: roleId }, { withCredentials: true });
-      updateUser(res.data);
       const label = roleId === 'medical_practitioner' ? 'Practitioner' : 'Family / Carer';
-      toast.success(`Switched to ${label} profile`);
+      if (isDemoUser) {
+        // Demo users: switch to the correct demo account (separate session + separate data)
+        await demoLogin(roleId);
+        toast.success(`Switched to ${label} demo`);
+      } else {
+        const res = await axios.put(`${API}/users/role`, { role: roleId }, { withCredentials: true });
+        updateUser(res.data);
+        toast.success(`Switched to ${label} profile`);
+      }
       navigate('/dashboard', { replace: true });
     } catch (err) {
       toast.error('Failed to switch profile');
@@ -76,7 +84,7 @@ export default function RoleSelection() {
         <div className="text-center mb-8">
           <Shield className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--sma-brand)' }} />
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-            {hasExistingRole ? 'Switch Profile' : `Welcome, ${user?.name?.split(' ')[0]}`}
+            {hasExistingRole ? 'Switch Profile' : `Welcome, ${(user?.name || '').replace(/^Dr\.?\s+/i, '').trim().split(' ')[0] || 'there'}`}
           </h1>
           <p className="text-base" style={{ color: 'var(--sma-text-secondary)' }}>
             {hasExistingRole
@@ -149,7 +157,10 @@ export default function RoleSelection() {
         )}
 
         <p className="mt-6 text-xs text-center" style={{ color: 'var(--sma-text-muted)' }}>
-          Both profiles use the same Google account ({user?.email}). Patient data you create under each profile is accessible when you switch back.
+          {isDemoUser
+            ? 'Demo accounts are separate — each role has its own data and patient records.'
+            : `Both profiles share the same account (${user?.email}). Data is kept separate between roles.`
+          }
         </p>
       </div>
     </div>

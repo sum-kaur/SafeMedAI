@@ -233,7 +233,7 @@ async def send_risk_notification_email(user_email: str, user_name: str, patient_
     color = risk_colors.get(risk_level, "#5C6661")
     html = f"""
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-      <div style="text-align:center;padding:16px;background:#3B7062;border-radius:8px 8px 0 0;">
+      <div style="text-align:center;padding:16px;background:#1E3A5F;border-radius:8px 8px 0 0;">
         <h1 style="color:#fff;margin:0;font-size:22px;">SafeMedAI Alert</h1>
       </div>
       <div style="padding:24px;background:#FAF9F6;border:1px solid #E6E4DE;border-top:none;border-radius:0 0 8px 8px;">

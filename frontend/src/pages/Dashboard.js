@@ -90,7 +90,9 @@ export default function Dashboard() {
 
 /* ======================== PRACTITIONER DASHBOARD ======================== */
 function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onExport, navigate, user }) {
-  const firstName = user?.name?.split(' ')[0] || 'Doctor';
+  // Strip any "Dr" prefix — the greeting template adds it explicitly
+  const cleanName = (user?.name || '').replace(/^Dr\.?\s+/i, '').trim();
+  const firstName = cleanName.split(' ')[0] || 'Doctor';
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
@@ -258,7 +260,9 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
 
 /* ======================== FAMILY DASHBOARD ======================== */
 function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
-  const firstName = user?.name?.split(' ')[0] || 'there';
+  // Strip any "Dr" prefix — families are never addressed as "Dr"
+  const cleanName = (user?.name || '').replace(/^Dr\.?\s+/i, '').trim();
+  const firstName = cleanName.split(' ')[0] || 'there';
   const [medDismissed, setMedDismissed] = useState(false);
   const highRiskPatients = stats?.recent_patients?.filter(p => p.latest_risk_level === 'high') || [];
   const medRiskPatients  = stats?.recent_patients?.filter(p => p.latest_risk_level === 'medium') || [];
