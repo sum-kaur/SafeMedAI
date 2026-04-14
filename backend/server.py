@@ -379,11 +379,11 @@ async def demo_login(request: Request):
     if role not in ["medical_practitioner", "family_carer"]:
         raise HTTPException(status_code=400, detail="Invalid role")
     demo_email = f"demo_{role}@safemedai.app"
-    demo_name = "Dr Demo Practitioner" if role == "medical_practitioner" else "Demo Family Carer"
+    demo_name = "Priya Sharma" if role == "medical_practitioner" else "Sunita Kaur"
     existing = await db.users.find_one({"email": demo_email}, {"_id": 0})
     if existing:
         user_id = existing["user_id"]
-        await db.users.update_one({"email": demo_email}, {"$set": {"role": role}})
+        await db.users.update_one({"email": demo_email}, {"$set": {"role": role, "name": demo_name}})
     else:
         user_id = f"demo_{uuid.uuid4().hex[:12]}"
         await db.users.insert_one({
@@ -1137,12 +1137,22 @@ async def _insert_seed_records(user, dataset):
     return patients
 
 @api_router.post("/seed")
-async def seed_data(request: Request):
+async def seed_data(request: Request, force: bool = False):
     user = await get_current_user(request)
     existing = await db.patients.count_documents({"created_by": user["user_id"]})
     if existing > 0:
+        if not force:
+            existing_patients = await db.patients.find({"created_by": user["user_id"]}, {"_id": 0, "patient_id": 1}).to_list(100)
+            return {"message": "Demo data already loaded", "patients": [p["patient_id"] for p in existing_patients]}
+        # force=True: wipe existing demo data and re-seed
         existing_patients = await db.patients.find({"created_by": user["user_id"]}, {"_id": 0, "patient_id": 1}).to_list(100)
-        return {"message": "Demo data already loaded", "patients": [p["patient_id"] for p in existing_patients]}
+        patient_ids = [p["patient_id"] for p in existing_patients]
+        await db.patients.delete_many({"created_by": user["user_id"]})
+        await db.documents.delete_many({"created_by": user["user_id"]})
+        if patient_ids:
+            await db.parsed_summaries.delete_many({"patient_id": {"$in": patient_ids}})
+            await db.risk_results.delete_many({"patient_id": {"$in": patient_ids}})
+        await db.alerts.delete_many({"user_id": user["user_id"]})
     role = user.get("role", "family_carer")
     dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
     patients = await _insert_seed_records(user, dataset)

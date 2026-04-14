@@ -5,8 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Users, FileText, AlertTriangle, Bell, Plus, CheckCircle,
-  Loader2, Shield, Download, Phone,
-  Stethoscope, Heart, Pill, Activity, Upload, MessageCircle, TrendingUp,
+  Loader2, Shield, Download, Heart, Activity,
   ChevronRight, X
 } from 'lucide-react';
 import axios from 'axios';
@@ -36,11 +35,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleSeed = async () => {
+  const handleSeed = async (force = false) => {
     setSeeding(true);
     try {
-      await axios.post(`${API}/seed`, {}, { withCredentials: true });
-      toast.success('Demo data loaded successfully');
+      await axios.post(`${API}/seed${force ? '?force=true' : ''}`, {}, { withCredentials: true });
+      toast.success(force ? 'Demo data reset successfully' : 'Demo data loaded successfully');
       fetchStats();
     } catch {
       toast.error('Failed to load demo data');
@@ -81,7 +80,7 @@ export default function Dashboard() {
         ) : (
           <FamilyDashboard
             stats={stats} loading={loading} seeding={seeding}
-            onSeed={handleSeed} navigate={navigate} user={user}
+            onSeed={(force) => handleSeed(force)} navigate={navigate} user={user}
           />
         )}
       </main>
@@ -263,7 +262,6 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
   const [medDismissed, setMedDismissed] = useState(false);
   const highRiskPatients = stats?.recent_patients?.filter(p => p.latest_risk_level === 'high') || [];
   const medRiskPatients  = stats?.recent_patients?.filter(p => p.latest_risk_level === 'medium') || [];
-  const needAttentionCount = (stats?.high_risk || 0) + (stats?.medium_risk || 0);
 
   React.useEffect(() => {
     if (!loading && stats?.recent_patients?.length === 1) {
@@ -273,23 +271,35 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="max-w-3xl mx-auto animate-fade-in">
+      <div className="max-w-2xl mx-auto animate-fade-in">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-              Hi, {firstName}
-            </h1>
-          </div>
-          <div className="flex gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+            Hi, {firstName}
+          </h1>
+          <div className="flex gap-2">
+            {stats?.total_patients > 0 && (
+              <Button
+                data-testid="reset-demo-btn"
+                onClick={() => onSeed(true)}
+                disabled={seeding}
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 rounded-lg text-xs font-medium"
+                style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-muted)' }}
+              >
+                {seeding ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : null}
+                Reset Demo
+              </Button>
+            )}
             {stats?.total_patients === 0 && (
               <Button
                 data-testid="seed-demo-btn"
-                onClick={onSeed}
+                onClick={() => onSeed(false)}
                 disabled={seeding}
                 variant="outline"
-                className="h-10 px-4 rounded-xl text-sm font-medium"
+                className="h-9 px-4 rounded-xl text-sm font-medium"
                 style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}
               >
                 {seeding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
@@ -299,7 +309,7 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
             <Button
               data-testid="add-patient-btn"
               onClick={() => navigate('/patients')}
-              className="h-10 px-5 rounded-xl text-sm font-medium gap-2"
+              className="h-9 px-4 rounded-xl text-sm font-medium gap-2"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
               <Plus className="w-4 h-4" /> Add Loved One
@@ -317,29 +327,19 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
             {/* High-risk alert banner */}
             {highRiskPatients.length > 0 && (
               <div
-                className="mb-5 p-5 rounded-2xl"
-                style={{ backgroundColor: 'var(--sma-risk-high-bg)', border: '2px solid var(--sma-risk-high-border)' }}
+                className="mb-4 p-4 rounded-xl"
+                style={{ backgroundColor: 'var(--sma-risk-high-bg)', border: '1.5px solid var(--sma-risk-high-border)' }}
                 data-testid="high-risk-alert-banner"
               >
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-risk-high-bg)', border: '1.5px solid var(--sma-risk-high-border)' }}>
-                    <AlertTriangle className="w-5 h-5" style={{ color: 'var(--sma-risk-high-text)' }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-semibold mb-1" style={{ color: 'var(--sma-risk-high-text)', fontFamily: 'Outfit' }}>
-                      Urgent: Medication Review Needed
-                    </h2>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--sma-risk-high-text)' }}>
-                      <strong>{highRiskPatients.map(p => p.name).join(', ')}</strong> {highRiskPatients.length === 1 ? 'has' : 'have'} a high medication risk score. Please book a GP appointment and request a pharmacist medication review as soon as possible.
+                <div className="flex gap-3">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--sma-risk-high-text)' }} />
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: 'var(--sma-risk-high-text)', fontFamily: 'Outfit' }}>
+                      Medication review needed urgently
                     </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <Button data-testid="alert-book-gp-btn" size="sm" className="h-8 rounded-lg text-xs font-semibold" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
-                        <Phone className="w-3 h-3 mr-1.5" /> Book GP Appointment
-                      </Button>
-                      <Button data-testid="alert-call-pharmacist-btn" size="sm" className="h-8 rounded-lg text-xs font-semibold" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
-                        <Pill className="w-3 h-3 mr-1.5" /> Request Pharmacist Review
-                      </Button>
-                    </div>
+                    <p className="text-sm mt-0.5 leading-relaxed" style={{ color: 'var(--sma-risk-high-text)' }}>
+                      <strong>{highRiskPatients.map(p => p.name.split(' ')[0]).join(' and ')}</strong> {highRiskPatients.length === 1 ? 'has' : 'have'} a high medication risk score. Please book a GP appointment as soon as possible.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -348,54 +348,39 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
             {/* Medium-risk alert banner (dismissable) */}
             {medRiskPatients.length > 0 && !medDismissed && (
               <div
-                className="mb-5 p-5 rounded-2xl relative"
+                className="mb-4 p-4 rounded-xl relative"
                 style={{ backgroundColor: 'var(--sma-risk-med-bg)', border: '1px solid var(--sma-risk-med-border)' }}
                 data-testid="medium-risk-alert-banner"
               >
                 <button
                   onClick={() => setMedDismissed(true)}
-                  className="absolute top-4 right-4 rounded-md p-1 transition-colors"
+                  className="absolute top-3 right-3 rounded p-0.5"
                   style={{ color: 'var(--sma-risk-med-text)' }}
                   aria-label="Dismiss"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
-                <div className="flex gap-4 pr-6">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-risk-med-bg)', border: '1.5px solid var(--sma-risk-med-border)' }}>
-                    <Shield className="w-5 h-5" style={{ color: 'var(--sma-risk-med-text)' }} />
-                  </div>
+                <div className="flex gap-3 pr-5">
+                  <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--sma-risk-med-text)' }} />
                   <div>
-                    <h2 className="font-semibold mb-1" style={{ color: 'var(--sma-risk-med-text)', fontFamily: 'Outfit' }}>
-                      Medication Review Recommended
-                    </h2>
-                    <p className="text-sm" style={{ color: 'var(--sma-risk-med-text)' }}>
-                      <strong>{medRiskPatients.map(p => p.name).join(', ')}</strong> {medRiskPatients.length === 1 ? 'has' : 'have'} a medium risk score. Consider booking a GP appointment in the next 1–2 weeks.
+                    <p className="font-semibold text-sm" style={{ color: 'var(--sma-risk-med-text)', fontFamily: 'Outfit' }}>
+                      Medication review recommended
+                    </p>
+                    <p className="text-sm mt-0.5" style={{ color: 'var(--sma-risk-med-text)' }}>
+                      <strong>{medRiskPatients.map(p => p.name.split(' ')[0]).join(' and ')}</strong> {medRiskPatients.length === 1 ? 'has' : 'have'} a medium risk score. Book a GP or pharmacist review in the next 1–2 weeks.
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <StatCard icon={Users}         label="My Family"      value={stats?.total_patients || 0}  color="var(--sma-brand)"         bg="var(--sma-surface)" />
-              <StatCard icon={FileText}      label="Summaries"      value={stats?.total_documents || 0} color="var(--sma-brand)"         bg="var(--sma-surface)" />
-              <StatCard
-                icon={AlertTriangle}
-                label="Need Attention"
-                value={needAttentionCount}
-                color={needAttentionCount > 0 ? 'var(--sma-risk-high-text)' : 'var(--sma-brand)'}
-                bg={needAttentionCount > 0 ? 'var(--sma-risk-high-bg)' : 'var(--sma-surface)'}
-              />
-            </div>
-
             {/* Patient Cards */}
             {stats?.recent_patients?.length > 0 ? (
-              <div className="mb-8">
-                <h2 className="text-base font-semibold mb-4" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+              <div className="mb-6">
+                <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--sma-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   My Family
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {stats.recent_patients.map((p) => (
                     <FamilyPatientCard key={p.patient_id} patient={p} navigate={navigate} />
                   ))}
@@ -417,38 +402,6 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
                   </Button>
                 }
               />
-            )}
-
-            {/* Helpful Contacts */}
-            {stats?.total_patients > 0 && (
-              <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
-                <h2 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                  <Phone className="w-4 h-4" style={{ color: 'var(--sma-brand)' }} /> Helpful Contacts
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { icon: Stethoscope, label: 'Book GP Appointment', desc: 'Contact your usual GP for a medication review', color: 'var(--sma-brand)', iconBg: 'var(--sma-surface-alt)' },
-                    { icon: Pill,        label: 'Pharmacist Review',   desc: 'Ask your local pharmacy for a medicines check', color: 'var(--sma-accent)', iconBg: 'var(--sma-surface-alt)' },
-                    { icon: Phone,       label: 'Health Advice Line',  desc: 'Call 1800 022 222 for health advice (AU)',      color: 'var(--sma-risk-med-text)', iconBg: 'var(--sma-risk-med-bg)' },
-                    { icon: AlertTriangle, label: 'Emergency: 000',   desc: 'Call immediately for medical emergencies',      color: 'var(--sma-risk-high-text)', iconBg: 'var(--sma-risk-high-bg)' },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 p-3 rounded-xl"
-                      style={{ backgroundColor: 'var(--sma-surface-alt)' }}
-                      data-testid={`contact-card-${i}`}
-                    >
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.iconBg }}>
-                        <item.icon className="w-4 h-4" style={{ color: item.color }} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium" style={{ color: 'var(--sma-text-primary)' }}>{item.label}</p>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
 
             <Disclaimer />
@@ -577,71 +530,74 @@ function PractitionerPatientCard({ patient: p, navigate }) {
 
 /* ======================== FAMILY PATIENT CARD ======================== */
 function FamilyPatientCard({ patient: p, navigate }) {
-  const hasRisk  = !!p.latest_risk_level;
-  const c        = riskColor(p.latest_risk_level);
-  const RIcon    = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
+  const hasRisk    = !!p.latest_risk_level;
+  const c          = riskColor(p.latest_risk_level);
+  const isHighMed  = p.latest_risk_level === 'high' || p.latest_risk_level === 'medium';
+  const RIcon      = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
   const pFirstName = p.name?.split(' ')[0] || 'Your loved one';
+  const destination = hasRisk ? `/results/${p.patient_id}` : `/upload/${p.patient_id}`;
 
   const riskMsg = {
-    high:   `${pFirstName}'s medications include some that may interact or cause side effects in older adults. Please seek a medication review urgently.`,
-    medium: `${pFirstName}'s medications may need checking. Consider booking a GP or pharmacist review in the next 1–2 weeks.`,
-    low:    `${pFirstName}'s current medications appear to have a low risk profile. Keep attending scheduled follow-up appointments.`,
+    high:   `${pFirstName}'s medications include some that may cause side effects or interact in older adults. A GP review is needed urgently.`,
+    medium: `${pFirstName}'s medications may need checking. A GP or pharmacist review is recommended in the next 1–2 weeks.`,
+    low:    `${pFirstName}'s current medications appear low risk. Keep attending scheduled follow-up appointments.`,
   };
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}
+      className="rounded-xl overflow-hidden cursor-pointer"
+      style={{
+        backgroundColor: 'var(--sma-surface)',
+        border: isHighMed ? `1.5px solid ${c.border}` : '1px solid var(--sma-border)',
+        transition: 'box-shadow 0.15s',
+      }}
+      onClick={() => navigate(destination)}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
       data-testid={`family-patient-card-${p.patient_id}`}
     >
-      {hasRisk && <div className="h-1 w-full" style={{ backgroundColor: c.border }} />}
+      {isHighMed && <div className="h-0.5 w-full" style={{ backgroundColor: c.border }} />}
 
-      <div className="p-5">
-        {/* Patient Info */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold"
-              style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)', color: hasRisk ? c.text : 'var(--sma-brand)' }}
-            >
-              {p.name?.[0]}
-            </div>
-            <div>
-              <h3 className="font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</h3>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>
-                DOB: {p.dob || 'Not set'}{p.gender ? ` · ${p.gender}` : ''}
-              </p>
-            </div>
+      <div className="p-4">
+        {/* Header row */}
+        <div className="flex items-center gap-3 mb-3">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+            style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)', color: hasRisk ? c.text : 'var(--sma-brand)' }}
+          >
+            {p.name?.[0]}
           </div>
-          {hasRisk && (
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0"
-              style={{ backgroundColor: c.bg, color: c.text }}
-              data-testid={`patient-risk-banner-${p.patient_id}`}
-            >
-              <RIcon className="w-3.5 h-3.5" />
-              {p.latest_risk_level} · {p.latest_risk_score}
-            </span>
-          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-sm" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</span>
+              {hasRisk && (
+                <span
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                  style={{ backgroundColor: c.bg, color: c.text }}
+                  data-testid={`patient-risk-banner-${p.patient_id}`}
+                >
+                  <RIcon className="w-3 h-3" />
+                  {p.latest_risk_level}
+                </span>
+              )}
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>
+              {p.dob ? `DOB: ${p.dob}` : 'No DOB set'}{p.gender ? ` · ${p.gender}` : ''}
+            </p>
+          </div>
+          <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sma-text-muted)' }} />
         </div>
 
-        {/* Risk explanation — personalised */}
+        {/* Risk explanation */}
         {hasRisk && (
-          <div
-            className="p-4 rounded-xl mb-3 text-sm leading-relaxed"
-            style={{ backgroundColor: c.bg, color: c.text }}
+          <p
+            className="text-sm leading-relaxed px-1"
+            style={{ color: c.text }}
             data-testid={`risk-explanation-${p.patient_id}`}
           >
-            {riskMsg[p.latest_risk_level] || riskMsg.low}
-          </div>
+            {riskMsg[p.latest_risk_level]}
+          </p>
         )}
-
-        {/* Actions */}
-        <div className="grid grid-cols-3 gap-2">
-          <ActionBtn testId={`family-upload-${p.patient_id}`}         icon={Upload}       label="Upload"           onClick={() => navigate(`/upload/${p.patient_id}`)}   primary />
-          <ActionBtn testId={`family-view-analysis-${p.patient_id}`}  icon={TrendingUp}   label={hasRisk ? 'View Analysis' : 'No Analysis'} onClick={() => navigate(`/results/${p.patient_id}`)} riskColor={hasRisk ? c : null} />
-          <ActionBtn testId={`family-ask-questions-${p.patient_id}`}  icon={MessageCircle} label="Ask Questions"   onClick={() => navigate(`/chat/${p.patient_id}`)}     accent />
-        </div>
       </div>
     </div>
   );
