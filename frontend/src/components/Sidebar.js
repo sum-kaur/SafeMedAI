@@ -59,10 +59,23 @@ export default function Sidebar() {
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 
-  const linkClass = (isActive) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-      isActive ? '' : 'hover:-translate-y-0.5'
-    }`;
+  const linkStyle = (isActive) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    paddingTop: '10px',
+    paddingBottom: '10px',
+    paddingRight: '16px',
+    paddingLeft: '13px',           // 16px - 3px to compensate for left border
+    borderRadius: isActive ? '0 8px 8px 0' : '8px',
+    borderLeft: isActive ? '3px solid var(--sma-brand)' : '3px solid transparent',
+    backgroundColor: isActive ? 'var(--sma-surface-alt)' : 'transparent',
+    color: isActive ? 'var(--sma-brand)' : 'var(--sma-text-secondary)',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'background-color 0.15s, color 0.15s',
+    textDecoration: 'none',
+  });
 
   return (
     <aside className="w-64 min-h-screen flex flex-col border-r" style={{ backgroundColor: 'var(--sma-surface)', borderColor: 'var(--sma-border)' }} data-testid="sidebar">
@@ -71,43 +84,51 @@ export default function Sidebar() {
           <PillLogo size={32} />
           <span className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>SafeMedAI</span>
         </div>
-        {/* Active Profile Badge */}
+        {/* Role badge — neutral colours, no risk-colour borrowing */}
         <div className="mt-3 flex items-center gap-2 p-2 rounded-lg" style={{
-          backgroundColor: isPractitioner ? 'var(--sma-risk-low-bg)' : 'var(--sma-risk-med-bg)',
-          border: `1px solid ${isPractitioner ? 'var(--sma-risk-low-border)' : 'var(--sma-risk-med-border)'}`,
+          backgroundColor: 'var(--sma-surface-alt)',
+          border: '1px solid var(--sma-border)',
         }}>
           {isPractitioner
-            ? <Brain className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sma-risk-low-text)' }} />
-            : <Heart className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sma-risk-med-text)' }} />
+            ? <Brain className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sma-brand)' }} />
+            : <Heart className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sma-accent)' }} />
           }
-          <span className="text-xs font-semibold flex-1" style={{ color: isPractitioner ? 'var(--sma-risk-low-text)' : 'var(--sma-risk-med-text)' }}>
-            {isPractitioner ? 'Practitioner Profile' : 'Family / Carer Profile'}
+          <span className="text-xs font-medium flex-1" style={{ color: 'var(--sma-text-secondary)' }}>
+            {isPractitioner ? 'Practitioner' : 'Family / Carer'}
           </span>
         </div>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             data-testid={`nav-${link.label.toLowerCase().replace(/[^a-z]/g, '-')}`}
-            className={({ isActive }) => linkClass(isActive)}
-            style={({ isActive }) => ({
-              backgroundColor: isActive ? 'var(--sma-risk-low-bg)' : 'transparent',
-              color: isActive ? 'var(--sma-brand)' : 'var(--sma-text-secondary)',
-            })}
+            style={({ isActive }) => linkStyle(isActive)}
+            onMouseEnter={(e) => {
+              if (e.currentTarget.style.borderLeft === '3px solid transparent') {
+                e.currentTarget.style.backgroundColor = 'var(--sma-surface-alt)';
+                e.currentTarget.style.color = 'var(--sma-text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (e.currentTarget.style.borderLeft === '3px solid transparent') {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = 'var(--sma-text-secondary)';
+              }
+            }}
           >
-            <link.icon className="w-5 h-5" />
+            <link.icon className="w-5 h-5 flex-shrink-0" />
             {link.label}
           </NavLink>
         ))}
       </nav>
       <div className="p-4 border-t" style={{ borderColor: 'var(--sma-border)' }}>
-        <div className="flex items-center gap-3 px-2 mb-3">
+        <div className="flex items-center gap-3 px-1 mb-3">
           {user?.picture ? (
             <img src={user.picture} alt="" className="w-8 h-8 rounded-full" />
           ) : (
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--sma-brand)' }}>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-brand)' }}>
               <span className="text-sm font-medium text-white">{user?.name?.[0]}</span>
             </div>
           )}
@@ -119,8 +140,10 @@ export default function Sidebar() {
         <button
           data-testid="switch-profile-btn"
           onClick={() => navigate('/select-role')}
-          className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 cursor-pointer mb-2"
+          className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer mb-1.5 transition-colors duration-150"
           style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-brand)', border: '1px solid var(--sma-border)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--sma-border)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--sma-surface-alt)'; }}
         >
           <Repeat className="w-4 h-4" />
           Switch Profile
@@ -128,8 +151,10 @@ export default function Sidebar() {
         <button
           data-testid="logout-btn"
           onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm transition-all duration-200 hover:bg-red-50 cursor-pointer"
+          className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-150"
           style={{ color: 'var(--sma-risk-high-text)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--sma-risk-high-bg)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
         >
           <LogOut className="w-4 h-4" />
           Sign Out
