@@ -1,0 +1,247 @@
+DISCHARGE SUMMARY
+================================================================================
+Prepared in accordance with the Australian Commission on Safety and Quality in
+Health Care (ACSQHC) National Standard for Discharge Summaries (January 2024)
+================================================================================
+
+PATIENT DETAILS
+---------------
+Family name:       Nguyen
+Given name(s):     Patricia
+Date of birth:     12 April 1946
+Age:               78 years
+Sex:               Female
+Medicare number:   2345 67891 0
+Address:           14 Banksia Court, Pymble NSW 2073
+Phone:             (02) 9876 5432
+Next of kin:       Michael Nguyen (son) — 0412 345 678
+GP:                Dr Sandra Walsh, Pymble Family Medical Centre
+                   Ph: (02) 9144 8800   Fax: (02) 9144 8801
+
+ADMISSION DETAILS
+-----------------
+Hospital:          Royal North Shore Hospital, St Leonards NSW
+Ward:              4 West (Geriatric Medicine)
+Admitting unit:    Geriatric Medicine
+Admission date:    2 April 2026
+Discharge date:    9 April 2026
+Length of stay:    7 days
+Mode of discharge: Home with community support
+Discharge destination: Home
+
+PRESENTING COMPLAINT
+--------------------
+78-year-old female with known Alzheimer's dementia and urinary incontinence
+presenting with acute-on-chronic confusion, increased falls risk, and urinary
+tract infection.
+
+HISTORY OF PRESENTING ILLNESS
+------------------------------
+Patricia was brought in by her son following a 3-day history of worsening
+confusion, visual hallucinations, and two mechanical falls at home without loss
+of consciousness. She had been commenced on oxybutynin 5 mg twice daily by her
+GP six weeks prior for urinary urgency. Her family reported marked deterioration
+in cognition since starting oxybutynin.
+
+MSU confirmed Escherichia coli urinary tract infection (>10^8 CFU/L, sensitive
+to trimethoprim). MMSE on admission: 14/30 (baseline per family: ~20/30).
+
+PAST MEDICAL HISTORY
+--------------------
+1. Alzheimer's dementia (diagnosed 2021, managed by memory clinic)
+2. Urinary incontinence — urge type
+3. Hypertension
+4. Osteoporosis
+5. Gastro-oesophageal reflux disease (GORD)
+6. Chronic insomnia
+7. Type 2 diabetes mellitus (diet-controlled)
+
+ALLERGIES AND ADVERSE DRUG REACTIONS
+--------------------------------------
+Penicillin — anaphylaxis (confirmed, MedicAlert bracelet)
+Codeine — nausea and vomiting
+
+SOCIAL HISTORY
+--------------
+Lives alone in her own home. Son visits daily. Receives Home Care Package Level 3
+(domestic assistance, personal care, meals). Non-smoker. Alcohol: nil.
+Occupation (retired): Primary school teacher.
+
+EXAMINATION FINDINGS ON ADMISSION
+-----------------------------------
+Vitals: BP 148/88 mmHg, HR 82 bpm regular, Temp 37.9°C, SpO2 97% on air,
+        RR 16/min, BGL 6.8 mmol/L
+Weight: 58 kg   Height: 162 cm   BMI: 22.1
+GCS: 14/15 (confused)
+Cardiorespiratory: Dual heart sounds, no murmurs. Clear chest.
+Abdomen: Soft, mild suprapubic tenderness. No guarding.
+Neurological: No focal deficits. Increased tone bilateral upper limbs.
+Skin: Dry mucous membranes. No pressure injuries.
+
+INVESTIGATIONS
+--------------
+Bloods (02/04/2026):
+  FBC:         Hb 121 g/L (low-normal), WCC 11.4 x10^9/L (mildly elevated)
+  CRP:         48 mg/L (elevated)
+  UEC:         Na 138, K 4.1, Cr 82 umol/L, eGFR 62 mL/min/1.73m²
+  LFTs:        Within normal limits
+  BSL:         6.8 mmol/L
+  Urine MCS:   E. coli >10^8 CFU/L — sensitive to trimethoprim, nitrofurantoin
+
+Imaging:
+  CT Brain (03/04/2026): Generalised cortical atrophy consistent with
+    Alzheimer's dementia. No acute intracranial pathology. No haemorrhage.
+  CXR (02/04/2026): No acute cardiopulmonary process.
+
+PROBLEMS AND DIAGNOSES
+-----------------------
+Primary:
+  1. Acute confusional state (delirium) — precipitated by anticholinergic
+     drug toxicity (oxybutynin) and urinary tract infection
+  2. Urinary tract infection — E. coli, uncomplicated
+
+Secondary:
+  3. Alzheimer's dementia — exacerbated
+  4. Falls risk — high (2 falls prior to admission)
+  5. Hypertension — stable
+  6. Osteoporosis — continued management
+
+CLINICAL COURSE IN HOSPITAL
+-----------------------------
+Oxybutynin was ceased on day 1 of admission given high anticholinergic burden
+and clear temporal relationship with cognitive decline. Geriatrician review
+confirmed this medication is inappropriate in elderly patients with dementia
+(Beers Criteria 2023, PIMs in Older Adults).
+
+UTI treated with trimethoprim 300 mg nocte for 7 days (commenced 02/04/2026).
+MMSE improved to 19/30 by day 5 after oxybutynin cessation.
+
+Occupational therapy assessment: home safety review arranged, grab rails
+recommended for bathroom.
+
+Physiotherapy: falls risk assessment — HIGH risk. Balance and strength program
+commenced. Referral to community physiotherapy made.
+
+Geriatric pharmacist reviewed all medications for anticholinergic burden:
+  - Oxybutynin ceased (ACB score 3 — high)
+  - Amitriptyline flagged — ACB score 3, continued for neuropathic pain but
+    dose reduced from 50 mg to 25 mg nocte. GP to review for cessation.
+  - Promethazine PRN ceased — replaced with melatonin 2 mg nocte for sleep
+  - Remainder of medications reviewed — no further high-ACB agents identified
+
+Falls prevention: Vitamin D 1000 IU daily added. Calcium supplementation
+reviewed (dietary intake adequate — no supplement added).
+
+MEDICATIONS ON DISCHARGE
+--------------------------
+The following medications are prescribed at the time of discharge:
+
+1.  Donepezil (ARICEPT) 10 mg — oral tablet — once daily at night
+    Indication: Alzheimer's dementia
+    Status: CONTINUING (no change)
+
+2.  Amitriptyline 25 mg — oral tablet — once daily at night
+    Indication: Neuropathic pain / insomnia
+    Status: DOSE REDUCED (from 50 mg nocte) — HIGH anticholinergic burden
+    NOTE: GP to review with aim to cease. Consider nortriptyline or
+    gabapentin as alternatives if analgesia required.
+
+3.  Irbesartan (AVAPRO) 150 mg — oral tablet — once daily in morning
+    Indication: Hypertension
+    Status: CONTINUING (no change)
+
+4.  Alendronate (FOSAMAX) 70 mg — oral tablet — once weekly (Monday)
+    Indication: Osteoporosis
+    Status: CONTINUING (no change)
+    Take with full glass of water 30 minutes before food. Remain upright.
+
+5.  Pantoprazole (SOMAC) 40 mg — oral tablet — once daily in morning
+    Indication: GORD
+    Status: CONTINUING (no change)
+
+6.  Melatonin (CIRCADIN) 2 mg — modified-release oral tablet — once daily
+    30 minutes before bed
+    Indication: Insomnia
+    Status: NEW — started in hospital to replace ceased promethazine
+
+7.  Vitamin D3 (OSTELIN) 1000 IU — oral capsule — once daily
+    Indication: Falls prevention, bone health
+    Status: NEW — started in hospital
+
+8.  Trimethoprim 300 mg — oral tablet — once daily at night
+    Indication: Urinary tract infection (E. coli)
+    Status: NEW — Day 1 of 7 (commenced 02/04/2026, complete 08/04/2026)
+    NOTE: Course already completed at time of discharge.
+
+CEASED MEDICATIONS
+------------------
+The following medications have been ceased during this admission:
+
+1.  Oxybutynin (DITROPAN) 5 mg twice daily
+    Reason: HIGH anticholinergic burden (ACB score 3). Inappropriate in
+    dementia. Associated with acute cognitive decline and delirium.
+    DO NOT RECOMMENCE without specialist review.
+
+2.  Promethazine (PHENERGAN) 25 mg nocte PRN
+    Reason: HIGH anticholinergic burden (ACB score 3). Beers Criteria
+    medication — strongly inappropriate in patients aged 65+.
+    Replaced with melatonin 2 mg nocte.
+
+FOLLOW-UP ARRANGEMENTS
+-----------------------
+1.  GP (Dr Sandra Walsh): within 5 days of discharge — medication reconciliation,
+    amitriptyline review, BP monitoring
+    Appointment booked: 14 April 2026, 10:30 am
+
+2.  Memory Clinic (Royal North Shore): 6 weeks — cognitive reassessment post
+    anticholinergic medication withdrawal
+    Referral sent: 09/04/2026
+
+3.  Community Physiotherapy: within 2 weeks — falls prevention program
+    Referral sent: 09/04/2026
+
+4.  Occupational Therapy (community): home safety assessment within 2 weeks
+    Referral sent: 09/04/2026
+
+5.  Aged Care Assessment Team (ACAT): referral for Home Care Package upgrade
+    review (Level 3 → Level 4 consideration)
+    Referral sent: 09/04/2026
+
+INFORMATION PROVIDED TO PATIENT AND FAMILY
+-------------------------------------------
+Patricia and her son Michael were counselled regarding:
+- The reason oxybutynin was ceased and its effect on cognition
+- Signs of delirium and when to seek medical attention
+- Falls prevention strategies
+- Medication management — Webster-pak recommended
+- Community support services available
+
+Written medication list provided. My Health Record updated.
+
+OUTSTANDING ISSUES / ALERTS FOR GP
+------------------------------------
+1. MEDICATION ALERT: Amitriptyline 25 mg nocte — HIGH anticholinergic burden
+   (ACB score 3). Commenced decades ago for neuropathic pain. Please review
+   for cessation or substitution with a lower-risk agent (e.g., gabapentin,
+   pregabalin, or duloxetine for neuropathic pain).
+
+2. Cognitive decline was significantly improved after oxybutynin cessation,
+   supporting anticholinergic aetiology of superimposed delirium.
+
+3. Falls risk remains HIGH. Community physio referral in place.
+
+4. Consider Webster-pak or blister pack dispensing to support medication
+   adherence given cognitive impairment.
+
+RESPONSIBLE CLINICIAN
+---------------------
+Dr Aisha Patel MBBS FRACP
+Staff Specialist, Geriatric Medicine
+Royal North Shore Hospital
+Phone: (02) 9926 7111
+Pager: 4521
+Dictated: 09 April 2026
+Authorised: 09 April 2026
+================================================================================
+END OF DISCHARGE SUMMARY
+================================================================================

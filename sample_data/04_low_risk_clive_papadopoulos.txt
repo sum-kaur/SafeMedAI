@@ -1,0 +1,249 @@
+DISCHARGE SUMMARY
+================================================================================
+Prepared in accordance with the Australian Commission on Safety and Quality in
+Health Care (ACSQHC) National Standard for Discharge Summaries (January 2024)
+================================================================================
+
+PATIENT DETAILS
+---------------
+Family name:       Papadopoulos
+Given name(s):     Clive George
+Date of birth:     14 February 1950
+Age:               76 years
+Sex:               Male
+Medicare number:   5678 90134 3
+Address:           8 Oleander Avenue, Kenmore QLD 4069
+Phone:             (07) 3378 5542
+Next of kin:       Diana Papadopoulos (wife) — (07) 3378 5542
+GP:                Dr Peter Halliday, Kenmore Family Practice
+                   Ph: (07) 3378 9900   Fax: (07) 3378 9901
+
+ADMISSION DETAILS
+-----------------
+Hospital:          The Prince Charles Hospital, Chermside QLD
+Ward:              11 East (Respiratory Medicine)
+Admitting unit:    Respiratory Medicine
+Admission date:    3 April 2026
+Discharge date:    7 April 2026
+Length of stay:    4 days
+Mode of discharge: Home
+Discharge destination: Home
+
+PRESENTING COMPLAINT
+--------------------
+76-year-old male with known COPD presenting with acute exacerbation — increased
+dyspnoea, productive cough, and wheeze for 5 days.
+
+HISTORY OF PRESENTING ILLNESS
+------------------------------
+Clive presented with a 5-day history of worsening breathlessness (NYHA Class III
+on admission), increased sputum production (yellow-green), and audible wheeze.
+He has moderate COPD (GOLD Stage II, FEV1 55% predicted). He reported good
+adherence to his regular inhalers. He had a respiratory tract infection 2 weeks
+prior managed by GP with amoxicillin (completed course).
+
+He denied fever, haemoptysis, chest pain, or leg swelling. No recent travel.
+Oxygen saturation on arrival 90% on room air.
+
+PAST MEDICAL HISTORY
+--------------------
+1. Chronic obstructive pulmonary disease (COPD) — GOLD Stage II, moderate
+2. Hypertension — well controlled
+3. Benign prostatic hyperplasia — mild symptoms
+4. Osteoarthritis — bilateral knees, managed conservatively
+5. Previous appendicectomy (1978)
+
+ALLERGIES AND ADVERSE DRUG REACTIONS
+--------------------------------------
+Nil known
+
+SOCIAL HISTORY
+--------------
+Lives with wife Diana in own home. Two adult children in Brisbane.
+Retired construction project manager. Ex-smoker — ceased 1998 (30 pack-year
+history). Alcohol: occasional, less than 2 standard drinks per week.
+Drives own vehicle. Active bowler (lawn bowls 3x weekly when well).
+
+EXAMINATION FINDINGS ON ADMISSION
+-----------------------------------
+Vitals: BP 138/82 mmHg, HR 96 bpm regular, Temp 37.2°C,
+        SpO2 90% on air → 96% on 2 L/min O2, RR 22/min
+Weight: 81 kg   Height: 176 cm   BMI: 26.1
+Respiratory: Bilateral expiratory wheeze, reduced air entry bilateral bases.
+             No crackles. Accessory muscle use mild.
+Cardiovascular: Regular rhythm. No murmurs. No peripheral oedema.
+Abdomen: Soft, non-tender. Mild BPH symptoms on questioning.
+ENT: Nasal congestion. No tonsillar enlargement.
+
+INVESTIGATIONS
+--------------
+Bloods (03/04/2026):
+  FBC:         Hb 148 g/L, WCC 9.8 x10^9/L (mildly elevated), Plt 231 x10^9/L
+  UEC:         Na 141, K 4.2, Cr 91 umol/L, eGFR 72 mL/min/1.73m²
+  CRP:         38 mg/L (elevated — infective exacerbation)
+  LFTs:        Within normal limits
+  Theophylline level: Not applicable (not on theophylline)
+
+Imaging:
+  CXR (03/04/2026): Hyperinflation consistent with COPD. No consolidation.
+    No pneumothorax. No pleural effusion.
+
+Spirometry (outpatient, 2025):
+  FEV1: 55% predicted, FEV1/FVC ratio 0.62 — confirms moderate COPD (GOLD II)
+
+Sputum MCS (04/04/2026): Haemophilus influenzae — sensitive to amoxicillin-
+  clavulanate, doxycycline, trimethoprim. No Pseudomonas. No AFBs.
+
+PROBLEMS AND DIAGNOSES
+-----------------------
+Primary:
+  1. Acute exacerbation of COPD — infective (Haemophilus influenzae)
+
+Secondary:
+  2. Hypertension — well controlled
+  3. Benign prostatic hyperplasia — stable, mild
+  4. Osteoarthritis bilateral knees — managed conservatively
+
+CLINICAL COURSE IN HOSPITAL
+-----------------------------
+Managed with controlled oxygen therapy (target SpO2 88–92%), nebulised
+salbutamol 2.5 mg 4-hourly (reduced to 6-hourly on day 3), ipratropium
+bromide 500 mcg 6-hourly. Prednisolone 40 mg daily commenced for 5 days
+(completing day 2 at discharge — 3 remaining days prescribed as outpatient).
+
+Antibiotic: Amoxicillin-clavulanate 875/125 mg BD commenced (day 1) given
+prior amoxicillin course and Haemophilus influenzae on sputum — 7-day course.
+
+Chest physiotherapy daily: mucus clearance techniques taught.
+
+Respiratory improved steadily. By day 3, weaned off supplemental oxygen.
+SpO2 94% on room air at discharge. Ambulating independently.
+
+Pharmacist medication review: low overall medication burden. Tamsulosin
+noted for BPH — appropriate, no interaction concerns with current regimen.
+Overall medication profile LOW risk — no high-burden anticholinergic or
+sedative medications identified.
+
+MEDICATIONS ON DISCHARGE
+--------------------------
+The following medications are prescribed at the time of discharge:
+
+1.  Salbutamol (VENTOLIN) 100 mcg/dose — metered-dose inhaler — 2 puffs
+    up to four times daily as needed (for breathlessness / wheeze)
+    Indication: COPD — relief bronchodilator
+    Status: CONTINUING (no change)
+    Device: MDI with spacer. Ensure spacer use demonstrated to patient.
+
+2.  Tiotropium (SPIRIVA RESPIMAT) 2.5 mcg/dose — inhalation solution —
+    2 puffs once daily in morning
+    Indication: COPD — long-acting muscarinic antagonist (LAMA) maintenance
+    Status: CONTINUING (no change)
+    NOTE: Tiotropium has mild anticholinergic properties but at inhaled doses
+    is well tolerated and considered appropriate for COPD management in older
+    adults.
+
+3.  Budesonide/Formoterol (SYMBICORT TURBUHALER) 200/6 mcg — 2 puffs
+    twice daily (morning and evening)
+    Indication: COPD — inhaled corticosteroid + LABA maintenance combination
+    Status: CONTINUING (no change)
+    NOTE: Rinse mouth after each use to prevent oral candidiasis.
+
+4.  Perindopril (COVERSYL) 4 mg — oral tablet — once daily in morning
+    Indication: Hypertension
+    Status: CONTINUING (no change)
+
+5.  Tamsulosin (FLOMAXTRA) 0.4 mg — oral tablet — once daily after breakfast
+    Indication: Benign prostatic hyperplasia
+    Status: CONTINUING (no change)
+
+6.  Paracetamol 500 mg — oral tablet — two tablets up to four times daily
+    as needed (maximum 4 g/day)
+    Indication: Knee osteoarthritis pain PRN
+    Status: CONTINUING (no change)
+
+7.  Prednisolone 40 mg — oral tablet — once daily in morning WITH FOOD
+    Indication: COPD exacerbation (short course)
+    Status: NEW (completing 5-day course — 3 days remaining)
+    Day 1: 03/04/2026 (in hospital)
+    Day 2: 06/04/2026 (in hospital)
+    Day 3: 07/04/2026 — TAKE TODAY
+    Day 4: 08/04/2026 — take at home
+    Day 5: 09/04/2026 — LAST DOSE — no taper required (5-day course)
+
+8.  Amoxicillin-Clavulanate (AUGMENTIN DUO FORTE) 875/125 mg — oral tablet —
+    twice daily with meals
+    Indication: Infective COPD exacerbation (Haemophilus influenzae)
+    Status: NEW — Day 3 of 7 at discharge (commenced 03/04/2026)
+    Complete course: 09/04/2026 (last dose)
+    NOTE: Take with food to reduce gastrointestinal side effects.
+
+CEASED MEDICATIONS
+------------------
+No medications ceased during this admission.
+
+FOLLOW-UP ARRANGEMENTS
+-----------------------
+1.  GP (Dr Peter Halliday): within 5 days of discharge — respiratory review,
+    complete antibiotic and prednisolone course confirmation, spirometry
+    Appointment booked: 11 April 2026, 9:30 am
+
+2.  Respiratory Medicine (The Prince Charles Hospital): 6 weeks outpatient —
+    post-exacerbation review, spirometry, inhaler technique check, COPD
+    action plan update
+    Appointment: 19 May 2026, 10:00 am (letter to follow)
+
+3.  Pulmonary Rehabilitation: referral sent — community-based program,
+    estimated commencement within 6–8 weeks
+    Referral sent: 07/04/2026
+
+4.  Influenza vaccination: recommend annual influenza vaccination (if not
+    already received this season)
+    Pneumococcal vaccination status: reviewed — vaccinated 2022 (booster
+    due 2027)
+
+INFORMATION PROVIDED TO PATIENT AND FAMILY
+-------------------------------------------
+Clive and Diana were counselled regarding:
+- COPD exacerbation warning signs and when to call emergency services
+- Written COPD action plan provided (traffic light system: green/amber/red)
+- Correct inhaler technique reviewed with physiotherapist — spacer use
+  reinforced for salbutamol MDI
+- Completing antibiotic and prednisolone courses as prescribed
+- Prednisolone: take with food, do not stop suddenly (short course — no taper)
+- Smoking cessation: ex-smoker, cessation reinforced and congratulated
+- Pulmonary rehabilitation benefits explained — Clive expressed enthusiasm
+- Annual influenza vaccination recommended
+- Oxygen saturation home monitoring: arrange oximeter (GP to prescribe)
+
+Written medication list and COPD action plan provided.
+My Health Record updated.
+
+OUTSTANDING ISSUES / ALERTS FOR GP
+------------------------------------
+1. PULMONARY REHABILITATION: Referral sent — strongly beneficial for GOLD II
+   COPD post-exacerbation. Encourage attendance.
+
+2. SPIROMETRY: Repeat 4–6 weeks post-exacerbation (when stable) to reassess
+   FEV1 and update GOLD staging.
+
+3. HOME PULSE OXIMETER: Consider prescribing for patient self-monitoring
+   during future exacerbations (target SpO2 88–92%).
+
+4. VACCINATION: Influenza vaccination status for 2026 — check and administer
+   if not received. Pneumococcal booster due 2027.
+
+5. LOW MEDICATION RISK: Pharmacist review confirms low anticholinergic and
+   sedative burden. No Beers Criteria medications. Continue current regimen.
+
+RESPONSIBLE CLINICIAN
+---------------------
+Dr Amira Hassan MBBS FRACP
+Staff Specialist, Respiratory Medicine
+The Prince Charles Hospital, Chermside QLD
+Phone: (07) 3139 4000
+Pager: 2244
+Dictated: 7 April 2026
+Authorised: 7 April 2026
+================================================================================
+END OF DISCHARGE SUMMARY
+================================================================================

@@ -540,12 +540,17 @@ async def process_document(document_id: str, request: Request):
     try:
         data, content_type = get_object(doc["storage_path"])
         extracted_text = ""
-        if "pdf" in (content_type or "").lower() or doc.get("original_filename", "").lower().endswith(".pdf"):
+        filename_lower = doc.get("original_filename", "").lower()
+        ct_lower = (content_type or "").lower()
+        if "pdf" in ct_lower or filename_lower.endswith(".pdf"):
             import PyPDF2
             import io
             reader = PyPDF2.PdfReader(io.BytesIO(data))
             for page in reader.pages:
                 extracted_text += page.extract_text() or ""
+            parsed = await extract_with_llm(extracted_text, is_text=True)
+        elif "text" in ct_lower or filename_lower.endswith(".txt"):
+            extracted_text = data.decode("utf-8", errors="replace")
             parsed = await extract_with_llm(extracted_text, is_text=True)
         else:
             image_base64 = base64.b64encode(data).decode('utf-8')
@@ -902,102 +907,203 @@ async def get_dashboard_stats(request: Request):
     }
 
 # ======================== SEED DATA ========================
-@api_router.post("/seed")
-async def seed_data(request: Request):
-    user = await get_current_user(request)
-    existing = await db.patients.count_documents({"created_by": user["user_id"]})
-    if existing > 0:
-        existing_patients = await db.patients.find({"created_by": user["user_id"]}, {"_id": 0, "patient_id": 1}).to_list(100)
-        return {"message": "Demo data already loaded", "patients": [p["patient_id"] for p in existing_patients]}
-    patients = [
+# Role-specific datasets so practitioner and family carer see completely different patients.
+
+SEED_DATA_PRACTITIONER = {
+    "patients": [
         {
-            "patient_id": f"pat_seed_{uuid.uuid4().hex[:8]}", "name": "Margaret Thompson",
-            "dob": "1947-03-15", "gender": "Female",
-            "emergency_contact": "John Thompson (Son) - 0412 345 678",
+            "name": "Patricia Nguyen", "dob": "1946-04-12", "gender": "Female",
+            "emergency_contact": "James Nguyen (Son) - 0411 234 567",
+            "gp_details": "Dr Anita Sharma - Northside Family Practice",
+            "allergies": ["Penicillin"], "medical_history": "Overactive bladder, Depression, Chronic low back pain, Insomnia, GERD",
+        },
+        {
+            "name": "Harold Okafor", "dob": "1942-11-03", "gender": "Male",
+            "emergency_contact": "Grace Okafor (Wife) - 0422 345 678",
+            "gp_details": "Dr Thomas Liu - Central Medical Group",
+            "allergies": ["Sulfonamides"], "medical_history": "Heart failure (HFrEF), AF, Chronic pain, Anxiety disorder",
+        },
+        {
+            "name": "Beverley O'Brien", "dob": "1954-07-29", "gender": "Female",
+            "emergency_contact": "Sean O'Brien (Husband) - 0433 456 789",
+            "gp_details": "Dr Priya Patel - Riverside Health Clinic",
+            "allergies": [], "medical_history": "Type 2 Diabetes, Hypertension, Mild depression",
+        },
+        {
+            "name": "Clive Papadopoulos", "dob": "1950-02-14", "gender": "Male",
+            "emergency_contact": "Elena Papadopoulos (Wife) - 0444 567 890",
+            "gp_details": "Dr Marcus Webb - Eastside Family Practice",
+            "allergies": [], "medical_history": "Hypertension, Hyperlipidaemia, Mild osteoarthritis",
+        },
+        {
+            "name": "Shirley Mahmoud", "dob": "1957-09-18", "gender": "Female",
+            "emergency_contact": "Omar Mahmoud (Son) - 0455 678 901",
             "gp_details": "Dr Sarah Wilson - Greenfield Medical Centre",
-            "allergies": ["Penicillin"], "medical_history": "Type 2 Diabetes, Hypertension",
-            "created_by": user["user_id"], "linked_users": [user["user_id"]],
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "allergies": ["Codeine"], "medical_history": "Insomnia, GERD, Chronic back pain, Mild anxiety",
         },
-        {
-            "patient_id": f"pat_seed_{uuid.uuid4().hex[:8]}", "name": "Robert Chen",
-            "dob": "1943-09-22", "gender": "Male",
-            "emergency_contact": "Lisa Chen (Daughter) - 0423 456 789",
-            "gp_details": "Dr Michael Park - Eastside Family Practice",
-            "allergies": ["Sulfonamides", "Codeine"], "medical_history": "Chronic pain, Anxiety, Heart failure, Insomnia",
-            "created_by": user["user_id"], "linked_users": [user["user_id"]],
-            "created_at": datetime.now(timezone.utc).isoformat()
-        },
-        {
-            "patient_id": f"pat_seed_{uuid.uuid4().hex[:8]}", "name": "Dorothy Williams",
-            "dob": "1950-12-08", "gender": "Female",
-            "emergency_contact": "Mary Williams (Daughter) - 0434 567 890",
-            "gp_details": "Dr James Patel - Riverside Health Clinic",
-            "allergies": [], "medical_history": "Overactive bladder, Depression, Insomnia, Chronic pain, GERD",
-            "created_by": user["user_id"], "linked_users": [user["user_id"]],
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-    ]
-    await db.patients.insert_many(patients)
-    summaries_data = [
+    ],
+    "summaries": [
+        # Patricia Nguyen — HIGH risk (ACB 10: amitriptyline 3 + oxybutynin 3 + promethazine 3 + metoclopramide 1)
         {
             "patient_idx": 0,
             "meds": [
-                {"name": "Aspirin", "dose": "100mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Metformin", "dose": "500mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Lisinopril", "dose": "10mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Atorvastatin", "dose": "20mg", "frequency": "nightly", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Amitriptyline", "dose": "25mg", "frequency": "at night", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Oxybutynin", "dose": "5mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Promethazine", "dose": "25mg", "frequency": "as needed for nausea", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Metoclopramide", "dose": "10mg", "frequency": "three times daily", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Omeprazole", "dose": "20mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Paracetamol", "dose": "1g", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
             ],
-            "diagnosis": "Chest pain - investigation. Cardiac enzymes normal. Discharged with stable angina management.",
-            "discharge_instructions": "Continue current medications. New statin added for cholesterol management. Low-salt diet.",
-            "follow_up": "GP review in 2 weeks. Pathology for HbA1c in 4 weeks.",
-            "confidence": 0.92,
+            "diagnosis": "Fall with acute confusion and urinary retention. CT head normal. Likely anticholinergic toxidrome. Metoclopramide added for nausea.",
+            "discharge_instructions": "Monitor for confusion, drowsiness and falls. Urgent pharmacist medication review required due to high anticholinergic burden. Consider deprescribing oxybutynin and amitriptyline.",
+            "follow_up": "GP review within 48 hours. Geriatric medicine referral recommended. Pharmacist medication reconciliation urgently required.",
+            "confidence": 0.93,
         },
+        # Harold Okafor — HIGH risk (Diazepam sedative + tramadol + quetiapine)
         {
             "patient_idx": 1,
             "meds": [
                 {"name": "Diazepam", "dose": "5mg", "frequency": "at night", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
                 {"name": "Furosemide", "dose": "40mg", "frequency": "morning", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Cetirizine", "dose": "10mg", "frequency": "daily", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
                 {"name": "Metoprolol", "dose": "50mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Spironolactone", "dose": "25mg", "frequency": "daily", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Tramadol", "dose": "50mg", "frequency": "four times daily", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Quetiapine", "dose": "25mg", "frequency": "at night", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
                 {"name": "Paracetamol", "dose": "1g", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Tramadol", "dose": "50mg", "frequency": "as needed", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
             ],
-            "diagnosis": "Acute exacerbation of heart failure. Stabilised with IV diuretics. Allergic rhinitis treated.",
-            "discharge_instructions": "Weigh daily. Report weight gain >2kg. Fluid restriction 1.5L/day. New antihistamine for rhinitis.",
-            "follow_up": "Heart failure clinic in 1 week. GP review in 2 weeks.",
-            "confidence": 0.87,
+            "diagnosis": "Acute decompensated heart failure (NYHA III). Optimised with IV diuresis. Quetiapine added for acute agitation. Tramadol added for chronic pain.",
+            "discharge_instructions": "Weigh daily — report weight gain >2 kg to GP immediately. Fluid restriction 1.5 L/day. Low sodium diet. Avoid alcohol.",
+            "follow_up": "Heart failure clinic in 1 week. GP review in 2 weeks. Echocardiogram booked. Review diazepam and tramadol at follow-up.",
+            "confidence": 0.88,
         },
+        # Beverley O'Brien — MEDIUM risk (paroxetine ACB 2 + cetirizine ACB 2)
         {
             "patient_idx": 2,
             "meds": [
-                {"name": "Amitriptyline", "dose": "25mg", "frequency": "at night", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Paroxetine", "dose": "20mg", "frequency": "morning", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Cetirizine", "dose": "10mg", "frequency": "daily", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Metformin", "dose": "1g", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Perindopril", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Aspirin", "dose": "100mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Atorvastatin", "dose": "40mg", "frequency": "nightly", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+            ],
+            "diagnosis": "Poorly controlled Type 2 Diabetes with HbA1c 9.2%. Hypertension managed. Cetirizine commenced for seasonal allergic rhinitis.",
+            "discharge_instructions": "Statin therapy started — monitor LFTs in 3 months. Blood glucose diary. DASH diet reinforced. Smoking cessation support offered.",
+            "follow_up": "GP review in 2 weeks. Fasting BSL and HbA1c in 6 weeks. Podiatry referral for diabetic foot care.",
+            "confidence": 0.91,
+        },
+        # Clive Papadopoulos — LOW risk
+        {
+            "patient_idx": 3,
+            "meds": [
+                {"name": "Amlodipine", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Perindopril", "dose": "10mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Atorvastatin", "dose": "40mg", "frequency": "nightly", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Aspirin", "dose": "100mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+            ],
+            "diagnosis": "Elective right total knee replacement. Uncomplicated recovery. Good pain control achieved.",
+            "discharge_instructions": "Wound care as instructed. DVT prophylaxis completed. Weight bearing as tolerated with physiotherapy guidance.",
+            "follow_up": "Orthopaedic outpatient review at 2 weeks. GP review at 1 week for wound check. Physiotherapy 3x/week.",
+            "confidence": 0.95,
+        },
+        # Shirley Mahmoud — MEDIUM risk (temazepam sedative + zopiclone)
+        {
+            "patient_idx": 4,
+            "meds": [
+                {"name": "Temazepam", "dose": "10mg", "frequency": "at night", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Omeprazole", "dose": "20mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Ibuprofen", "dose": "400mg", "frequency": "three times daily with food", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Diazepam", "dose": "2mg", "frequency": "twice daily as needed", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Paracetamol", "dose": "1g", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+            ],
+            "diagnosis": "Lower back pain exacerbation with associated anxiety. Short course diazepam commenced. Ibuprofen continued with gastroprotection.",
+            "discharge_instructions": "Diazepam for short-term use only (max 2 weeks). Avoid driving while taking benzodiazepines. Physiotherapy referral made. Sleep hygiene advice given.",
+            "follow_up": "GP review in 1 week to reassess benzodiazepine use. Physiotherapy referral. Consider weaning temazepam at next review.",
+            "confidence": 0.86,
+        },
+    ],
+}
+
+SEED_DATA_FAMILY = {
+    "patients": [
+        {
+            "name": "Nora Kaur", "dob": "1948-06-22", "gender": "Female",
+            "emergency_contact": "Priya Kaur (Daughter) - 0466 789 012",
+            "gp_details": "Dr David Chen - Hillside Medical Centre",
+            "allergies": ["Aspirin"], "medical_history": "Vascular dementia, Urinary incontinence, Hypertension, Type 2 Diabetes",
+        },
+        {
+            "name": "Ronald Kaur", "dob": "1945-03-09", "gender": "Male",
+            "emergency_contact": "Priya Kaur (Daughter) - 0466 789 012",
+            "gp_details": "Dr David Chen - Hillside Medical Centre",
+            "allergies": [], "medical_history": "Chronic heart failure, Chronic kidney disease stage 3, Osteoarthritis",
+        },
+    ],
+    "summaries": [
+        # Nora Kaur — HIGH risk (multiple anticholinergics for dementia patient)
+        {
+            "patient_idx": 0,
+            "meds": [
                 {"name": "Oxybutynin", "dose": "5mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Quetiapine", "dose": "25mg", "frequency": "at night", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
+                {"name": "Haloperidol", "dose": "0.5mg", "frequency": "at night", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
                 {"name": "Diphenhydramine", "dose": "25mg", "frequency": "at night", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Promethazine", "dose": "25mg", "frequency": "as needed", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Metformin", "dose": "500mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Perindopril", "dose": "4mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Paracetamol", "dose": "500mg", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+            ],
+            "diagnosis": "Behavioural and Psychological Symptoms of Dementia (BPSD) — acute agitation and wandering. Haloperidol added at low dose for acute agitation.",
+            "discharge_instructions": "Haloperidol should be reviewed and if possible ceased within 12 weeks. Monitor for sedation, falls, and worsening confusion. Oxybutynin review recommended — may worsen cognition. Ensure safe home environment.",
+            "follow_up": "GP review within 72 hours. Psychogeriatrician follow-up in 2 weeks. Carer support services referral made. Pharmacist medication review.",
+            "confidence": 0.89,
+        },
+        # Ronald Kaur — MEDIUM risk (tramadol + diuretics)
+        {
+            "patient_idx": 1,
+            "meds": [
+                {"name": "Furosemide", "dose": "40mg", "frequency": "morning", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Bisoprolol", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Ramipril", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Tramadol", "dose": "50mg", "frequency": "twice daily", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
                 {"name": "Omeprazole", "dose": "20mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
                 {"name": "Paracetamol", "dose": "1g", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
             ],
-            "diagnosis": "Fall with confusion. CT head normal. Likely medication-related cognitive impairment. New quetiapine for agitation.",
-            "discharge_instructions": "Monitor for confusion, drowsiness, falls. Medication review urgently recommended. Falls prevention.",
-            "follow_up": "GP review within 48 hours. Geriatrician referral recommended. Pharmacist medication reconciliation.",
-            "confidence": 0.90,
+            "diagnosis": "Acute-on-chronic heart failure secondary to medication non-adherence. Stabilised with IV diuresis. Tramadol added for hip osteoarthritis pain.",
+            "discharge_instructions": "Weigh daily — contact GP if weight increases >2 kg in 24 hours. Fluid restriction 1.5 L/day. Low sodium diet. Take all medications as prescribed.",
+            "follow_up": "GP review in 1 week. Heart failure nurse phone call in 3 days. Renal function check in 2 weeks.",
+            "confidence": 0.87,
         },
-    ]
-    for sd in summaries_data:
+    ],
+}
+
+async def _insert_seed_records(user, dataset):
+    """Insert patients, summaries, risk results and alerts from a seed dataset dict."""
+    patients = []
+    for p_data in dataset["patients"]:
+        p = {
+            "patient_id": f"pat_seed_{uuid.uuid4().hex[:8]}",
+            **p_data,
+            "created_by": user["user_id"],
+            "linked_users": [user["user_id"]],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        patients.append(p)
+    await db.patients.insert_many(patients)
+
+    for sd in dataset["summaries"]:
         p = patients[sd["patient_idx"]]
         doc_id = f"doc_seed_{uuid.uuid4().hex[:8]}"
         await db.documents.insert_one({
-            "document_id": doc_id, "patient_id": p["patient_id"], "upload_batch_id": f"batch_seed_{uuid.uuid4().hex[:8]}",
-            "storage_path": f"seed/demo_{doc_id}.pdf", "original_filename": f"discharge_summary_{p['name'].replace(' ','_').lower()}.pdf",
-            "content_type": "application/pdf", "size": 0, "status": "processed",
+            "document_id": doc_id, "patient_id": p["patient_id"],
+            "upload_batch_id": f"batch_seed_{uuid.uuid4().hex[:8]}",
+            "storage_path": f"seed/demo_{doc_id}.txt",
+            "original_filename": f"discharge_summary_{p['name'].replace(' ', '_').lower()}.txt",
+            "content_type": "text/plain", "size": 0, "status": "processed",
             "created_by": user["user_id"], "created_at": datetime.now(timezone.utc).isoformat()
         })
         summary_id = f"sum_seed_{uuid.uuid4().hex[:8]}"
         await db.parsed_summaries.insert_one({
             "summary_id": summary_id, "document_id": doc_id, "patient_id": p["patient_id"],
-            "patient_name": p["name"], "discharge_date": "2026-02-01",
+            "patient_name": p["name"], "discharge_date": "2026-03-15",
             "diagnosis": sd["diagnosis"], "medications": sd["meds"],
             "new_medications": [m["name"] for m in sd["meds"] if m.get("is_new")],
             "ceased_medications": [], "changed_doses": [],
@@ -1024,10 +1130,22 @@ async def seed_data(request: Request):
                 "alert_id": f"alert_seed_{uuid.uuid4().hex[:8]}",
                 "patient_id": p["patient_id"], "user_id": user["user_id"],
                 "result_id": result_id, "type": "risk_assessment", "severity": risk["risk_level"],
-                "title": f"{'High' if risk['risk_level']=='high' else 'Medium'} medication risk - {p['name']}",
-                "message": f"ACB score of {risk['total_score']} detected. {risk['flagged_count']} medications flagged.",
+                "title": f"{'High' if risk['risk_level']=='high' else 'Medium'} medication risk — {p['name']}",
+                "message": f"Score of {risk['total_score']} detected. {risk['flagged_count']} medication(s) flagged.",
                 "read": False, "created_at": datetime.now(timezone.utc).isoformat()
             })
+    return patients
+
+@api_router.post("/seed")
+async def seed_data(request: Request):
+    user = await get_current_user(request)
+    existing = await db.patients.count_documents({"created_by": user["user_id"]})
+    if existing > 0:
+        existing_patients = await db.patients.find({"created_by": user["user_id"]}, {"_id": 0, "patient_id": 1}).to_list(100)
+        return {"message": "Demo data already loaded", "patients": [p["patient_id"] for p in existing_patients]}
+    role = user.get("role", "family_carer")
+    dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
+    patients = await _insert_seed_records(user, dataset)
     return {"message": "Demo data seeded successfully", "patients": [p["patient_id"] for p in patients]}
 
 # ======================== REPORT ========================

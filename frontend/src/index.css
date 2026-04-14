@@ -12,11 +12,11 @@
   --sma-text-secondary: #5C6661;
   --sma-text-muted: #8A938E;
   --sma-text-inverse: #FFFFFF;
-  --sma-brand: #3B7062;
-  --sma-brand-hover: #2D5A4E;
+  --sma-brand: #2563EB;
+  --sma-brand-hover: #1D4ED8;
   --sma-accent: #C97A5E;
   --sma-border: #E6E4DE;
-  --sma-border-focus: #3B7062;
+  --sma-border-focus: #2563EB;
   --sma-risk-low-bg: #E8F0EC;
   --sma-risk-low-border: #4E876C;
   --sma-risk-low-text: #2A4D3D;
@@ -53,7 +53,7 @@ code {
     --card-foreground: 150 9% 13%;
     --popover: 0 0% 100%;
     --popover-foreground: 150 9% 13%;
-    --primary: 163 31% 33%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
     --secondary: 36 18% 94%;
     --secondary-foreground: 150 9% 13%;

@@ -1,0 +1,280 @@
+DISCHARGE SUMMARY
+================================================================================
+Prepared in accordance with the Australian Commission on Safety and Quality in
+Health Care (ACSQHC) National Standard for Discharge Summaries (January 2024)
+================================================================================
+
+PATIENT DETAILS
+---------------
+Family name:       Okafor
+Given name(s):     Harold James
+Date of birth:     3 November 1942
+Age:               83 years
+Sex:               Male
+Medicare number:   3456 78912 1
+Address:           7 Warrigal Street, Bundoora VIC 3083
+Phone:             (03) 9404 2211
+Next of kin:       Grace Okafor (wife) — (03) 9404 2211
+GP:                Dr James Kowalski, Bundoora Medical Group
+                   Ph: (03) 9467 3300   Fax: (03) 9467 3301
+
+ADMISSION DETAILS
+-----------------
+Hospital:          Northern Hospital, Epping VIC
+Ward:              6 North (General Medicine)
+Admitting unit:    General Medicine / Geriatric Consultation
+Admission date:    28 March 2026
+Discharge date:    5 April 2026
+Length of stay:    8 days
+Mode of discharge: Home with family support + community nursing
+Discharge destination: Home
+
+PRESENTING COMPLAINT
+--------------------
+83-year-old male presenting after unwitnessed fall at home with right hip pain
+and increasing daytime sedation.
+
+HISTORY OF PRESENTING ILLNESS
+------------------------------
+Harold was found on the floor of his bedroom by his wife Grace at 6:00 am.
+He could not recall the events but denied losing consciousness. He was unable
+to weight-bear on the right leg. Grace reported he had been increasingly drowsy
+during the day over the past 4–6 weeks, falling asleep mid-conversation and
+during meals.
+
+His current medication list includes diazepam 5 mg twice daily (longstanding,
+commenced for anxiety approximately 12 years ago), zopiclone 7.5 mg nocte
+(insomnia, commenced 3 months ago by GP), oxycodone SR 20 mg twice daily
+(chronic lumbar pain — osteoarthritis and compression fractures), and
+pregabalin 75 mg twice daily (neuropathic leg pain).
+
+X-ray in ED: no fracture identified. Right hip contusion confirmed clinically.
+
+PAST MEDICAL HISTORY
+--------------------
+1. Chronic low back pain — multilevel lumbar osteoarthritis, L1 and L3
+   compression fractures (2019)
+2. Generalised anxiety disorder
+3. Chronic insomnia
+4. Parkinson's disease (early, diagnosed 2022)
+5. Type 2 diabetes mellitus — on oral agents
+6. Hypertension
+7. Benign prostatic hyperplasia
+8. Chronic kidney disease Stage 3a (eGFR 52 mL/min/1.73m²)
+
+ALLERGIES AND ADVERSE DRUG REACTIONS
+--------------------------------------
+Aspirin — gastrointestinal bleeding (confirmed, documented 2015)
+Sulfonamides — rash
+
+SOCIAL HISTORY
+--------------
+Lives with wife Grace in own home. Two adult children nearby. Retired engineer.
+Ex-smoker (ceased 1995, 25 pack-year history). Alcohol: occasional, 1–2 standard
+drinks on weekends. Drives (licence currently under review by GP).
+
+EXAMINATION FINDINGS ON ADMISSION
+-----------------------------------
+Vitals: BP 132/76 mmHg (lying), 118/68 mmHg (standing — orthostatic drop 14/8)
+        HR 74 bpm regular, Temp 36.6°C, SpO2 96% on air, RR 14/min
+Weight: 74 kg   Height: 178 cm   BMI: 23.4
+GCS: 14/15 (drowsy, slow to respond)
+Musculoskeletal: Tender right greater trochanter region. Full ROM right hip.
+                 No crepitus. Weight-bearing painful.
+Neurological: Bradykinesia, cogwheel rigidity left upper limb (Parkinson's).
+              Mild cerebellar signs. No focal deficits.
+Gait: Unable to assess — pain-limited.
+Skin: No pressure injuries. Mild peripheral oedema bilateral ankles.
+
+INVESTIGATIONS
+--------------
+Bloods (28/03/2026):
+  FBC:         Hb 128 g/L, WCC 7.2 x10^9/L, Plt 198 x10^9/L
+  UEC:         Na 140, K 4.3, Cr 104 umol/L, eGFR 52 mL/min/1.73m²
+  LFTs:        ALT 28, ALP 68, GGT 42 — within normal limits
+  HbA1c:       7.1% (satisfactory)
+  CRP:         12 mg/L (mildly elevated)
+  Serum albumin: 36 g/L
+
+Imaging:
+  Right hip X-ray (28/03/2026): No fracture. Degenerative change both hips.
+  Right hip CT (28/03/2026): Confirmed no occult fracture. Moderate
+    osteoarthritic change. No dislocation.
+  Lumbar spine X-ray (29/03/2026): Established L1/L3 compression fractures,
+    unchanged from 2023. Multilevel spondylosis.
+  DXA (arranged outpatient — referral sent): T-score estimated low per history.
+
+PROBLEMS AND DIAGNOSES
+-----------------------
+Primary:
+  1. Fall — mechanical, secondary to polypharmacy (HIGH sedative load)
+     Contributing factors: diazepam + zopiclone + oxycodone SR + pregabalin
+     causing excessive CNS depression, orthostatic hypotension
+  2. Right hip contusion — no fracture
+
+Secondary:
+  3. Excessive daytime sedation — polypharmacy cause
+  4. Parkinson's disease — early, stable
+  5. Chronic low back pain with neuropathic component
+  6. Type 2 diabetes mellitus — satisfactory control
+  7. Hypertension — well controlled
+  8. Benign prostatic hyperplasia — stable
+
+CLINICAL COURSE IN HOSPITAL
+-----------------------------
+Medication review was performed by consultant geriatrician and clinical
+pharmacist on day 1. Sedative load was assessed as VERY HIGH:
+  - Diazepam 5 mg BD (DBI: 0.50 per dose × 2 = sedative contribution HIGH)
+  - Zopiclone 7.5 mg nocte (DBI: HIGH sedative)
+  - Oxycodone SR 20 mg BD (opioid — HIGH sedative/analgesic burden)
+  - Pregabalin 75 mg BD (CNS depressant — additive sedation)
+  Combined Drug Burden Index estimated > 2.0 — significantly exceeds safe
+  threshold for older adults (target < 1.0 in this age group)
+
+Day 1–2: Zopiclone ceased. Diazepam dose reduced to 2.5 mg nocte only
+(PRN anxiety). Patient closely monitored for benzodiazepine withdrawal.
+No significant withdrawal symptoms observed.
+
+Day 3–5: Oxycodone SR dose reviewed — reduced from 20 mg BD to 10 mg BD.
+Pregabalin continued for neuropathic pain but specialist recommended
+further reduction to 50 mg BD outpatient.
+
+Day 5: Harold significantly more alert. Able to hold prolonged conversation.
+Orthostatic hypotension resolved. No further falls.
+
+Physiotherapy commenced day 3: gait training, falls risk reduction exercises,
+walking frame trialled and accepted.
+
+Neurology (Parkinson's) consulted: sinemet dose unchanged, no medication
+adjustments recommended at this time. Follow-up with neurologist in 8 weeks.
+
+Diabetes: metformin and gliclazide continued. BSL monitoring 4x daily — stable.
+
+Pain management: Occupational therapy pain-coping strategies initiated.
+Oxycodone dose reduction plan discussed with patient. Referral to pain clinic.
+
+MEDICATIONS ON DISCHARGE
+--------------------------
+The following medications are prescribed at the time of discharge:
+
+1.  Levodopa/Carbidopa (SINEMET) 100/25 mg — oral tablet — three times daily
+    (7am, 12pm, 5pm)
+    Indication: Parkinson's disease
+    Status: CONTINUING (no change)
+
+2.  Diazepam (VALIUM) 2.5 mg — oral tablet — once daily at night ONLY (PRN)
+    Indication: Anxiety
+    Status: DOSE REDUCED AND FREQUENCY REDUCED (was 5 mg twice daily)
+    NOTE: Weaning plan — GP to reduce to 2 mg nocte in 4 weeks, then 1 mg nocte
+    in 8 weeks, then cease if tolerated. Benzodiazepine dependency acknowledged.
+
+3.  Oxycodone SR (OXYCONTIN) 10 mg — oral modified-release tablet — twice daily
+    Indication: Chronic lumbar pain
+    Status: DOSE REDUCED (was 20 mg twice daily)
+    NOTE: Pain clinic referral in place for further opioid rationalisation.
+
+4.  Pregabalin (LYRICA) 50 mg — oral capsule — twice daily
+    Indication: Neuropathic leg pain
+    Status: DOSE REDUCED (was 75 mg twice daily)
+    NOTE: Further review at pain clinic.
+
+5.  Metformin (GLUCOPHAGE) 500 mg — oral tablet — twice daily with meals
+    Indication: Type 2 diabetes mellitus
+    Status: CONTINUING (no change)
+
+6.  Gliclazide MR (DIAMICRON MR) 30 mg — oral tablet — once daily with breakfast
+    Indication: Type 2 diabetes mellitus
+    Status: CONTINUING (no change)
+
+7.  Perindopril (COVERSYL) 5 mg — oral tablet — once daily in morning
+    Indication: Hypertension
+    Status: CONTINUING (no change)
+
+8.  Tamsulosin (FLOMAXTRA) 0.4 mg — oral tablet — once daily after breakfast
+    Indication: Benign prostatic hyperplasia
+    Status: CONTINUING (no change)
+    NOTE: Monitor for orthostatic hypotension (additive with opioids).
+
+9.  Rosuvastatin (CRESTOR) 10 mg — oral tablet — once daily at night
+    Indication: Cardiovascular risk reduction
+    Status: CONTINUING (no change)
+
+10. Calcium + Vitamin D3 (CALTRATE PLUS) — oral tablet — once daily
+    Indication: Bone health / falls prevention (commenced during admission)
+    Status: NEW
+
+CEASED MEDICATIONS
+------------------
+The following medications have been ceased during this admission:
+
+1.  Zopiclone (IMOVANE) 7.5 mg nocte
+    Reason: HIGH sedative load contribution. Z-drug — not appropriate for long-
+    term use in older adults. Beers Criteria — avoid in adults 65+.
+    Replaced with: non-pharmacological sleep hygiene advice. GP may consider
+    melatonin 2 mg nocte if required.
+    DO NOT RECOMMENCE without specialist review.
+
+FOLLOW-UP ARRANGEMENTS
+-----------------------
+1.  GP (Dr James Kowalski): within 3 days of discharge — medication reconciliation,
+    diazepam wean review, BP and falls monitoring
+    Appointment booked: 8 April 2026, 9:00 am
+
+2.  Neurology (Parkinson's Clinic, Northern Hospital): 8 weeks
+    Referral sent: 05/04/2026. Appointment pending — patient to call rooms.
+
+3.  Pain Management Clinic (Northern Hospital): routine referral
+    Referral sent: 05/04/2026. Waitlist: 8–12 weeks.
+
+4.  Community Physiotherapy: 2 weeks — falls prevention, gait retraining,
+    walking frame use
+    Referral sent: 05/04/2026
+
+5.  DXA scan: arranged via GP for assessment of bone density (falls + fracture
+    history)
+
+6.  Driving: GP to liaise with neurologist re Parkinson's and fitness to drive.
+    Recommend voluntary cessation pending assessment.
+
+INFORMATION PROVIDED TO PATIENT AND FAMILY
+-------------------------------------------
+Harold and Grace were counselled regarding:
+- High sedative medication burden and the link to falls
+- Benzodiazepine dependency and safe tapering process
+- Importance of NOT resuming zopiclone or increasing diazepam independently
+- Orthostatic hypotension — stand slowly, sit on edge of bed first
+- Driving safety concerns discussed sensitively
+- Walking frame use and home safety
+- When to call an ambulance (falls with injury, loss of consciousness)
+
+Written medication list provided and Webster-pak recommended.
+My Health Record updated.
+
+OUTSTANDING ISSUES / ALERTS FOR GP
+------------------------------------
+1. SEDATIVE LOAD ALERT: Patient had combined Drug Burden Index > 2.0 on
+   admission. Even after reductions, DBI remains elevated. Prioritise further
+   rationalisation at each visit.
+
+2. DIAZEPAM WEAN: 2.5 mg nocte → 2 mg nocte at 4 weeks → 1 mg nocte at 8 weeks
+   → cease. Monitor for anxiety recurrence and withdrawal. Consider referral
+   to psychology (CBT for anxiety/insomnia) as non-pharmacological support.
+
+3. DRIVING: Formal fitness-to-drive assessment required given Parkinson's
+   disease progression and recent falls. Do not clear to drive until assessed.
+
+4. FALLS RISK: Remains HIGH despite medication adjustment. Home hazard assessment
+   recommended. Consider personal alarm / emergency response system.
+
+RESPONSIBLE CLINICIAN
+---------------------
+Dr Marcus Tran MBBS FRACP
+Staff Specialist, General Medicine / Geriatric Medicine
+Northern Hospital, Epping VIC
+Phone: (03) 8405 8000
+Pager: 3312
+Dictated: 5 April 2026
+Authorised: 5 April 2026
+================================================================================
+END OF DISCHARGE SUMMARY
+================================================================================

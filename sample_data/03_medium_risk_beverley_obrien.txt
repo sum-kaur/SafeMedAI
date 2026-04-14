@@ -1,0 +1,270 @@
+DISCHARGE SUMMARY
+================================================================================
+Prepared in accordance with the Australian Commission on Safety and Quality in
+Health Care (ACSQHC) National Standard for Discharge Summaries (January 2024)
+================================================================================
+
+PATIENT DETAILS
+---------------
+Family name:       O'Brien
+Given name(s):     Beverley Anne
+Date of birth:     29 July 1954
+Age:               71 years
+Sex:               Female
+Medicare number:   4567 89123 2
+Address:           23 Coolabah Drive, Woden ACT 2606
+Phone:             (02) 6285 9911
+Next of kin:       Patrick O'Brien (husband) — (02) 6285 9911
+GP:                Dr Fiona McAlpine, Woden Valley Medical Practice
+                   Ph: (02) 6281 5500   Fax: (02) 6281 5501
+
+ADMISSION DETAILS
+-----------------
+Hospital:          Canberra Hospital, Garran ACT
+Ward:              3 South (Cardiology)
+Admitting unit:    Cardiology
+Admission date:    1 April 2026
+Discharge date:    6 April 2026
+Length of stay:    5 days
+Mode of discharge: Home with husband support
+Discharge destination: Home
+
+PRESENTING COMPLAINT
+--------------------
+71-year-old female with known atrial fibrillation presenting with palpitations,
+fatigue, and breathlessness on exertion for 3 days.
+
+HISTORY OF PRESENTING ILLNESS
+------------------------------
+Beverley presented to her GP reporting worsening palpitations and exertional
+dyspnoea (NYHA Class II). She had no chest pain or pre-syncope. ECG at GP
+confirmed AF with rapid ventricular response (HR 138 bpm). She was transferred
+to the Emergency Department.
+
+Her AF was previously diagnosed in 2023. She has been on apixaban and bisoprolol
+since that time. Recent addition of clarithromycin 10 days prior for chest
+infection may have contributed to AF exacerbation (interaction with bisoprolol).
+
+She also takes sertraline 100 mg daily (depression, commenced 2020) and
+tramadol SR 100 mg twice daily for chronic hip pain (osteoarthritis awaiting
+right hip replacement surgery, listed May 2026).
+
+PAST MEDICAL HISTORY
+--------------------
+1. Atrial fibrillation — paroxysmal, diagnosed 2023
+2. Hypertension
+3. Hyperlipidaemia
+4. Major depressive disorder — recurrent, well controlled
+5. Osteoarthritis — bilateral hips (right hip replacement listed May 2026)
+6. Hypothyroidism
+7. Chronic kidney disease Stage 2 (eGFR 68 mL/min/1.73m²)
+
+ALLERGIES AND ADVERSE DRUG REACTIONS
+--------------------------------------
+Ibuprofen — acute kidney injury (2021, hospitalised)
+Latex — contact dermatitis
+
+SOCIAL HISTORY
+--------------
+Lives with husband Patrick. Two adult children interstate. Retired teacher.
+Non-smoker. Alcohol: 1–2 standard drinks, 3x per week. Regular walker (prior
+to hip pain). Drives own vehicle.
+
+EXAMINATION FINDINGS ON ADMISSION
+-----------------------------------
+Vitals: BP 142/88 mmHg, HR 138 bpm (irregular), Temp 36.8°C,
+        SpO2 97% on air, RR 18/min
+Weight: 67 kg   Height: 165 cm   BMI: 24.6
+Cardiovascular: Irregularly irregular rhythm. No murmurs. JVP not elevated.
+                No peripheral oedema.
+Respiratory: Mild bibasal crackles. No wheeze.
+Abdomen: Soft, non-tender. No organomegaly.
+
+INVESTIGATIONS
+--------------
+Bloods (01/04/2026):
+  FBC:         Hb 135 g/L, WCC 8.1 x10^9/L, Plt 224 x10^9/L
+  UEC:         Na 139, K 4.0, Cr 88 umol/L, eGFR 68 mL/min/1.73m²
+  LFTs:        Within normal limits
+  TSH:         1.8 mIU/L (normal — on levothyroxine)
+  CRP:         22 mg/L (mildly elevated)
+  BNP:         145 pg/mL (mildly elevated)
+  INR:         Not applicable (on DOAC)
+  Troponin:    Negative (serial x2)
+
+Imaging:
+  CXR (01/04/2026): Mild pulmonary vascular prominence. No consolidation.
+  Echo (02/04/2026): Mildly dilated left atrium (4.2 cm). LVEF 55%.
+    Mild mitral regurgitation. No pericardial effusion.
+  ECG (01/04/2026): Atrial fibrillation with RVR, HR 138 bpm. No ischaemia.
+
+PROBLEMS AND DIAGNOSES
+-----------------------
+Primary:
+  1. Atrial fibrillation with rapid ventricular response
+     Possible precipitants: clarithromycin drug interaction (QT prolongation
+     risk, CYP3A4 interaction with bisoprolol), respiratory illness
+
+Secondary:
+  2. Hypertension — suboptimally controlled
+  3. Hyperlipidaemia — stable
+  4. Major depressive disorder — stable
+  5. Osteoarthritis bilateral hips — pending right hip replacement
+  6. Hypothyroidism — stable on levothyroxine
+  7. CKD Stage 2
+
+MEDICATION SAFETY NOTE (identified by pharmacist):
+  - Tramadol SR 100 mg BD + sertraline 100 mg daily: MODERATE risk of
+    serotonin syndrome. Tramadol inhibits serotonin reuptake — combined
+    use increases serotonergic transmission. Patient counselled. GP
+    to review and consider switching to alternative analgesic (e.g.,
+    paracetamol scheduled, or referral to pain specialist).
+
+CLINICAL COURSE IN HOSPITAL
+-----------------------------
+Rate control achieved with IV metoprolol 5 mg x2 doses on day 1. Transitioned
+to oral bisoprolol 5 mg (dose increased from 2.5 mg). Converted to normal sinus
+rhythm spontaneously on day 2. Rhythm stable since.
+
+Apixaban dose confirmed at 5 mg BD (CHA₂DS₂-VASc score = 4: age, sex, HTN,
+prior AF — anticoagulation appropriate and continued).
+
+Clarithromycin course completed prior to admission (day 10 of 10) — no further
+doses required. Interaction noted and flagged for GP awareness.
+
+Bisoprolol uptitrated to 5 mg daily for improved rate control.
+
+Cardiologist reviewed — no indication for rhythm control strategy at present.
+Holter monitor arranged outpatient to characterise AF burden.
+
+Hypertension: irbesartan 150 mg daily added (ACE-I/ARB indicated in CKD + HTN).
+
+Tramadol/sertraline interaction: pharmacist counselled patient. Pain management
+discussed — paracetamol 1 g TDS trialled during admission with adequate relief.
+Tramadol weaning plan discussed — patient agreeable to trial of reduction.
+
+MEDICATIONS ON DISCHARGE
+--------------------------
+The following medications are prescribed at the time of discharge:
+
+1.  Apixaban (ELIQUIS) 5 mg — oral tablet — twice daily
+    Indication: Stroke prevention in atrial fibrillation
+    Status: CONTINUING (no change)
+    NOTE: Do not miss doses. Inform all treating clinicians.
+
+2.  Bisoprolol (BICOR) 5 mg — oral tablet — once daily in morning
+    Indication: Atrial fibrillation rate control
+    Status: DOSE INCREASED (from 2.5 mg daily)
+
+3.  Irbesartan (AVAPRO) 150 mg — oral tablet — once daily in morning
+    Indication: Hypertension, renal protection (CKD)
+    Status: NEW — commenced during admission
+    NOTE: Monitor renal function and potassium in 1–2 weeks.
+
+4.  Sertraline (ZOLOFT) 100 mg — oral tablet — once daily in morning
+    Indication: Major depressive disorder
+    Status: CONTINUING (no change)
+    INTERACTION NOTE: Combined with tramadol — serotonin syndrome risk.
+    GP to review analgesic strategy.
+
+5.  Tramadol SR (TRAMAL SR) 100 mg — oral tablet — twice daily
+    Indication: Chronic hip pain (osteoarthritis)
+    Status: CONTINUING pending GP review (DOSE REDUCTION planned outpatient)
+    INTERACTION ALERT: Serotonin syndrome risk with sertraline.
+    Consider replacing with paracetamol 1 g TDS or referral to pain specialist.
+    NOTE: Tramadol also lowers seizure threshold.
+
+6.  Levothyroxine (EUTROXSIG) 75 mcg — oral tablet — once daily
+    30 minutes before breakfast
+    Indication: Hypothyroidism
+    Status: CONTINUING (no change)
+
+7.  Rosuvastatin (CRESTOR) 20 mg — oral tablet — once daily at night
+    Indication: Hyperlipidaemia, cardiovascular risk reduction
+    Status: CONTINUING (no change)
+
+8.  Paracetamol 1 g — oral tablet — three times daily (7am, 1pm, 7pm)
+    Indication: Chronic hip pain (adjunct/replacement for tramadol)
+    Status: NEW — commenced during admission
+    NOTE: Do not exceed 4 g/day. Avoid additional paracetamol-containing products.
+
+CEASED MEDICATIONS
+------------------
+The following medications have been ceased during this admission:
+
+1.  Clarithromycin 500 mg twice daily
+    Reason: Course completed (10/10 days for community-acquired chest infection).
+    NOTE for GP: Interaction with bisoprolol noted — clarithromycin inhibits
+    CYP3A4, increasing bisoprolol levels and potentially precipitating this
+    AF episode. Avoid macrolide antibiotics where possible in future.
+    If required, use azithromycin (shorter CYP interaction window).
+
+FOLLOW-UP ARRANGEMENTS
+-----------------------
+1.  GP (Dr Fiona McAlpine): within 7 days — medication reconciliation, BP
+    monitoring, renal function + K+ check (1–2 weeks post irbesartan),
+    tramadol reduction plan
+    Appointment booked: 12 April 2026, 11:00 am
+
+2.  Cardiology (Dr Sarah Nguyen, Canberra Hospital): 6 weeks —
+    AF review, Holter monitor results
+    Appointment: 17 May 2026, 2:00 pm
+
+3.  Holter monitor: 48-hour Holter arranged — patient to attend Cardiology
+    Investigations Unit within 2 weeks
+    Referral sent: 06/04/2026
+
+4.  Orthopaedics: Right hip replacement confirmed for May 2026
+    Pre-operative review with anaesthetics required — inform of AF and
+    anticoagulation
+
+5.  Pre-operative planning: Apixaban bridging plan required before surgery.
+    GP to coordinate with orthopaedic team. Do NOT cease apixaban without
+    specialist guidance.
+
+INFORMATION PROVIDED TO PATIENT AND FAMILY
+-------------------------------------------
+Beverley and Patrick were counselled regarding:
+- AF management, anticoagulation importance
+- Drug interaction between tramadol and sertraline — serotonin syndrome
+  warning signs (agitation, tremor, sweating, rapid heart rate, confusion)
+- When to seek urgent care (palpitations, chest pain, breathlessness,
+  signs of stroke: FAST — Face, Arm, Speech, Time to call 000)
+- Apixaban compliance — never miss doses; do not self-cease before surgery
+- Paracetamol as safer alternative for pain pending orthopaedic surgery
+- Bisoprolol dose increase — may cause fatigue initially
+
+Written medication list and AF action plan provided.
+My Health Record updated.
+
+OUTSTANDING ISSUES / ALERTS FOR GP
+------------------------------------
+1. DRUG INTERACTION: Tramadol + sertraline — serotonin syndrome risk (MODERATE).
+   Prioritise tramadol reduction and replacement. Options:
+   a) Paracetamol 1 g TDS (already commenced — may be sufficient)
+   b) Referral to pain specialist for hip pain management pre-surgery
+   c) Short-term low-dose codeine if needed (caution: constipation)
+   Avoid NSAIDs (ibuprofen AKI history, also interacts with apixaban).
+
+2. ANTIBIOTIC PRESCRIBING: Clarithromycin contraindicated with bisoprolol
+   (significant CYP3A4 interaction). Amoxicillin or azithromycin preferred
+   for future respiratory infections. Document in medication record.
+
+3. SURGICAL PLANNING: Apixaban bridging protocol required. Coordinate with
+   orthopaedics and anaesthetics 4–6 weeks before right hip replacement.
+
+4. CKD monitoring: eGFR 68 — borderline Stage 2/3. Renal function and
+   electrolytes 1–2 weeks post irbesartan commencement. Annual monitoring.
+
+RESPONSIBLE CLINICIAN
+---------------------
+Dr Elena Marchetti MBBS FRACP
+Staff Specialist, Cardiology
+Canberra Hospital, Garran ACT
+Phone: (02) 5124 0000
+Pager: 5543
+Dictated: 6 April 2026
+Authorised: 6 April 2026
+================================================================================
+END OF DISCHARGE SUMMARY
+================================================================================
