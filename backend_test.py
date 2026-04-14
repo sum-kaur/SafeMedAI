@@ -12,8 +12,8 @@ from datetime import datetime
 import base64
 import os
 
-# Use the public endpoint from frontend/.env
-BASE_URL = "https://discharge-med-check.preview.emergentagent.com/api"
+# Local development endpoint
+BASE_URL = "http://localhost:8000/api"
 
 class SafeMedAITester:
     def __init__(self):

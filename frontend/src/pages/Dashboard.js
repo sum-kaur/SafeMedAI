@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import {
-  Users, AlertTriangle, Bell, Plus, CheckCircle,
+  Users, FileText, AlertTriangle, Bell, Plus, CheckCircle,
   Loader2, Shield, Download, Phone,
   Stethoscope, Heart, Pill, Activity, Upload, MessageCircle, TrendingUp,
   ChevronRight, X

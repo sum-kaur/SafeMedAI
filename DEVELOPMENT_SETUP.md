@@ -28,7 +28,7 @@ Update `backend/.env` with your MongoDB connection string and API keys:
 ```
 MONGO_URL=your_mongodb_connection_string
 DB_NAME=safemed_dev
-EMERGENT_LLM_KEY=your_emergent_key
+OPENAI_API_KEY=your_openai_key
 RESEND_API_KEY=your_resend_key
 ```
 
