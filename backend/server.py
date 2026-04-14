@@ -379,7 +379,7 @@ async def demo_login(request: Request):
     if role not in ["medical_practitioner", "family_carer"]:
         raise HTTPException(status_code=400, detail="Invalid role")
     demo_email = f"demo_{role}@safemedai.app"
-    demo_name = "Priya Sharma" if role == "medical_practitioner" else "Sunita Kaur"
+    demo_name = "Dr Williams" if role == "medical_practitioner" else "Olivia Taylor"
     existing = await db.users.find_one({"email": demo_email}, {"_id": 0})
     if existing:
         user_id = existing["user_id"]
@@ -941,6 +941,12 @@ SEED_DATA_PRACTITIONER = {
             "gp_details": "Dr Sarah Wilson - Greenfield Medical Centre",
             "allergies": ["Codeine"], "medical_history": "Insomnia, GERD, Chronic back pain, Mild anxiety",
         },
+        {
+            "name": "Victor Osei", "dob": "1951-08-14", "gender": "Male",
+            "emergency_contact": "Abena Osei (Wife) - 0466 789 012",
+            "gp_details": "Dr Helen Park - Southgate Medical Centre",
+            "allergies": [], "medical_history": "Coronary artery disease (post-CABG 2019), Hypertension, Hypercholesterolaemia, Type 2 Diabetes (diet-controlled)",
+        },
     ],
     "summaries": [
         # Patricia Nguyen — HIGH risk (ACB 10: amitriptyline 3 + oxybutynin 3 + promethazine 3 + metoclopramide 1)
@@ -1021,42 +1027,57 @@ SEED_DATA_PRACTITIONER = {
             "follow_up": "GP review in 1 week to reassess benzodiazepine use. Physiotherapy referral. Consider weaning temazepam at next review.",
             "confidence": 0.86,
         },
+        # Victor Osei — LOW risk (stable cardiac, no anticholinergic burden)
+        {
+            "patient_idx": 5,
+            "meds": [
+                {"name": "Warfarin", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Bisoprolol", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Perindopril", "dose": "5mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Atorvastatin", "dose": "40mg", "frequency": "nightly", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Aspirin", "dose": "100mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+            ],
+            "diagnosis": "Elective cataract surgery (right eye), uncomplicated. Background: stable coronary artery disease post-CABG 2019. Warfarin continued perioperatively under haematology guidance.",
+            "discharge_instructions": "Eye drops as charted for 4 weeks. Avoid rubbing eye. No heavy lifting for 2 weeks. Continue all cardiac medications unchanged. INR check in 5 days.",
+            "follow_up": "Ophthalmology review at 1 week. GP for INR check in 5 days. Cardiology annual review due October 2026.",
+            "confidence": 0.97,
+        },
     ],
 }
 
 SEED_DATA_FAMILY = {
     "patients": [
         {
-            "name": "Nora Kaur", "dob": "1948-06-22", "gender": "Female",
-            "emergency_contact": "Priya Kaur (Daughter) - 0466 789 012",
-            "gp_details": "Dr David Chen - Hillside Medical Centre",
-            "allergies": ["Aspirin"], "medical_history": "Vascular dementia, Urinary incontinence, Hypertension, Type 2 Diabetes",
+            "name": "June Walsh", "dob": "1948-03-14", "gender": "Female",
+            "emergency_contact": "Olivia Taylor (Daughter) - 0412 111 222",
+            "gp_details": "Dr Kevin Barrett - Hillside Medical Centre",
+            "allergies": [], "medical_history": "Alzheimer's dementia (moderate), Urinary incontinence, Hypertension, Osteoporosis, History of falls",
         },
         {
-            "name": "Ronald Kaur", "dob": "1945-03-09", "gender": "Male",
-            "emergency_contact": "Priya Kaur (Daughter) - 0466 789 012",
-            "gp_details": "Dr David Chen - Hillside Medical Centre",
-            "allergies": [], "medical_history": "Chronic heart failure, Chronic kidney disease stage 3, Osteoarthritis",
+            "name": "Brian Walsh", "dob": "1945-11-27", "gender": "Male",
+            "emergency_contact": "Olivia Taylor (Daughter) - 0412 111 222",
+            "gp_details": "Dr Kevin Barrett - Hillside Medical Centre",
+            "allergies": ["Penicillin"], "medical_history": "Chronic heart failure (HFpEF), Type 2 Diabetes, Osteoarthritis both knees, Mild CKD",
         },
     ],
     "summaries": [
-        # Nora Kaur — HIGH risk (multiple anticholinergics for dementia patient)
+        # June Walsh — HIGH risk (dementia + anticholinergics: oxybutynin, diphenhydramine, haloperidol)
         {
             "patient_idx": 0,
             "meds": [
                 {"name": "Oxybutynin", "dose": "5mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
                 {"name": "Haloperidol", "dose": "0.5mg", "frequency": "at night", "route": "oral", "is_new": True, "is_ceased": False, "is_changed": False},
                 {"name": "Diphenhydramine", "dose": "25mg", "frequency": "at night", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
-                {"name": "Metformin", "dose": "500mg", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
                 {"name": "Perindopril", "dose": "4mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
+                {"name": "Calcium + Vitamin D", "dose": "600mg/400IU", "frequency": "twice daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
                 {"name": "Paracetamol", "dose": "500mg", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
             ],
-            "diagnosis": "Behavioural and Psychological Symptoms of Dementia (BPSD) — acute agitation and wandering. Haloperidol added at low dose for acute agitation.",
-            "discharge_instructions": "Haloperidol should be reviewed and if possible ceased within 12 weeks. Monitor for sedation, falls, and worsening confusion. Oxybutynin review recommended — may worsen cognition. Ensure safe home environment.",
-            "follow_up": "GP review within 72 hours. Psychogeriatrician follow-up in 2 weeks. Carer support services referral made. Pharmacist medication review.",
+            "diagnosis": "Behavioural and Psychological Symptoms of Dementia — acute agitation and nocturnal wandering. Haloperidol added at low dose. June was admitted after a fall at home.",
+            "discharge_instructions": "Haloperidol should be reviewed and ceased within 12 weeks if possible. Watch for increased drowsiness, confusion, or further falls. Oxybutynin may worsen memory — discuss with GP at next visit. Ensure home is safe (remove trip hazards, install grab rails).",
+            "follow_up": "GP review within 72 hours. Memory clinic follow-up in 2 weeks. Carer support referral completed. Pharmacist medication review requested.",
             "confidence": 0.89,
         },
-        # Ronald Kaur — MEDIUM risk (tramadol + diuretics)
+        # Brian Walsh — MEDIUM risk (tramadol + heart failure medications)
         {
             "patient_idx": 1,
             "meds": [
@@ -1067,9 +1088,9 @@ SEED_DATA_FAMILY = {
                 {"name": "Omeprazole", "dose": "20mg", "frequency": "daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
                 {"name": "Paracetamol", "dose": "1g", "frequency": "four times daily", "route": "oral", "is_new": False, "is_ceased": False, "is_changed": False},
             ],
-            "diagnosis": "Acute-on-chronic heart failure secondary to medication non-adherence. Stabilised with IV diuresis. Tramadol added for hip osteoarthritis pain.",
-            "discharge_instructions": "Weigh daily — contact GP if weight increases >2 kg in 24 hours. Fluid restriction 1.5 L/day. Low sodium diet. Take all medications as prescribed.",
-            "follow_up": "GP review in 1 week. Heart failure nurse phone call in 3 days. Renal function check in 2 weeks.",
+            "diagnosis": "Acute-on-chronic heart failure — fluid overload secondary to dietary non-adherence. Stabilised with IV diuresis. Tramadol added for knee osteoarthritis pain on discharge.",
+            "discharge_instructions": "Weigh every morning — call the GP if weight increases by more than 2 kg overnight. Limit fluids to 1.5 L per day. Follow a low-salt diet. Take all medications as prescribed. Tramadol may cause drowsiness — do not drive.",
+            "follow_up": "GP review in 1 week. Heart failure nurse to call in 3 days. Kidney function blood test in 2 weeks.",
             "confidence": 0.87,
         },
     ],

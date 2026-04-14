@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, ArrowRight, Users, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -20,7 +21,7 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '' });
+  const [form, setForm] = useState({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '', medical_history: '' });
   const [creating, setCreating] = useState(false);
 
   useEffect(() => { fetchPatients(); }, []);
@@ -43,7 +44,7 @@ export default function PatientsPage() {
       const res = await axios.post(`${API}/patients`, form, { withCredentials: true });
       toast.success('Patient created');
       setOpen(false);
-      setForm({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '' });
+      setForm({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '', medical_history: '' });
       navigate(`/patients/${res.data.patient_id}`);
     } catch (err) {
       toast.error('Failed to create patient');
@@ -95,6 +96,10 @@ export default function PatientsPage() {
                   <div>
                     <Label htmlFor="gp_phone">GP Contact Number</Label>
                     <Input id="gp_phone" data-testid="patient-gp-phone-input" type="tel" value={form.gp_phone} onChange={e => setForm({ ...form, gp_phone: e.target.value })} placeholder="e.g. 03 9123 4567" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="medical_history">{isFamily ? 'Medical History' : 'Past Medical History'}</Label>
+                    <Textarea id="medical_history" data-testid="patient-medical-history-input" value={form.medical_history} onChange={e => setForm({ ...form, medical_history: e.target.value })} placeholder={isFamily ? "e.g. dementia, diabetes, heart conditions, previous hospitalisations" : "Relevant medical background, diagnoses, allergies"} className="mt-1" rows={3} />
                   </div>
                   <Button data-testid="save-patient-btn" onClick={handleCreate} disabled={creating} className="w-full h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
                     {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : isFamily ? 'Add Loved One' : 'Create Patient'}

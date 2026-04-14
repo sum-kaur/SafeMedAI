@@ -117,7 +117,7 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
             <p className="text-sm mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>
               {new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}
               {stats?.total_patients > 0 && (
-                <span> · {stats.total_patients} patient{stats.total_patients !== 1 ? 's' : ''} · {stats.total_documents || 0} document{(stats.total_documents || 0) !== 1 ? 's' : ''}</span>
+                <span> · {stats.total_patients} patient{stats.total_patients !== 1 ? 's' : ''}</span>
               )}
             </p>
           </div>
@@ -194,34 +194,81 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
               <RiskDistributionBar stats={stats} />
             )}
 
-            {/* Patient List */}
-            {sortedPatients.length > 0 ? (
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-base font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                      Patients
-                    </h2>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>
-                      Click a patient to view full profile
-                    </p>
-                  </div>
-                  <button
-                    data-testid="view-all-patients-btn"
-                    onClick={() => navigate('/patients')}
-                    className="flex items-center gap-1 text-sm font-medium transition-opacity hover:opacity-70"
-                    style={{ color: 'var(--sma-brand)' }}
-                  >
-                    Manage all <ChevronRight className="w-4 h-4" />
-                  </button>
+            {/* Patient sections */}
+            {sortedPatients.length > 0 ? (() => {
+              const attention = sortedPatients.filter(p => p.latest_risk_level === 'high' || p.latest_risk_level === 'medium');
+              const onTrack   = sortedPatients.filter(p => p.latest_risk_level === 'low' || !p.latest_risk_level);
+              return (
+                <div className="mb-6">
+                  {attention.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--sma-text-muted)' }}>
+                          Requires Attention
+                          <span className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold" style={{ backgroundColor: 'var(--sma-risk-high-bg)', color: 'var(--sma-risk-high-text)' }}>
+                            {attention.length}
+                          </span>
+                        </h2>
+                        <button
+                          data-testid="view-all-patients-btn"
+                          onClick={() => navigate('/patients')}
+                          className="flex items-center gap-1 text-xs font-medium transition-opacity hover:opacity-70"
+                          style={{ color: 'var(--sma-brand)' }}
+                        >
+                          All patients <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="space-y-2 mb-3">
+                        {attention.map(p => <PractitionerPatientCard key={p.patient_id} patient={p} navigate={navigate} />)}
+                      </div>
+                      {onTrack.length > 0 && (
+                        <div
+                          className="flex items-center justify-between px-4 py-3 rounded-xl"
+                          style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--sma-risk-low-text)' }} />
+                            <span className="text-sm" style={{ color: 'var(--sma-text-secondary)' }}>
+                              {onTrack.length} patient{onTrack.length !== 1 ? 's' : ''} with low medication risk
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => navigate('/patients')}
+                            className="flex items-center gap-1 text-xs font-medium transition-opacity hover:opacity-70"
+                            style={{ color: 'var(--sma-brand)' }}
+                          >
+                            View all <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div
+                      className="p-5 rounded-xl flex items-start gap-4"
+                      style={{ backgroundColor: 'var(--sma-risk-low-bg)', border: '1px solid var(--sma-risk-low-border)' }}
+                    >
+                      <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--sma-risk-low-text)' }} />
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm" style={{ color: 'var(--sma-risk-low-text)', fontFamily: 'Outfit' }}>
+                          All patients on track
+                        </p>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--sma-risk-low-text)' }}>
+                          {onTrack.length} patient{onTrack.length !== 1 ? 's' : ''} — low medication risk profile
+                        </p>
+                      </div>
+                      <button
+                        data-testid="view-all-patients-btn"
+                        onClick={() => navigate('/patients')}
+                        className="flex items-center gap-1 text-sm font-medium transition-opacity hover:opacity-70 flex-shrink-0"
+                        style={{ color: 'var(--sma-brand)' }}
+                      >
+                        View all <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  {sortedPatients.map((p) => (
-                    <PractitionerPatientCard key={p.patient_id} patient={p} navigate={navigate} />
-                  ))}
-                </div>
-              </div>
-            ) : (
+              );
+            })() : (
               <EmptyState
                 icon={Users}
                 title="No patients yet"
@@ -283,20 +330,6 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
             Hi, {firstName}
           </h1>
           <div className="flex gap-2">
-            {stats?.total_patients > 0 && (
-              <Button
-                data-testid="reset-demo-btn"
-                onClick={() => onSeed(true)}
-                disabled={seeding}
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 rounded-lg text-xs font-medium"
-                style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-muted)' }}
-              >
-                {seeding ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : null}
-                Reset Demo
-              </Button>
-            )}
             {stats?.total_patients === 0 && (
               <Button
                 data-testid="seed-demo-btn"
