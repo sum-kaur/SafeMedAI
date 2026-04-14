@@ -29,10 +29,10 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, [checkAuth]);
 
-  const login = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + '/dashboard';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  const login = async (role = 'medical_practitioner') => {
+    const res = await axios.post(`${API}/auth/demo-login`, { role }, { withCredentials: true });
+    setUser(res.data);
+    return res.data;
   };
 
   const logout = async () => {

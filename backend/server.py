@@ -18,6 +18,8 @@ import io
 import asyncio
 import csv
 from io import StringIO
+import re
+import openai
 
 # Resend email (graceful if not configured)
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
@@ -41,38 +43,35 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # ======================== OBJECT STORAGE ========================
-STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
-EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+LLM_MODEL = os.environ.get("LLM_MODEL", "minimax/minimax-m2.5:free")
 APP_NAME = "safemedai"
-storage_key = None
 
-def init_storage():
-    global storage_key
-    if storage_key:
-        return storage_key
-    resp = http_requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_KEY}, timeout=30)
-    resp.raise_for_status()
-    storage_key = resp.json()["storage_key"]
-    return storage_key
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() in ("1", "true", "yes")
+COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax")
+SESSION_COOKIE_NAME = "session_token"
+
+openai_client = None
+if OPENAI_API_KEY:
+    openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
+
+STORAGE_DIR = ROOT_DIR / "storage"
+STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    key = init_storage()
-    resp = http_requests.put(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data, timeout=120
-    )
-    resp.raise_for_status()
-    return resp.json()
+    file_path = STORAGE_DIR / path
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(file_path, "wb") as f:
+        f.write(data)
+    return {"path": path, "size": len(data), "content_type": content_type}
 
 def get_object(path: str):
-    key = init_storage()
-    resp = http_requests.get(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key}, timeout=60
-    )
-    resp.raise_for_status()
-    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+    file_path = STORAGE_DIR / path
+    if not file_path.exists():
+        raise FileNotFoundError(f"Storage object not found: {path}")
+    with open(file_path, "rb") as f:
+        return f.read(), None
 
 # ======================== AUTH HELPERS ========================
 async def get_current_user(request: Request):
@@ -359,46 +358,6 @@ class CareRelationshipCreate(BaseModel):
     relationship_type: str = "carer"
 
 # ======================== AUTH ROUTES ========================
-@api_router.post("/auth/session")
-async def exchange_session(request: Request):
-    body = await request.json()
-    session_id = body.get("session_id")
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
-    try:
-        resp = http_requests.get(
-            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-            headers={"X-Session-ID": session_id}, timeout=10
-        )
-        resp.raise_for_status()
-        data = resp.json()
-    except Exception as e:
-        logger.error(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
-    email = data.get("email")
-    name = data.get("name")
-    picture = data.get("picture")
-    session_token = data.get("session_token")
-    existing = await db.users.find_one({"email": email}, {"_id": 0})
-    if existing:
-        user_id = existing["user_id"]
-        await db.users.update_one({"email": email}, {"$set": {"name": name, "picture": picture, "updated_at": datetime.now(timezone.utc).isoformat()}})
-    else:
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        await db.users.insert_one({
-            "user_id": user_id, "email": email, "name": name, "picture": picture,
-            "role": None, "created_at": datetime.now(timezone.utc).isoformat()
-        })
-    await db.user_sessions.insert_one({
-        "user_id": user_id, "session_token": session_token,
-        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-    response = JSONResponse(content=user)
-    response.set_cookie(key="session_token", value=session_token, httponly=True, secure=True, samesite="none", path="/", max_age=7*24*3600)
-    return response
-
 @api_router.get("/auth/me")
 async def get_me(request: Request):
     user = await get_current_user(request)
@@ -440,7 +399,15 @@ async def demo_login(request: Request):
     })
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     response = JSONResponse(content=user)
-    response.set_cookie(key="session_token", value=session_token, httponly=True, secure=True, samesite="none", path="/", max_age=7*24*3600)
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=session_token,
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        path="/",
+        max_age=7*24*3600
+    )
     return response
 
 # ======================== USER ROUTES ========================
@@ -661,54 +628,131 @@ def generate_explanation(risk: dict):
     else:
         return f"This patient has a low ACB score of {score}. {flagged} out of {total} medications have mild anticholinergic properties. Standard post-discharge follow-up is appropriate."
 
+def _simple_extract_field(text: str, keys: list[str]) -> Optional[str]:
+    for key in keys:
+        match = re.search(rf"{re.escape(key)}\s*[:\-]\s*(.+)", text, re.I)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def simple_discharge_extraction(text: str) -> dict:
+    patient_name = _simple_extract_field(text, ["Patient Name", "Name"])
+    discharge_date = _simple_extract_field(text, ["Discharge Date", "Date of Discharge", "Discharge Date:"])
+    diagnosis = _simple_extract_field(text, ["Diagnosis", "Diagnoses", "Assessment"])
+    discharge_instructions = _simple_extract_field(text, ["Discharge Instructions", "Instructions"])
+    follow_up = _simple_extract_field(text, ["Follow-up", "Follow up", "Follow up instructions"])
+    allergy_text = _simple_extract_field(text, ["Allergies", "Allergy"])
+    allergies = [a.strip() for a in re.split(r",|;|\n", allergy_text)] if allergy_text else []
+    medications = []
+    lower_text = text.lower()
+    for med in ENGINES_REGISTRY["ACB"]["medications"].keys():
+        if med.lower() in lower_text:
+            medications.append({
+                "name": med,
+                "dose": None,
+                "frequency": None,
+                "route": None,
+                "is_new": True,
+                "is_ceased": False,
+                "is_changed": False
+            })
+    medications = [dict(t) for t in {tuple(sorted(m.items())) for m in medications}]
+    return {
+        "patient_name": patient_name,
+        "discharge_date": discharge_date,
+        "diagnosis": diagnosis,
+        "medications": medications,
+        "new_medications": [m["name"] for m in medications],
+        "ceased_medications": [],
+        "changed_doses": [],
+        "discharge_instructions": discharge_instructions,
+        "follow_up": follow_up,
+        "allergies": [a for a in allergies if a],
+        "confidence": 0.5
+    }
+
 async def extract_with_llm(content: str, is_text: bool = False):
-    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
-    system_msg = """You are a medical document extraction system. Extract structured information from hospital discharge summaries. Return ONLY valid JSON with these fields:
-{
-  "patient_name": "string or null",
-  "discharge_date": "string or null",
-  "diagnosis": "string or null",
-  "medications": [{"name": "string", "dose": "string or null", "frequency": "string or null", "route": "string or null", "is_new": true/false, "is_ceased": false, "is_changed": false}],
-  "new_medications": ["medication names"],
-  "ceased_medications": ["medication names"],
-  "changed_doses": [{"name": "string", "old_dose": "string", "new_dose": "string"}],
-  "discharge_instructions": "string or null",
-  "follow_up": "string or null",
-  "allergies": ["string"],
-  "confidence": 0.0-1.0
-}
-Be accurate. Do not hallucinate information not present in the document. If a field cannot be determined, use null. Return ONLY the JSON object."""
-    chat = LlmChat(
-        api_key=EMERGENT_KEY,
-        session_id=f"ocr-{uuid.uuid4().hex[:8]}",
-        system_message=system_msg
+    _empty = {
+        "patient_name": None, "discharge_date": None, "diagnosis": None,
+        "medications": [], "new_medications": [], "ceased_medications": [],
+        "changed_doses": [], "discharge_instructions": None, "follow_up": None,
+        "allergies": [], "confidence": 0.2
+    }
+    if not OPENAI_API_KEY or not openai_client:
+        return simple_discharge_extraction(content) if is_text else _empty
+
+    system_msg = (
+        "You are a medical document extraction system. Extract structured information from hospital "
+        "discharge summaries. Return ONLY valid JSON with these fields:\n"
+        '{"patient_name": "string or null", "discharge_date": "string or null", "diagnosis": "string or null", '
+        '"medications": [{"name": "string", "dose": "string or null", "frequency": "string or null", '
+        '"route": "string or null", "is_new": true, "is_ceased": false, "is_changed": false}], '
+        '"new_medications": ["medication names"], "ceased_medications": ["medication names"], '
+        '"changed_doses": [{"name": "string", "old_dose": "string", "new_dose": "string"}], '
+        '"discharge_instructions": "string or null", "follow_up": "string or null", '
+        '"allergies": ["string"], "confidence": 0.0}\n'
+        "Be accurate. Do not hallucinate. If a field cannot be determined, use null. Return ONLY the JSON object."
     )
-    chat.with_model("openai", "gpt-4o")
-    if is_text:
-        msg = UserMessage(text=f"Extract structured discharge summary data from this text:\n\n{content}")
-    else:
-        image_content = ImageContent(image_base64=content)
-        msg = UserMessage(
-            text="Extract structured discharge summary data from this hospital discharge document image.",
-            file_contents=[image_content]
-        )
-    response = await chat.send_message(msg)
-    text = response.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-        text = text.strip()
-        if text.startswith("json"):
-            text = text[4:].strip()
+
     try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        logger.error(f"Failed to parse LLM response: {text[:500]}")
-        return {"medications": [], "confidence": 0.1, "raw_text": text,
-                "patient_name": None, "discharge_date": None, "diagnosis": None,
-                "new_medications": [], "ceased_medications": [], "changed_doses": [],
-                "discharge_instructions": None, "follow_up": None, "allergies": []}
+        if is_text:
+            messages = [
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": f"Extract structured discharge summary data from this text:\n\n{content}"}
+            ]
+        else:
+            # Image — use Vision API
+            messages = [
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": [
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{content}"}},
+                    {"type": "text", "text": "Extract structured discharge summary data from this hospital document image."}
+                ]}
+            ]
+        response = await asyncio.to_thread(
+            openai_client.chat.completions.create,
+            model=LLM_MODEL if is_text else "gpt-4o",
+            messages=messages,
+            temperature=0.0,
+            max_tokens=1200
+        )
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+            raw = raw.rsplit("```", 1)[0].strip()
+            if raw.startswith("json"):
+                raw = raw[4:].strip()
+        return json.loads(raw)
+    except Exception as e:
+        logger.error(f"LLM extraction failed: {e}")
+        return simple_discharge_extraction(content) if is_text else _empty
+
+async def generate_chat_response(system_msg: str, user_message: str) -> str:
+    if OPENAI_API_KEY and openai_client:
+        messages = [
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": user_message}
+        ]
+        try:
+            response = await asyncio.to_thread(
+                openai_client.chat.completions.create,
+                model=LLM_MODEL,
+                messages=messages,
+                temperature=0.2,
+                max_tokens=800
+            )
+            content = response.choices[0].message.content.strip()
+            return content
+        except Exception as e:
+            logger.error(f"OpenAI chat failed: {e}")
+
+    text = user_message.strip().lower()
+    if "medication" in text or "dose" in text or "drug" in text:
+        return "This local SafeMedAI instance is running in fallback mode. For medication-specific guidance, please consult a clinician."
+    if "risk" in text or "score" in text:
+        return "I can summarize the available patient data, but this local setup does not provide full LLM decision support."
+    return "This is a local SafeMedAI fallback response. Full LLM integration is not configured for local development."
 
 # ======================== RISK RESULTS ========================
 @api_router.get("/risk-results/{patient_id}")
@@ -788,10 +832,7 @@ PREVIOUS CONVERSATION:
 
 Provide helpful, accurate answers grounded in the patient's data. Cite specific medications or findings when relevant. If information is not available in the data, say so honestly."""
 
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
-    chat = LlmChat(api_key=EMERGENT_KEY, session_id=f"chat-{uuid.uuid4().hex[:8]}", system_message=system_msg)
-    chat.with_model("openai", "gpt-4o")
-    ai_response = await chat.send_message(UserMessage(text=body.message))
+    ai_response = await generate_chat_response(system_msg, body.message)
     user_msg = {
         "message_id": f"msg_{uuid.uuid4().hex[:12]}", "patient_id": patient_id,
         "user_id": user["user_id"], "role": "user", "content": body.message,
@@ -1510,11 +1551,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    try:
-        init_storage()
-        logger.info("Object storage initialized successfully")
-    except Exception as e:
-        logger.error(f"Storage init failed (will retry on first use): {e}")
     await db.users.create_index("user_id", unique=True)
     await db.users.create_index("email", unique=True)
     await db.patients.create_index("patient_id", unique=True)

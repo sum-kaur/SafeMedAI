@@ -9,11 +9,21 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState(null);
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
     if (user) {
       window.location.href = user.role ? '/dashboard' : '/select-role';
-    } else {
-      login();
+      return;
+    }
+    try {
+      const loggedIn = await login();
+      if (loggedIn?.role) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/select-role', { replace: true });
+      }
+    } catch {
+      // fallback to demo login for local development
+      await handleDemoLogin('medical_practitioner');
     }
   };
 

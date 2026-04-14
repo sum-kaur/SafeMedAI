@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";

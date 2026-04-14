@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, AlertTriangle, Bell, ArrowRight, Plus, CheckCircle, Loader2, Shield, Download, Upload, MessageCircle, BarChart3, Phone, Stethoscope, Heart, Pill, ExternalLink, BookOpen } from 'lucide-react';
+import {
+  Users, FileText, AlertTriangle, Bell, ArrowRight, Plus, CheckCircle,
+  Loader2, Shield, Download, Upload, MessageCircle, BarChart3, Phone,
+  Stethoscope, Heart, Pill, ExternalLink, BookOpen, Activity, TrendingUp,
+  Clock, ChevronRight, User
+} from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -37,7 +42,7 @@ export default function Dashboard() {
       await axios.post(`${API}/seed`, {}, { withCredentials: true });
       toast.success('Demo data loaded successfully');
       fetchStats();
-    } catch (err) {
+    } catch {
       toast.error('Failed to load demo data');
     } finally {
       setSeeding(false);
@@ -49,24 +54,36 @@ export default function Dashboard() {
     try {
       const res = await axios.get(`${API}/export/patients`, { withCredentials: true, responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a'); link.href = url; link.setAttribute('download', `patients_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link); link.click(); link.remove();
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `patients_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
       toast.success('Patients exported');
-    } catch (err) { toast.error('Export failed'); }
-    finally { setExporting(false); }
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--sma-bg)' }}>
       <Sidebar />
-      <main className="flex-1 p-8" data-testid="dashboard-main">
-        <div className="max-w-6xl mx-auto animate-fade-in">
-          {isPractitioner ? (
-            <PractitionerDashboard stats={stats} loading={loading} seeding={seeding} exporting={exporting} onSeed={handleSeed} onExport={handleExportPatients} navigate={navigate} user={user} />
-          ) : (
-            <FamilyDashboard stats={stats} loading={loading} seeding={seeding} onSeed={handleSeed} navigate={navigate} user={user} />
-          )}
-        </div>
+      <main className="flex-1 overflow-auto" data-testid="dashboard-main">
+        {isPractitioner ? (
+          <PractitionerDashboard
+            stats={stats} loading={loading} seeding={seeding} exporting={exporting}
+            onSeed={handleSeed} onExport={handleExportPatients}
+            navigate={navigate} user={user}
+          />
+        ) : (
+          <FamilyDashboard
+            stats={stats} loading={loading} seeding={seeding}
+            onSeed={handleSeed} navigate={navigate} user={user}
+          />
+        )}
       </main>
     </div>
   );
@@ -74,91 +91,179 @@ export default function Dashboard() {
 
 /* ======================== PRACTITIONER DASHBOARD ======================== */
 function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onExport, navigate, user }) {
-  return (
-    <>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Practitioner Dashboard</h1>
-          <p className="text-base mt-1" style={{ color: 'var(--sma-text-secondary)' }}>Welcome back, {user?.name?.split(' ')[0]}</p>
-        </div>
-        <div className="flex gap-3">
-          {stats?.total_patients > 0 && (
-            <Button data-testid="export-patients-btn" onClick={onExport} disabled={exporting} variant="outline" className="h-11 px-5 rounded-full font-medium" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
-              {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} Export CSV
-            </Button>
-          )}
-          {stats?.total_patients === 0 && (
-            <Button data-testid="seed-demo-btn" onClick={onSeed} disabled={seeding} className="h-11 px-5 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-accent)', color: 'var(--sma-text-inverse)' }}>
-              {seeding ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading Demo...</> : 'Load Demo Data'}
-            </Button>
-          )}
-          <Button data-testid="add-patient-btn" onClick={() => navigate('/patients')} className="h-11 px-5 rounded-full font-medium hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-            <Plus className="w-4 h-4 mr-2" /> New Patient
-          </Button>
-        </div>
-      </div>
+  const firstName = user?.name?.split(' ')[0] || 'Doctor';
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-      {loading ? <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--sma-brand)' }} /></div> : (
-        <>
-          <div className="grid gap-6 mb-8 grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
-            <StatCard icon={Users} label="Patients" value={stats?.total_patients || 0} color="var(--sma-brand)" />
-            <StatCard icon={FileText} label="Documents" value={stats?.total_documents || 0} color="var(--sma-brand)" />
-            <StatCard icon={AlertTriangle} label="High Risk" value={stats?.high_risk || 0} color="var(--sma-risk-high-text)" accent="var(--sma-risk-high-bg)" />
-            <StatCard icon={Bell} label="Unread Alerts" value={stats?.unread_alerts || 0} color="var(--sma-risk-med-text)" accent="var(--sma-risk-med-bg)" />
+  return (
+    <div className="p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto animate-fade-in">
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--sma-brand)' }}>
+              {greeting},
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+              {firstName}
+            </h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
+              {new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
           </div>
-          <div className="grid gap-6 mb-8 grid-cols-1 md:grid-cols-3">
-            {['low', 'medium', 'high'].map((level) => {
-              const c = riskColor(level);
-              return (
-                <div key={level} className="p-6 rounded-xl" style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }} data-testid={`risk-summary-${level}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm uppercase tracking-[0.15em] font-semibold" style={{ color: c.text }}>{level} Risk</p>
-                      <p className="text-3xl font-semibold mt-1" style={{ fontFamily: 'Outfit', color: c.text }}>{stats?.[`${level}_risk`] || 0}</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            {stats?.total_patients > 0 && (
+              <Button
+                data-testid="export-patients-btn"
+                onClick={onExport}
+                disabled={exporting}
+                variant="outline"
+                className="h-10 px-4 rounded-xl font-medium text-sm gap-2"
+                style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }}
+              >
+                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Export CSV
+              </Button>
+            )}
+            {stats?.total_patients === 0 && (
+              <Button
+                data-testid="seed-demo-btn"
+                onClick={onSeed}
+                disabled={seeding}
+                className="h-10 px-4 rounded-xl font-medium text-sm gap-2"
+                style={{ backgroundColor: 'var(--sma-accent)', color: 'white' }}
+              >
+                {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                {seeding ? 'Loading...' : 'Load Demo Data'}
+              </Button>
+            )}
+            <Button
+              data-testid="add-patient-btn"
+              onClick={() => navigate('/patients')}
+              className="h-10 px-5 rounded-xl font-medium text-sm gap-2"
+              style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+            >
+              <Plus className="w-4 h-4" /> New Patient
+            </Button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-32 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--sma-brand)' }} />
+            <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>Loading dashboard…</p>
+          </div>
+        ) : (
+          <>
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <StatCard icon={Users} label="Total Patients" value={stats?.total_patients || 0} color="var(--sma-brand)" bg="var(--sma-surface)" />
+              <StatCard icon={FileText} label="Documents" value={stats?.total_documents || 0} color="var(--sma-brand)" bg="var(--sma-surface)" />
+              <StatCard icon={AlertTriangle} label="High Risk" value={stats?.high_risk || 0} color="var(--sma-risk-high-text)" bg="var(--sma-risk-high-bg)" />
+              <StatCard icon={Bell} label="Unread Alerts" value={stats?.unread_alerts || 0} color="var(--sma-risk-med-text)" bg="var(--sma-risk-med-bg)" />
+            </div>
+
+            {/* Risk Breakdown Row */}
+            {stats?.total_patients > 0 && (
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                {['low', 'medium', 'high'].map((level) => {
+                  const c = riskColor(level);
+                  const icons = { low: CheckCircle, medium: Shield, high: AlertTriangle };
+                  const Icon = icons[level];
+                  const counts = { low: stats?.low_risk || 0, medium: stats?.medium_risk || 0, high: stats?.high_risk || 0 };
+                  const total = stats?.total_patients || 1;
+                  const pct = Math.round((counts[level] / total) * 100);
+                  return (
+                    <div
+                      key={level}
+                      className="p-5 rounded-2xl"
+                      style={{ backgroundColor: c.bg, border: `1px solid ${c.border}` }}
+                      data-testid={`risk-summary-${level}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${c.border}30` }}>
+                          <Icon className="w-5 h-5" style={{ color: c.text }} />
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${c.border}30`, color: c.text }}>
+                          {pct}%
+                        </span>
+                      </div>
+                      <p className="text-2xl font-bold" style={{ fontFamily: 'Outfit', color: c.text }}>{counts[level]}</p>
+                      <p className="text-xs font-medium mt-0.5 capitalize" style={{ color: c.text }}>{level} Risk</p>
                     </div>
-                    {level === 'high' && <AlertTriangle className="w-8 h-8" style={{ color: c.text }} />}
-                    {level === 'medium' && <Shield className="w-8 h-8" style={{ color: c.text }} />}
-                    {level === 'low' && <CheckCircle className="w-8 h-8" style={{ color: c.text }} />}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {/* Practitioner Patient Cards with Upload/Analysis/Score */}
-          {stats?.recent_patients?.length > 0 && (
-            <div className="space-y-5 mb-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-medium" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Recent Patients</h2>
-                <Button data-testid="view-all-patients-btn" variant="ghost" onClick={() => navigate('/patients')} className="text-sm" style={{ color: 'var(--sma-brand)' }}>
-                  View All <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
+                  );
+                })}
               </div>
-              {stats.recent_patients.map((p) => (
-                <PractitionerPatientCard key={p.patient_id} patient={p} navigate={navigate} />
-              ))}
-            </div>
-          )}
-          {stats?.total_patients === 0 && (
-            <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
-              <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
-              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No patients yet</h3>
-              <p className="mb-4" style={{ color: 'var(--sma-text-secondary)' }}>Add a patient or load demo data to get started</p>
-            </div>
-          )}
-          <Disclaimer />
-        </>
-      )}
-    </>
+            )}
+
+            {/* Recent Patients */}
+            {stats?.recent_patients?.length > 0 ? (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+                    Recent Patients
+                  </h2>
+                  <button
+                    data-testid="view-all-patients-btn"
+                    onClick={() => navigate('/patients')}
+                    className="flex items-center gap-1 text-sm font-medium transition-opacity hover:opacity-70"
+                    style={{ color: 'var(--sma-brand)' }}
+                  >
+                    View all <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {stats.recent_patients.map((p) => (
+                    <PractitionerPatientCard key={p.patient_id} patient={p} navigate={navigate} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <EmptyState
+                icon={Users}
+                title="No patients yet"
+                subtitle="Add a patient or load demo data to see the dashboard in action."
+                action={
+                  <div className="flex gap-3 justify-center">
+                    <Button
+                      data-testid="seed-demo-btn"
+                      onClick={onSeed}
+                      disabled={seeding}
+                      variant="outline"
+                      className="h-10 px-5 rounded-xl font-medium text-sm"
+                      style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}
+                    >
+                      {seeding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Load Demo Data
+                    </Button>
+                    <Button
+                      data-testid="add-patient-empty-btn"
+                      onClick={() => navigate('/patients')}
+                      className="h-10 px-5 rounded-xl font-medium text-sm"
+                      style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Add Patient
+                    </Button>
+                  </div>
+                }
+              />
+            )}
+
+            <Disclaimer />
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
-/* ======================== FAMILY / CARER DASHBOARD ======================== */
+/* ======================== FAMILY DASHBOARD ======================== */
 function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
+  const firstName = user?.name?.split(' ')[0] || 'there';
   const highRiskPatients = stats?.recent_patients?.filter(p => p.latest_risk_level === 'high') || [];
   const medRiskPatients = stats?.recent_patients?.filter(p => p.latest_risk_level === 'medium') || [];
-  const hasAlerts = highRiskPatients.length > 0 || medRiskPatients.length > 0;
 
-  // Auto-redirect to upload if family user has exactly 1 patient
   React.useEffect(() => {
     if (!loading && stats?.recent_patients?.length === 1) {
       navigate(`/upload/${stats.recent_patients[0].patient_id}`, { replace: true });
@@ -166,126 +271,182 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
   }, [loading, stats, navigate]);
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Family Dashboard</h1>
-          <p className="text-base mt-1" style={{ color: 'var(--sma-text-secondary)' }}>Here's what needs your attention.</p>
-        </div>
-        <div className="flex gap-3">
-          {stats?.total_patients === 0 && (
-            <Button data-testid="seed-demo-btn" onClick={onSeed} disabled={seeding} className="h-11 px-5 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-accent)', color: 'var(--sma-text-inverse)' }}>
-              {seeding ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading Demo...</> : 'Load Demo Data'}
-            </Button>
-          )}
-          <Button data-testid="add-patient-btn" onClick={() => navigate('/patients')} className="h-11 px-5 rounded-full font-medium hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-            <Plus className="w-4 h-4 mr-2" /> Add Loved One
-          </Button>
-        </div>
-      </div>
+    <div className="p-6 lg:p-8">
+      <div className="max-w-3xl mx-auto animate-fade-in">
 
-      {loading ? <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--sma-brand)' }} /></div> : (
-        <>
-          {/* Medication Review Alert Banners */}
-          {highRiskPatients.length > 0 && (
-            <div className="mb-6 p-5 rounded-xl animate-fade-in" style={{ backgroundColor: 'var(--sma-risk-high-bg)', border: '2px solid var(--sma-risk-high-border)' }} data-testid="high-risk-alert-banner">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-risk-high-border)' }}>
-                  <AlertTriangle className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-risk-high-text)' }}>Urgent: Medication Review Needed</h2>
-                  <p className="text-sm mt-1" style={{ color: 'var(--sma-risk-high-text)' }}>
-                    {highRiskPatients.map(p => p.name).join(', ')} {highRiskPatients.length === 1 ? 'has' : 'have'} a <strong>high risk</strong> medication score. Please book a GP appointment as soon as possible and request a pharmacist medication review.
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <Button data-testid="alert-book-gp-btn" size="sm" className="h-8 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
-                      <Phone className="w-3.5 h-3.5 mr-1" /> Book GP Appointment
-                    </Button>
-                    <Button data-testid="alert-call-pharmacist-btn" size="sm" className="h-8 rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
-                      <Pill className="w-3.5 h-3.5 mr-1" /> Request Pharmacist Review
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {medRiskPatients.length > 0 && (
-            <div className="mb-6 p-5 rounded-xl animate-fade-in" style={{ backgroundColor: 'var(--sma-risk-med-bg)', border: '2px solid var(--sma-risk-med-border)' }} data-testid="medium-risk-alert-banner">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-risk-med-border)' }}>
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-risk-med-text)' }}>Medication Review Recommended</h2>
-                  <p className="text-sm mt-1" style={{ color: 'var(--sma-risk-med-text)' }}>
-                    {medRiskPatients.map(p => p.name).join(', ')} {medRiskPatients.length === 1 ? 'has' : 'have'} a <strong>medium risk</strong> score. Consider booking a GP appointment in the next 1-2 weeks for a medication check.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Stats Row */}
-          <div className="grid gap-6 mb-8 grid-cols-1 sm:grid-cols-3">
-            <StatCard icon={Users} label="My Family" value={stats?.total_patients || 0} color="var(--sma-brand)" />
-            <StatCard icon={FileText} label="Summaries Uploaded" value={stats?.total_documents || 0} color="var(--sma-brand)" />
-            <StatCard icon={AlertTriangle} label="Need Attention" value={(stats?.high_risk || 0) + (stats?.medium_risk || 0)} color="var(--sma-risk-high-text)" accent="var(--sma-risk-high-bg)" />
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--sma-brand)' }}>Welcome back,</p>
+            <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+              {firstName}
+            </h1>
           </div>
-
-          {/* Patient Cards with Actions */}
-          {stats?.recent_patients?.length > 0 && (
-            <div className="space-y-5 mb-8">
-              <h2 className="text-xl font-medium" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>My Family</h2>
-              {stats.recent_patients.map((p) => (
-                <FamilyPatientCard key={p.patient_id} patient={p} navigate={navigate} />
-              ))}
-            </div>
-          )}
-
-          {stats?.total_patients === 0 && (
-            <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
-              <Heart className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-accent)' }} />
-              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No loved ones added yet</h3>
-              <p className="mb-4 text-sm" style={{ color: 'var(--sma-text-secondary)' }}>Add your loved one's details and upload their hospital discharge summary to get started</p>
-              <Button data-testid="family-add-patient-btn" onClick={() => navigate('/patients')} className="h-12 px-6 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                <Plus className="w-4 h-4 mr-2" /> Add Loved One
+          <div className="flex gap-3">
+            {stats?.total_patients === 0 && (
+              <Button
+                data-testid="seed-demo-btn"
+                onClick={onSeed}
+                disabled={seeding}
+                variant="outline"
+                className="h-10 px-4 rounded-xl text-sm font-medium"
+                style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}
+              >
+                {seeding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Try a Demo
               </Button>
-            </div>
-          )}
+            )}
+            <Button
+              data-testid="add-patient-btn"
+              onClick={() => navigate('/patients')}
+              className="h-10 px-5 rounded-xl text-sm font-medium gap-2"
+              style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+            >
+              <Plus className="w-4 h-4" /> Add Loved One
+            </Button>
+          </div>
+        </div>
 
-          {/* Helpful Contacts */}
-          {stats?.total_patients > 0 && (
-            <div className="rounded-xl shadow-sm p-6 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
-              <h2 className="text-lg font-medium mb-4 flex items-center gap-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                <Phone className="w-5 h-5" style={{ color: 'var(--sma-brand)' }} /> Helpful Contacts & Actions
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  { icon: Stethoscope, label: 'Book GP Appointment', desc: 'Contact your usual doctor for a medication review', color: 'var(--sma-brand)' },
-                  { icon: Pill, label: 'Pharmacist Review', desc: 'Ask your local pharmacy for a medication check', color: 'var(--sma-accent)' },
-                  { icon: Phone, label: 'Health Advice Line', desc: 'Call 1800 022 222 for health advice (AU)', color: 'var(--sma-risk-med-text)' },
-                  { icon: AlertTriangle, label: 'Emergency: 000', desc: 'Call immediately for emergencies', color: 'var(--sma-risk-high-text)' },
-                  { icon: Heart, label: 'Hospital Discharge Team', desc: 'Contact the ward that discharged your loved one', color: 'var(--sma-brand)' },
-                  { icon: MessageCircle, label: 'Ask SafeMedAI', desc: 'Ask questions about the discharge summary', color: 'var(--sma-brand)' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-surface-alt)' }} data-testid={`contact-card-${i}`}>
-                    <item.icon className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: item.color }} />
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: 'var(--sma-text-primary)' }}>{item.label}</p>
-                      <p className="text-xs" style={{ color: 'var(--sma-text-muted)' }}>{item.desc}</p>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-32 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--sma-brand)' }} />
+            <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>Loading…</p>
+          </div>
+        ) : (
+          <>
+            {/* Urgent Alert Banners */}
+            {highRiskPatients.length > 0 && (
+              <div
+                className="mb-5 p-5 rounded-2xl"
+                style={{ backgroundColor: 'var(--sma-risk-high-bg)', border: '2px solid var(--sma-risk-high-border)' }}
+                data-testid="high-risk-alert-banner"
+              >
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-risk-high-border)' }}>
+                    <AlertTriangle className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-semibold mb-1" style={{ color: 'var(--sma-risk-high-text)', fontFamily: 'Outfit' }}>
+                      Urgent: Medication Review Needed
+                    </h2>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--sma-risk-high-text)' }}>
+                      <strong>{highRiskPatients.map(p => p.name).join(', ')}</strong> {highRiskPatients.length === 1 ? 'has' : 'have'} a high medication risk score. Please book a GP appointment and request a pharmacist medication review as soon as possible.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button data-testid="alert-book-gp-btn" size="sm" className="h-8 rounded-lg text-xs font-semibold" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
+                        <Phone className="w-3 h-3 mr-1.5" /> Book GP Appointment
+                      </Button>
+                      <Button data-testid="alert-call-pharmacist-btn" size="sm" className="h-8 rounded-lg text-xs font-semibold" style={{ backgroundColor: 'var(--sma-risk-high-border)', color: 'white' }}>
+                        <Pill className="w-3 h-3 mr-1.5" /> Request Pharmacist Review
+                      </Button>
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <Disclaimer />
-        </>
-      )}
-    </>
+            {medRiskPatients.length > 0 && (
+              <div
+                className="mb-5 p-5 rounded-2xl"
+                style={{ backgroundColor: 'var(--sma-risk-med-bg)', border: '1px solid var(--sma-risk-med-border)' }}
+                data-testid="medium-risk-alert-banner"
+              >
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-risk-med-border)' }}>
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold mb-1" style={{ color: 'var(--sma-risk-med-text)', fontFamily: 'Outfit' }}>
+                      Medication Review Recommended
+                    </h2>
+                    <p className="text-sm" style={{ color: 'var(--sma-risk-med-text)' }}>
+                      <strong>{medRiskPatients.map(p => p.name).join(', ')}</strong> {medRiskPatients.length === 1 ? 'has' : 'have'} a medium risk score. Consider booking a GP appointment in the next 1–2 weeks.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <StatCard icon={Users} label="My Family" value={stats?.total_patients || 0} color="var(--sma-brand)" bg="var(--sma-surface)" />
+              <StatCard icon={FileText} label="Summaries" value={stats?.total_documents || 0} color="var(--sma-brand)" bg="var(--sma-surface)" />
+              <StatCard
+                icon={AlertTriangle}
+                label="Need Attention"
+                value={(stats?.high_risk || 0) + (stats?.medium_risk || 0)}
+                color="var(--sma-risk-high-text)"
+                bg="var(--sma-risk-high-bg)"
+              />
+            </div>
+
+            {/* Patient Cards */}
+            {stats?.recent_patients?.length > 0 ? (
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+                  My Family
+                </h2>
+                <div className="space-y-4">
+                  {stats.recent_patients.map((p) => (
+                    <FamilyPatientCard key={p.patient_id} patient={p} navigate={navigate} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <EmptyState
+                icon={Heart}
+                title="No loved ones added yet"
+                subtitle="Add your loved one's details and upload their discharge summary to get started."
+                action={
+                  <Button
+                    data-testid="family-add-patient-btn"
+                    onClick={() => navigate('/patients')}
+                    className="h-10 px-6 rounded-xl font-medium text-sm gap-2"
+                    style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+                  >
+                    <Plus className="w-4 h-4" /> Add Loved One
+                  </Button>
+                }
+              />
+            )}
+
+            {/* Helpful Contacts */}
+            {stats?.total_patients > 0 && (
+              <div className="rounded-2xl p-6 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
+                <h2 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+                  <Phone className="w-4 h-4" style={{ color: 'var(--sma-brand)' }} /> Helpful Contacts
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { icon: Stethoscope, label: 'Book GP Appointment', desc: 'Contact your usual GP for a medication review', color: 'var(--sma-brand)' },
+                    { icon: Pill, label: 'Pharmacist Review', desc: 'Ask your local pharmacy for a medicines check', color: 'var(--sma-accent)' },
+                    { icon: Phone, label: 'Health Advice Line', desc: 'Call 1800 022 222 for health advice (AU)', color: 'var(--sma-risk-med-text)' },
+                    { icon: AlertTriangle, label: 'Emergency: 000', desc: 'Call immediately for medical emergencies', color: 'var(--sma-risk-high-text)' },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 p-3 rounded-xl"
+                      style={{ backgroundColor: 'var(--sma-surface-alt)' }}
+                      data-testid={`contact-card-${i}`}
+                    >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-surface)' }}>
+                        <item.icon className="w-4 h-4" style={{ color: item.color }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--sma-text-primary)' }}>{item.label}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Disclaimer />
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -293,73 +454,112 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
 function PractitionerPatientCard({ patient: p, navigate }) {
   const hasRisk = !!p.latest_risk_level;
   const c = riskColor(p.latest_risk_level);
-  const RIcon = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
   const isHighMed = p.latest_risk_level === 'high' || p.latest_risk_level === 'medium';
+  const RIcon = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
 
   return (
-    <div className="rounded-xl shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--sma-surface)', border: hasRisk && isHighMed ? `2px solid ${c.border}` : '1px solid var(--sma-border)' }} data-testid={`practitioner-patient-card-${p.patient_id}`}>
-      {/* Risk Banner */}
-      {hasRisk && (
-        <div className="px-6 py-3 flex items-center gap-3" style={{ backgroundColor: c.bg, borderBottom: `1px solid ${c.border}` }}>
-          <RIcon className="w-5 h-5" style={{ color: c.text }} />
-          <div className="flex items-center gap-3 flex-1">
-            <span className="text-sm font-bold uppercase" style={{ color: c.text }}>{p.latest_risk_level} Risk</span>
-            <span className="text-sm" style={{ color: c.text }}>|</span>
-            <span className="text-sm font-semibold" style={{ color: c.text }}>Score: {p.latest_risk_score}</span>
-            <span className="text-sm" style={{ color: c.text }}>|</span>
-            <span className="text-xs" style={{ color: c.text }}>{p.latest_risk_level === 'high' ? 'Urgent review required' : p.latest_risk_level === 'medium' ? 'Review recommended' : 'Standard follow-up'}</span>
-          </div>
-        </div>
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        backgroundColor: 'var(--sma-surface)',
+        border: hasRisk && isHighMed ? `1.5px solid ${c.border}` : '1px solid var(--sma-border)',
+      }}
+      data-testid={`practitioner-patient-card-${p.patient_id}`}
+    >
+      {/* Coloured top strip for risky patients */}
+      {hasRisk && isHighMed && (
+        <div className="h-1 w-full" style={{ backgroundColor: c.border }} />
       )}
 
       <div className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)' }}>
-              <span className="text-sm font-semibold" style={{ color: hasRisk ? c.text : 'var(--sma-brand)' }}>{p.name?.[0]}</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</h3>
-              <p className="text-xs" style={{ color: 'var(--sma-text-muted)' }}>DOB: {p.dob || 'N/A'} {p.gender ? `| ${p.gender}` : ''}</p>
-            </div>
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-base font-bold"
+            style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)', color: hasRisk ? c.text : 'var(--sma-brand)' }}
+          >
+            {p.name?.[0]}
           </div>
-          <Button data-testid={`prac-view-profile-${p.patient_id}`} onClick={() => navigate(`/patients/${p.patient_id}`)} variant="ghost" size="sm" className="text-xs rounded-full" style={{ color: 'var(--sma-brand)' }}>
-            Full Profile <ArrowRight className="w-3.5 h-3.5 ml-1" />
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-base" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</h3>
+              {hasRisk && (
+                <span
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                  style={{ backgroundColor: c.bg, color: c.text }}
+                >
+                  <RIcon className="w-3 h-3" />
+                  {p.latest_risk_level} risk · {p.latest_risk_score}
+                </span>
+              )}
+            </div>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>
+              DOB: {p.dob || 'N/A'}{p.gender ? ` · ${p.gender}` : ''}
+            </p>
+          </div>
+
+          {/* Profile link */}
+          <Button
+            data-testid={`prac-view-profile-${p.patient_id}`}
+            onClick={() => navigate(`/patients/${p.patient_id}`)}
+            variant="ghost"
+            size="sm"
+            className="text-xs h-8 px-3 rounded-lg flex-shrink-0"
+            style={{ color: 'var(--sma-brand)' }}
+          >
+            Profile <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </Button>
         </div>
 
         {/* Action Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-          <Button data-testid={`prac-upload-${p.patient_id}`} onClick={() => navigate(`/upload/${p.patient_id}`)} className="h-10 rounded-lg font-medium text-xs" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>
-            <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Document
-          </Button>
-          <Button data-testid={`prac-results-${p.patient_id}`} onClick={() => navigate(`/results/${p.patient_id}`)} variant="outline" className="h-10 rounded-lg font-medium text-xs" style={{ borderColor: hasRisk ? c.border : 'var(--sma-border)', color: hasRisk ? c.text : 'var(--sma-text-secondary)' }}>
-            <BarChart3 className="w-3.5 h-3.5 mr-1.5" /> {hasRisk ? 'View Score' : 'No Score'}
-          </Button>
-          <Button data-testid={`prac-chat-${p.patient_id}`} onClick={() => navigate(`/chat/${p.patient_id}`)} variant="outline" className="h-10 rounded-lg font-medium text-xs" style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}>
-            <MessageCircle className="w-3.5 h-3.5 mr-1.5" /> Clinical Q&A
-          </Button>
-          <Button data-testid={`prac-history-${p.patient_id}`} onClick={() => navigate(`/history/${p.patient_id}`)} variant="outline" className="h-10 rounded-lg font-medium text-xs" style={{ borderColor: 'var(--sma-text-muted)', color: 'var(--sma-text-secondary)' }}>
-            <FileText className="w-3.5 h-3.5 mr-1.5" /> History
-          </Button>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+          <ActionBtn
+            testId={`prac-upload-${p.patient_id}`}
+            icon={Upload}
+            label="Upload"
+            onClick={() => navigate(`/upload/${p.patient_id}`)}
+            primary
+          />
+          <ActionBtn
+            testId={`prac-results-${p.patient_id}`}
+            icon={BarChart3}
+            label={hasRisk ? 'Risk Score' : 'No Score'}
+            onClick={() => navigate(`/results/${p.patient_id}`)}
+            riskColor={hasRisk ? c : null}
+          />
+          <ActionBtn
+            testId={`prac-chat-${p.patient_id}`}
+            icon={MessageCircle}
+            label="Clinical Q&A"
+            onClick={() => navigate(`/chat/${p.patient_id}`)}
+            accent
+          />
+          <ActionBtn
+            testId={`prac-history-${p.patient_id}`}
+            icon={Clock}
+            label="History"
+            onClick={() => navigate(`/history/${p.patient_id}`)}
+          />
         </div>
 
-        {/* Deprescribing Guidelines Link - for medium/high risk */}
+        {/* Deprescribing link */}
         {isHighMed && (
           <a
             href="https://kiktools.amsterdamumc.org/falls/decision-tree/"
             target="_blank"
             rel="noopener noreferrer"
             data-testid={`deprescribing-link-${p.patient_id}`}
-            className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5"
+            className="flex items-center gap-3 p-3 rounded-xl mt-3 transition-opacity hover:opacity-80"
             style={{ backgroundColor: '#EDE9FE', border: '1px solid #C4B5FD' }}
           >
-            <BookOpen className="w-5 h-5 flex-shrink-0" style={{ color: '#5B21B6' }} />
-            <div className="flex-1">
+            <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: '#6D28D9' }} />
+            <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold" style={{ color: '#5B21B6' }}>Medication Withdrawal Guidelines</p>
-              <p className="text-[10px]" style={{ color: '#7C3AED' }}>Amsterdam UMC CAREFREE decision tree for deprescribing fall-risk medications</p>
+              <p className="text-[11px]" style={{ color: '#7C3AED' }}>Amsterdam UMC CAREFREE deprescribing decision tree</p>
             </div>
-            <ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#5B21B6' }} />
+            <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6D28D9' }} />
           </a>
         )}
       </div>
@@ -373,82 +573,83 @@ function FamilyPatientCard({ patient: p, navigate }) {
   const c = riskColor(p.latest_risk_level);
   const RIcon = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
 
-  const riskExplanation = {
-    high: 'This patient has a high medication risk score. Some of their medicines may interact or cause side effects, especially in older adults. Please seek a medication review urgently.',
-    medium: 'Some medications may need checking. Consider booking a GP or pharmacist review in the next 1-2 weeks.',
-    low: 'The current medications appear to have a low risk profile. Continue attending scheduled follow-up appointments.',
+  const riskMsg = {
+    high: 'Some medicines may interact or cause side effects. Please seek a medication review urgently.',
+    medium: 'Some medications may need checking. Consider booking a GP or pharmacist review soon.',
+    low: 'The current medications appear to have a low risk profile. Keep attending follow-up appointments.',
   };
 
   return (
-    <div className="rounded-xl shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid={`family-patient-card-${p.patient_id}`}>
-      {/* Risk Banner */}
-      {hasRisk && (
-        <div className="px-6 py-3 flex items-center gap-3" style={{ backgroundColor: c.bg, borderBottom: `2px solid ${c.border}` }} data-testid={`patient-risk-banner-${p.patient_id}`}>
-          <RIcon className="w-5 h-5" style={{ color: c.text }} />
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold uppercase" style={{ color: c.text }}>{p.latest_risk_level} Risk</span>
-              <span className="text-sm" style={{ color: c.text }}>|</span>
-              <span className="text-sm font-semibold" style={{ color: c.text }}>Score: {p.latest_risk_score}</span>
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}
+      data-testid={`family-patient-card-${p.patient_id}`}
+    >
+      {hasRisk && <div className="h-1 w-full" style={{ backgroundColor: c.border }} />}
+
+      <div className="p-5">
+        {/* Patient Info */}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold"
+              style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)', color: hasRisk ? c.text : 'var(--sma-brand)' }}
+            >
+              {p.name?.[0]}
+            </div>
+            <div>
+              <h3 className="font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</h3>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--sma-text-muted)' }}>
+                DOB: {p.dob || 'Not set'}{p.gender ? ` · ${p.gender}` : ''}
+              </p>
             </div>
           </div>
-          {p.latest_risk_level !== 'low' && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: c.border, color: 'white' }}>
-              {p.latest_risk_level === 'high' ? 'Seek Urgent Review' : 'Review Recommended'}
+          {hasRisk && (
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0"
+              style={{ backgroundColor: c.bg, color: c.text }}
+              data-testid={`patient-risk-banner-${p.patient_id}`}
+            >
+              <RIcon className="w-3.5 h-3.5" />
+              {p.latest_risk_level} · {p.latest_risk_score}
             </span>
           )}
         </div>
-      )}
 
-      <div className="p-6">
-        {/* Patient Info */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</h3>
-            <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>DOB: {p.dob || 'Not set'} {p.gender ? `| ${p.gender}` : ''}</p>
-          </div>
-          <Button data-testid={`family-view-profile-${p.patient_id}`} onClick={() => navigate(`/patients/${p.patient_id}`)} variant="ghost" size="sm" className="text-xs rounded-full" style={{ color: 'var(--sma-brand)' }}>
-            View Profile <ArrowRight className="w-3.5 h-3.5 ml-1" />
-          </Button>
-        </div>
-
-        {/* Risk Explanation */}
+        {/* Risk explanation */}
         {hasRisk && (
-          <div className="p-4 rounded-lg mb-4" style={{ backgroundColor: c.bg }} data-testid={`risk-explanation-${p.patient_id}`}>
-            <p className="text-sm leading-relaxed" style={{ color: c.text }}>
-              {riskExplanation[p.latest_risk_level] || riskExplanation.low}
-            </p>
+          <div
+            className="p-4 rounded-xl mb-4 text-sm leading-relaxed"
+            style={{ backgroundColor: c.bg, color: c.text }}
+            data-testid={`risk-explanation-${p.patient_id}`}
+          >
+            {riskMsg[p.latest_risk_level] || riskMsg.low}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Button
-            data-testid={`family-upload-${p.patient_id}`}
+        {/* Actions */}
+        <div className="grid grid-cols-3 gap-2">
+          <ActionBtn
+            testId={`family-upload-${p.patient_id}`}
+            icon={Upload}
+            label="Upload"
             onClick={() => navigate(`/upload/${p.patient_id}`)}
-            className="h-12 rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5"
-            style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
-          >
-            <Upload className="w-4 h-4 mr-2" /> Upload Summary
-          </Button>
-          <Button
-            data-testid={`family-view-analysis-${p.patient_id}`}
+            primary
+          />
+          <ActionBtn
+            testId={`family-view-analysis-${p.patient_id}`}
+            icon={TrendingUp}
+            label={hasRisk ? 'View Analysis' : 'No Analysis'}
             onClick={() => navigate(`/results/${p.patient_id}`)}
-            variant="outline"
-            className="h-12 rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5"
-            style={{ borderColor: hasRisk ? c.border : 'var(--sma-border)', color: hasRisk ? c.text : 'var(--sma-text-secondary)' }}
-          >
-            <BarChart3 className="w-4 h-4 mr-2" /> {hasRisk ? 'View Analysis' : 'No Analysis Yet'}
-          </Button>
-          <Button
-            data-testid={`family-ask-questions-${p.patient_id}`}
+            riskColor={hasRisk ? c : null}
+          />
+          <ActionBtn
+            testId={`family-ask-questions-${p.patient_id}`}
+            icon={MessageCircle}
+            label="Ask Questions"
             onClick={() => navigate(`/chat/${p.patient_id}`)}
-            variant="outline"
-            className="h-12 rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5"
-            style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}
-          >
-            <MessageCircle className="w-4 h-4 mr-2" /> Ask Questions
-          </Button>
+            accent
+          />
         </div>
       </div>
     </div>
@@ -457,28 +658,77 @@ function FamilyPatientCard({ patient: p, navigate }) {
 
 /* ======================== SHARED COMPONENTS ======================== */
 
-function Disclaimer() {
+function ActionBtn({ testId, icon: Icon, label, onClick, primary, accent, riskColor: rc }) {
+  let bg = 'var(--sma-surface-alt)';
+  let color = 'var(--sma-text-secondary)';
+  let border = '1px solid var(--sma-border)';
+
+  if (primary) { bg = 'var(--sma-brand)'; color = 'white'; border = 'none'; }
+  else if (accent) { bg = 'transparent'; color = 'var(--sma-accent)'; border = `1px solid var(--sma-accent)`; }
+  else if (rc) { bg = rc.bg; color = rc.text; border = `1px solid ${rc.border}`; }
+
   return (
-    <div className="mt-8 p-4 rounded-lg text-xs text-center" style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-text-muted)' }} data-testid="dashboard-disclaimer">
-      This tool provides decision support only and does not replace professional medical judgment.
+    <button
+      data-testid={testId}
+      onClick={onClick}
+      className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl text-xs font-medium transition-opacity hover:opacity-80 w-full"
+      style={{ backgroundColor: bg, color, border }}
+    >
+      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, color, bg }) {
+  return (
+    <div
+      className="p-5 rounded-2xl"
+      style={{ backgroundColor: bg, border: '1px solid var(--sma-border)' }}
+      data-testid={`stat-${label.toLowerCase().replace(/\s+/g, '-')}`}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className="w-4 h-4" style={{ color }} />
+        <p className="text-xs font-medium" style={{ color: 'var(--sma-text-muted)' }}>{label}</p>
+      </div>
+      <p className="text-3xl font-bold" style={{ fontFamily: 'Outfit', color }}>{value}</p>
     </div>
   );
 }
 
-function StatCard({ icon: Icon, label, value, color, accent }) {
+function EmptyState({ icon: Icon, title, subtitle, action }) {
   return (
-    <div className="p-6 rounded-xl shadow-sm" style={{ backgroundColor: accent || 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid={`stat-${label.toLowerCase().replace(/\s+/g, '-')}`}>
-      <div className="flex items-center gap-3 mb-2">
-        <Icon className="w-5 h-5" style={{ color }} />
-        <p className="text-sm font-medium" style={{ color: 'var(--sma-text-secondary)' }}>{label}</p>
+    <div
+      className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-2xl mb-8"
+      style={{ backgroundColor: 'var(--sma-surface)', border: '1px dashed var(--sma-border)' }}
+    >
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+        style={{ backgroundColor: 'var(--sma-surface-alt)' }}
+      >
+        <Icon className="w-8 h-8" style={{ color: 'var(--sma-text-muted)' }} />
       </div>
-      <p className="text-3xl font-semibold" style={{ fontFamily: 'Outfit', color }}>{value}</p>
+      <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{title}</h3>
+      <p className="text-sm mb-6 max-w-sm" style={{ color: 'var(--sma-text-secondary)' }}>{subtitle}</p>
+      {action}
+    </div>
+  );
+}
+
+function Disclaimer() {
+  return (
+    <div
+      className="mt-4 p-4 rounded-xl text-xs text-center"
+      style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-text-muted)' }}
+      data-testid="dashboard-disclaimer"
+    >
+      This tool provides decision support only and does not replace professional medical judgment. Always consult a qualified healthcare professional.
     </div>
   );
 }
 
 const riskColor = (level) => ({
-  high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)' },
-  medium: { bg: 'var(--sma-risk-med-bg)', border: 'var(--sma-risk-med-border)', text: 'var(--sma-risk-med-text)' },
-  low: { bg: 'var(--sma-risk-low-bg)', border: 'var(--sma-risk-low-border)', text: 'var(--sma-risk-low-text)' },
+  high:   { bg: 'var(--sma-risk-high-bg)',  border: 'var(--sma-risk-high-border)',  text: 'var(--sma-risk-high-text)' },
+  medium: { bg: 'var(--sma-risk-med-bg)',   border: 'var(--sma-risk-med-border)',   text: 'var(--sma-risk-med-text)' },
+  low:    { bg: 'var(--sma-risk-low-bg)',   border: 'var(--sma-risk-low-border)',   text: 'var(--sma-risk-low-text)' },
 }[level] || { bg: 'var(--sma-surface-alt)', border: 'var(--sma-border)', text: 'var(--sma-text-secondary)' });
