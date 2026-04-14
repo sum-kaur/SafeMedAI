@@ -398,6 +398,19 @@ async def demo_login(request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+
+    # Auto-seed fresh demo data every login so the demo always starts in a clean, known state
+    existing_patients = await db.patients.find({"created_by": user_id}, {"_id": 0, "patient_id": 1}).to_list(100)
+    if existing_patients:
+        patient_ids = [p["patient_id"] for p in existing_patients]
+        await db.patients.delete_many({"created_by": user_id})
+        await db.documents.delete_many({"created_by": user_id})
+        await db.parsed_summaries.delete_many({"patient_id": {"$in": patient_ids}})
+        await db.risk_results.delete_many({"patient_id": {"$in": patient_ids}})
+        await db.alerts.delete_many({"user_id": user_id})
+    dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
+    await _insert_seed_records(user, dataset)
+
     response = JSONResponse(content=user)
     response.set_cookie(
         key=SESSION_COOKIE_NAME,

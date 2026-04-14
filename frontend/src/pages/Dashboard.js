@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Users, FileText, AlertTriangle, Bell, Plus, CheckCircle,
-  Loader2, Shield, Download, Heart, Activity,
+  Loader2, Shield, Download, Heart,
   ChevronRight, X
 } from 'lucide-react';
 import axios from 'axios';
@@ -18,7 +18,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const [exporting, setExporting] = useState(false);
   const isPractitioner = user?.role === 'medical_practitioner';
 
@@ -32,19 +31,6 @@ export default function Dashboard() {
       console.error('Failed to fetch stats:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSeed = async (force = false) => {
-    setSeeding(true);
-    try {
-      await axios.post(`${API}/seed${force ? '?force=true' : ''}`, {}, { withCredentials: true });
-      toast.success(force ? 'Demo data reset successfully' : 'Demo data loaded successfully');
-      fetchStats();
-    } catch {
-      toast.error('Failed to load demo data');
-    } finally {
-      setSeeding(false);
     }
   };
 
@@ -73,14 +59,13 @@ export default function Dashboard() {
       <main className="flex-1 overflow-auto" data-testid="dashboard-main">
         {isPractitioner ? (
           <PractitionerDashboard
-            stats={stats} loading={loading} seeding={seeding} exporting={exporting}
-            onSeed={handleSeed} onExport={handleExportPatients}
+            stats={stats} loading={loading} exporting={exporting}
+            onExport={handleExportPatients}
             navigate={navigate} user={user}
           />
         ) : (
           <FamilyDashboard
-            stats={stats} loading={loading} seeding={seeding}
-            onSeed={(force) => handleSeed(force)} navigate={navigate} user={user}
+            stats={stats} loading={loading} navigate={navigate} user={user}
           />
         )}
       </main>
@@ -89,7 +74,7 @@ export default function Dashboard() {
 }
 
 /* ======================== PRACTITIONER DASHBOARD ======================== */
-function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onExport, navigate, user }) {
+function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, user }) {
   // Strip any "Dr" prefix — the greeting template adds it explicitly
   const cleanName = (user?.name || '').replace(/^Dr\.?\s+/i, '').trim();
   const firstName = cleanName.split(' ')[0] || 'Doctor';
@@ -133,18 +118,6 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
               >
                 {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 Export CSV
-              </Button>
-            )}
-            {stats?.total_patients === 0 && (
-              <Button
-                data-testid="seed-demo-btn"
-                onClick={onSeed}
-                disabled={seeding}
-                className="h-9 px-4 rounded-xl font-medium text-sm gap-2"
-                style={{ backgroundColor: 'var(--sma-accent)', color: 'white' }}
-              >
-                {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-                {seeding ? 'Loading…' : 'Load Demo Data'}
               </Button>
             )}
             <Button
@@ -272,29 +245,16 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
               <EmptyState
                 icon={Users}
                 title="No patients yet"
-                subtitle="Add a patient or load demo data to see the dashboard in action."
+                subtitle="Add a patient to get started."
                 action={
-                  <div className="flex gap-3 justify-center">
-                    <Button
-                      data-testid="seed-demo-btn"
-                      onClick={onSeed}
-                      disabled={seeding}
-                      variant="outline"
-                      className="h-9 px-5 rounded-xl font-medium text-sm"
-                      style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}
-                    >
-                      {seeding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Load Demo Data
-                    </Button>
-                    <Button
-                      data-testid="add-patient-empty-btn"
-                      onClick={() => navigate('/patients')}
-                      className="h-9 px-5 rounded-xl font-medium text-sm"
-                      style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> Add Patient
-                    </Button>
-                  </div>
+                  <Button
+                    data-testid="add-patient-empty-btn"
+                    onClick={() => navigate('/patients')}
+                    className="h-9 px-5 rounded-xl font-medium text-sm"
+                    style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Add Patient
+                  </Button>
                 }
               />
             )}
@@ -306,7 +266,7 @@ function PractitionerDashboard({ stats, loading, seeding, exporting, onSeed, onE
 }
 
 /* ======================== FAMILY DASHBOARD ======================== */
-function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
+function FamilyDashboard({ stats, loading, navigate, user }) {
   // Strip any "Dr" prefix — families are never addressed as "Dr"
   const cleanName = (user?.name || '').replace(/^Dr\.?\s+/i, '').trim();
   const firstName = cleanName.split(' ')[0] || 'there';
@@ -329,29 +289,14 @@ function FamilyDashboard({ stats, loading, seeding, onSeed, navigate, user }) {
           <h1 className="text-2xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
             Hi, {firstName}
           </h1>
-          <div className="flex gap-2">
-            {stats?.total_patients === 0 && (
-              <Button
-                data-testid="seed-demo-btn"
-                onClick={() => onSeed(false)}
-                disabled={seeding}
-                variant="outline"
-                className="h-9 px-4 rounded-xl text-sm font-medium"
-                style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}
-              >
-                {seeding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Try a Demo
-              </Button>
-            )}
-            <Button
-              data-testid="add-patient-btn"
-              onClick={() => navigate('/patients')}
-              className="h-9 px-4 rounded-xl text-sm font-medium gap-2"
-              style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
-            >
-              <Plus className="w-4 h-4" /> Add Loved One
-            </Button>
-          </div>
+          <Button
+            data-testid="add-patient-btn"
+            onClick={() => navigate('/patients')}
+            className="h-9 px-4 rounded-xl text-sm font-medium gap-2"
+            style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+          >
+            <Plus className="w-4 h-4" /> Add Loved One
+          </Button>
         </div>
 
         {loading ? (
