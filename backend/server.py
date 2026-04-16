@@ -2,8 +2,7 @@ from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Header,
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-from gridfs import GridFS
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 import os
 import logging
 import uuid
@@ -37,7 +36,7 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 # GridFS for file storage (Railway/Docker-compatible)
-fs = GridFS(db, "fs")
+fs = AsyncIOMotorGridFSBucket(db, bucket_name="fs")
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -59,22 +58,22 @@ openai_client = None
 if OPENAI_API_KEY:
     openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
-def put_object(path: str, data: bytes, content_type: str) -> dict:
+async def put_object(path: str, data: bytes, content_type: str) -> dict:
     """Store file in GridFS. Path is used as filename metadata."""
     try:
-        file_id = fs.put(data, filename=path, content_type=content_type)
+        file_id = await fs.upload_from_stream(path, data, content_type=content_type)
         return {"path": path, "file_id": str(file_id), "size": len(data), "content_type": content_type}
     except Exception as e:
         logger.error(f"GridFS put error: {e}")
         raise
 
-def get_object(path: str):
+async def get_object(path: str):
     """Retrieve file from GridFS by filename (path).
 
     Gracefully handles legacy local file references by returning a clear error.
     """
     try:
-        file_doc = db.fs.files.find_one({"filename": path})
+        file_doc = await db.fs.files.find_one({"filename": path})
         if not file_doc:
             # Check if this looks like a legacy local storage path
             if path.startswith("safemedai/") or "uploads" in path:
@@ -83,8 +82,8 @@ def get_object(path: str):
                     f"This file was uploaded before GridFS storage was configured."
                 )
             raise FileNotFoundError(f"Storage object not found: {path}")
-        file_id = file_doc["_id"]
-        data = fs.get(file_id).read()
+        grid_out = await fs.open_download_stream(file_doc["_id"])
+        data = await grid_out.read()
         return data, file_doc.get("contentType") or file_doc.get("content_type")
     except FileNotFoundError:
         raise
@@ -527,7 +526,7 @@ async def upload_files(patient_id: str, request: Request, files: List[UploadFile
         storage_path = f"{APP_NAME}/uploads/{user['user_id']}/{uuid.uuid4()}.{ext}"
         data = await file.read()
         try:
-            result = put_object(storage_path, data, file.content_type or "application/octet-stream")
+            result = await put_object(storage_path, data, file.content_type or "application/octet-stream")
             doc_id = f"doc_{uuid.uuid4().hex[:12]}"
             doc = {
                 "document_id": doc_id, "patient_id": patient_id, "upload_batch_id": batch_id,
@@ -564,7 +563,7 @@ async def download_file(path: str, request: Request, auth: str = Query(None)):
     record = await db.documents.find_one({"storage_path": path}, {"_id": 0})
     if not record:
         raise HTTPException(status_code=404, detail="File not found")
-    data, content_type = get_object(path)
+    data, content_type = await get_object(path)
     return Response(content=data, media_type=record.get("content_type", content_type))
 
 # ======================== DOCUMENT PROCESSING ========================
@@ -576,7 +575,7 @@ async def process_document(document_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Document not found")
     await db.documents.update_one({"document_id": document_id}, {"$set": {"status": "processing"}})
     try:
-        data, content_type = get_object(doc["storage_path"])
+        data, content_type = await get_object(doc["storage_path"])
         extracted_text = ""
         filename_lower = doc.get("original_filename", "").lower()
         ct_lower = (content_type or "").lower()
