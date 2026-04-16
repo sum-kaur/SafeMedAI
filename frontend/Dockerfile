@@ -26,5 +26,5 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Expose port
 EXPOSE 80
 
-# Process template with envsubst and start nginx
-CMD ["sh", "-c", "envsubst '${BACKEND_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Remove default config, process template with envsubst, then start nginx
+CMD ["sh", "-c", "rm -f /etc/nginx/conf.d/default.conf && envsubst '${BACKEND_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
