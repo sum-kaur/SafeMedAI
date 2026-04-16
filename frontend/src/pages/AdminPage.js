@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Settings, Plus, Trash2, Save, Loader2, AlertTriangle, Shield, CheckCircle, RefreshCw, Zap, Search } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { getApiUrl } from '@/lib/utils';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -32,7 +31,7 @@ export default function AdminPage() {
 
   const fetchEngines = async () => {
     try {
-      const res = await axios.get(`${API}/admin/engines`, { withCredentials: true });
+      const res = await axios.get(`${getApiUrl('/api/')}admin/engines`, { withCredentials: true });
       setEngines(res.data.engines || []);
       setActiveEngine(res.data.active_engine || 'ACB');
       setSelectedEngine(res.data.active_engine || 'ACB');
@@ -45,7 +44,7 @@ export default function AdminPage() {
 
   const fetchConfig = async (engine) => {
     try {
-      const res = await axios.get(`${API}/admin/scoring-config?engine=${engine}`, { withCredentials: true });
+      const res = await axios.get(`${getApiUrl('/api/')}admin/scoring-config?engine=${engine}`, { withCredentials: true });
       setConfig(res.data);
       if (res.data.thresholds) setThresholds(res.data.thresholds);
     } catch (err) {
@@ -56,7 +55,7 @@ export default function AdminPage() {
   const switchEngine = async (engine) => {
     setSwitching(true);
     try {
-      await axios.put(`${API}/admin/engines/active`, { engine }, { withCredentials: true });
+      await axios.put(`${getApiUrl('/api/')}admin/engines/active`, { engine }, { withCredentials: true });
       setActiveEngine(engine);
       toast.success(`Active scoring engine switched to ${engine}`);
       fetchEngines();
@@ -70,7 +69,7 @@ export default function AdminPage() {
   const saveThresholds = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/admin/scoring-config/thresholds?engine=${selectedEngine}`, thresholds, { withCredentials: true });
+      await axios.put(`${getApiUrl('/api/')}admin/scoring-config/thresholds?engine=${selectedEngine}`, thresholds, { withCredentials: true });
       toast.success(`${selectedEngine} thresholds updated`);
     } catch (err) {
       toast.error('Failed to update thresholds');
@@ -82,7 +81,7 @@ export default function AdminPage() {
   const addMedication = async () => {
     if (!newMed.name.trim()) { toast.error('Name required'); return; }
     try {
-      await axios.post(`${API}/admin/scoring-config/medications?engine=${selectedEngine}`, { name: newMed.name, score: parseInt(newMed.score) }, { withCredentials: true });
+      await axios.post(`${getApiUrl('/api/')}admin/scoring-config/medications?engine=${selectedEngine}`, { name: newMed.name, score: parseInt(newMed.score) }, { withCredentials: true });
       toast.success(`Added ${newMed.name} (score ${newMed.score}) to ${selectedEngine}`);
       setNewMed({ name: '', score: '1' });
       setAddOpen(false);
@@ -95,7 +94,7 @@ export default function AdminPage() {
   const removeMedication = async (name) => {
     setDeleting(name);
     try {
-      await axios.delete(`${API}/admin/scoring-config/medications/${encodeURIComponent(name)}?engine=${selectedEngine}`, { withCredentials: true });
+      await axios.delete(`${getApiUrl('/api/')}admin/scoring-config/medications/${encodeURIComponent(name)}?engine=${selectedEngine}`, { withCredentials: true });
       toast.success(`Removed ${name} from ${selectedEngine}`);
       fetchConfig(selectedEngine);
     } catch (err) {

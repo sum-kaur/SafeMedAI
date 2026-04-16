@@ -185,43 +185,33 @@ You can also seed sample patient data from inside the dashboard by clicking **"L
 ```
 SafeMedAI/
 ├── backend/
-│   ├── server.py            # FastAPI application (all routes + business logic)
-│   ├── requirements.txt     # Python dependencies
-│   ├── .env                 # Environment variables (not committed with real keys)
-│   └── storage/             # Local file storage for uploaded documents
+│   ├── Dockerfile             # Railway deployment (Docker)
+│   ├── railway.json           # Railway service configuration
+│   ├── server.py              # FastAPI application
+│   ├── requirements.txt       # Python dependencies
+│   └── .env                   # Environment variables template
 │
 ├── frontend/
+│   ├── Dockerfile             # Railway deployment (nginx)
+│   ├── railway.json           # Railway service configuration
+│   ├── nginx.conf             # SPA routing + API proxy
 │   ├── public/
-│   │   └── index.html       # HTML entry point
+│   │   └── index.html
 │   ├── src/
-│   │   ├── App.js           # Router + layout
-│   │   ├── index.css        # Global styles + CSS variables (design tokens)
-│   │   ├── contexts/
-│   │   │   └── AuthContext.js   # Auth state (login, logout, demo login)
-│   │   ├── components/
-│   │   │   ├── Sidebar.js       # Navigation sidebar
-│   │   │   ├── ProtectedRoute.js
-│   │   │   └── ui/              # Shadcn/UI component library
+│   │   ├── App.js
+│   │   ├── contexts/AuthContext.js
+│   │   ├── lib/utils.js       # API URL helpers
 │   │   ├── pages/
-│   │   │   ├── LandingPage.js   # Public landing page
-│   │   │   ├── Dashboard.js     # Main dashboard (practitioner + family views)
-│   │   │   ├── PatientsPage.js  # Patient list + add patient
-│   │   │   ├── PatientProfile.js
-│   │   │   ├── UploadPage.js    # Document upload (photo / PDF)
-│   │   │   ├── RiskResults.js   # Risk score display + recommendations
-│   │   │   ├── ChatPage.js      # AI Q&A interface
+│   │   │   ├── Dashboard.js
+│   │   │   ├── AdminPage.js
 │   │   │   ├── AlertsPage.js
-│   │   │   ├── AdminPage.js     # Scoring engine config
-│   │   │   ├── SettingsPage.js
-│   │   │   └── ReportHistory.js
-│   │   └── hooks/
-│   │       └── use-toast.js
+│   │   │   ├── ChatPage.js
+│   │   │   └── ...
+│   │   └── components/
 │   ├── package.json
-│   ├── tailwind.config.js
-│   └── craco.config.js
+│   └── tailwind.config.js
 │
-├── README.md
-└── DEVELOPMENT_SETUP.md
+└── README.md
 ```
 
 ---
@@ -258,7 +248,68 @@ Key endpoint groups:
 - Add a real `OPENAI_API_KEY` to enable AI extraction and chat
 - Add `RESEND_API_KEY` + `SENDER_EMAIL` to enable email alerts
 
-### Running in production
+---
+
+## Railway Deployment
+
+SafeMed is configured for Docker-based deployment on Railway. The platform automatically builds from the `Dockerfile` in each service directory.
+
+### Prerequisites
+
+- Railway account: [railway.app](https://railway.app)
+- Railway CLI: `npm install -g @railway/cli`
+- MongoDB instance (Railway MongoDB service or MongoDB Atlas)
+
+### Step 1: Deploy Backend
+
+```bash
+cd backend
+railway login
+railway init --name safemed-backend
+railway up --detach
+```
+
+### Step 2: Configure Backend Environment Variables
+
+Set these variables on the backend service via Railway dashboard or CLI:
+
+```bash
+railway variables set MONGO_URL="mongodb+srv://user:pass@cluster.mongodb.net/"
+railway variables set DB_NAME="safemed"
+railway variables set OPENAI_API_KEY="sk-..."           # Optional
+railway variables set RESEND_API_KEY="re_..."           # Optional
+railway variables set SENDER_EMAIL="alerts@yourdomain.com"  # Optional
+railway variables set CORS_ORIGINS="https://safemed-frontend.up.railway.app"
+```
+
+### Step 3: Deploy Frontend
+
+```bash
+cd frontend
+railway login
+railway init --name safemed-frontend
+railway up --detach
+```
+
+### Step 4: Configure Frontend Environment Variables
+
+```bash
+railway variables set BACKEND_URL="https://safemed-backend.up.railway.app"
+```
+
+> **Note:** For internal Railway networking (same project), you can use the service name directly: `BACKEND_URL=http://safemed-backend:8000`
+
+### Step 5: Seed Demo Data
+
+After deployment, seed demo patient data:
+
+```bash
+curl -X POST https://safemed-backend.up.railway.app/api/seed
+```
+
+Demo data also seeds automatically on first login.
+
+### Running in production (self-hosted)
 
 **Backend:**
 ```bash

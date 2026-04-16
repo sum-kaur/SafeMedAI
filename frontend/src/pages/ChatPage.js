@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, MessageCircle, Bot, User, Loader2, Shield } from 'lucide-react';
 import axios from 'axios';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function ChatPage() {
   const { patientId } = useParams();
@@ -24,7 +25,7 @@ export default function ChatPage() {
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get(`${API}/chat/${patientId}/messages`, { withCredentials: true });
+      const res = await axios.get(`${getApiUrl('/api/')}chat/${patientId}/messages`, { withCredentials: true });
       setMessages(res.data);
     } catch (err) {
       console.error(err);
@@ -40,7 +41,7 @@ export default function ChatPage() {
     setSending(true);
     setMessages(prev => [...prev, { message_id: 'temp', role: 'user', content: text, created_at: new Date().toISOString() }]);
     try {
-      const res = await axios.post(`${API}/chat/${patientId}/messages`, { message: text }, { withCredentials: true });
+      const res = await axios.post(`${getApiUrl('/api/')}chat/${patientId}/messages`, { message: text }, { withCredentials: true });
       setMessages(prev => [
         ...prev.filter(m => m.message_id !== 'temp'),
         res.data.user_message,

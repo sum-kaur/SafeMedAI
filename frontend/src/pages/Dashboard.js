@@ -10,8 +10,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get(`${API}/dashboard/stats`, { withCredentials: true });
+      const res = await axios.get(`${getApiUrl('/api/')}dashboard/stats`, { withCredentials: true });
       setStats(res.data);
     } catch (err) {
       console.error('Failed to fetch stats:', err);
@@ -37,7 +38,7 @@ export default function Dashboard() {
   const handleExportPatients = async () => {
     setExporting(true);
     try {
-      const res = await axios.get(`${API}/export/patients`, { withCredentials: true, responseType: 'blob' });
+      const res = await axios.get(`${getApiUrl('/api/')}export/patients`, { withCredentials: true, responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;

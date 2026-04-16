@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
+import { getApiUrl } from '../lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      const res = await axios.get(getApiUrl('/api/auth/me'), { withCredentials: true });
       setUser(res.data);
     } catch {
       setUser(null);
@@ -30,14 +30,14 @@ export function AuthProvider({ children }) {
   }, [checkAuth]);
 
   const login = async (role = 'medical_practitioner') => {
-    const res = await axios.post(`${API}/auth/demo-login`, { role }, { withCredentials: true });
+    const res = await axios.post(getApiUrl('/api/auth/demo-login'), { role }, { withCredentials: true });
     setUser(res.data);
     return res.data;
   };
 
   const logout = async () => {
     try {
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+      await axios.post(getApiUrl('/api/auth/logout'), {}, { withCredentials: true });
     } catch {}
     setUser(null);
   };
@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
 
   const demoLogin = async (role) => {
     try {
-      const res = await axios.post(`${API}/auth/demo-login`, { role }, { withCredentials: true });
+      const res = await axios.post(getApiUrl('/api/auth/demo-login'), { role }, { withCredentials: true });
       setUser(res.data);
       return res.data;
     } catch (err) {

@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Bell, AlertTriangle, Shield, CheckCircle, Check, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { getApiUrl } from '@/lib/utils';
 
 export default function AlertsPage() {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ export default function AlertsPage() {
 
   const fetchAlerts = async () => {
     try {
-      const res = await axios.get(`${API}/alerts`, { withCredentials: true });
+      const res = await axios.get(`${getApiUrl('/api/')}alerts`, { withCredentials: true });
       setAlerts(res.data);
     } catch (err) {
       console.error(err);
@@ -28,7 +27,7 @@ export default function AlertsPage() {
 
   const markRead = async (alertId) => {
     try {
-      await axios.put(`${API}/alerts/${alertId}/read`, {}, { withCredentials: true });
+      await axios.put(`${getApiUrl('/api/')}alerts/${alertId}/read`, {}, { withCredentials: true });
       setAlerts(prev => prev.map(a => a.alert_id === alertId ? { ...a, read: true } : a));
     } catch (err) {
       toast.error('Failed to mark alert');

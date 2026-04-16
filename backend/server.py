@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from gridfs import GridFS
 import os
 import logging
 import uuid
@@ -35,6 +36,8 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+# GridFS for file storage (Railway/Docker-compatible)
+fs = GridFS(db, "fs")
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -42,7 +45,7 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# ======================== OBJECT STORAGE ========================
+# ======================== OBJECT STORAGE (GridFS) ========================
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_API_BASE = os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
 LLM_MODEL = os.environ.get("LLM_MODEL", "minimax/minimax-m2.5:free")
@@ -56,22 +59,38 @@ openai_client = None
 if OPENAI_API_KEY:
     openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
-STORAGE_DIR = ROOT_DIR / "storage"
-STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    file_path = STORAGE_DIR / path
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(file_path, "wb") as f:
-        f.write(data)
-    return {"path": path, "size": len(data), "content_type": content_type}
+    """Store file in GridFS. Path is used as filename metadata."""
+    try:
+        file_id = fs.put(data, filename=path, content_type=content_type)
+        return {"path": path, "file_id": str(file_id), "size": len(data), "content_type": content_type}
+    except Exception as e:
+        logger.error(f"GridFS put error: {e}")
+        raise
 
 def get_object(path: str):
-    file_path = STORAGE_DIR / path
-    if not file_path.exists():
-        raise FileNotFoundError(f"Storage object not found: {path}")
-    with open(file_path, "rb") as f:
-        return f.read(), None
+    """Retrieve file from GridFS by filename (path).
+
+    Gracefully handles legacy local file references by returning a clear error.
+    """
+    try:
+        file_doc = db.fs.files.find_one({"filename": path})
+        if not file_doc:
+            # Check if this looks like a legacy local storage path
+            if path.startswith("safemedai/") or "uploads" in path:
+                raise FileNotFoundError(
+                    f"File '{path}' was stored in local storage which is not available in this deployment. "
+                    f"This file was uploaded before GridFS storage was configured."
+                )
+            raise FileNotFoundError(f"Storage object not found: {path}")
+        file_id = file_doc["_id"]
+        data = fs.get(file_id).read()
+        return data, file_doc.get("contentType") or file_doc.get("content_type")
+    except FileNotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"GridFS get error: {e}")
+        raise
 
 # ======================== AUTH HELPERS ========================
 async def get_current_user(request: Request):
@@ -356,6 +375,12 @@ class CareRelationshipCreate(BaseModel):
     patient_id: str
     user_email: str
     relationship_type: str = "carer"
+
+# ======================== HEALTH CHECK ========================
+@api_router.get("/health")
+async def health_check():
+    """Railway health check endpoint - unauthenticated."""
+    return {"ok": True}
 
 # ======================== AUTH ROUTES ========================
 @api_router.get("/auth/me")
@@ -1703,10 +1728,14 @@ async def remove_care_relationship(relationship_id: str, request: Request):
 # ======================== APP CONFIG ========================
 app.include_router(api_router)
 
+# CORS configuration
+cors_origins_raw = os.environ.get('CORS_ORIGINS', '')
+cors_origins = [origin.strip() for origin in cors_origins_raw.split(',') if origin.strip()] if cors_origins_raw else ['*']
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
