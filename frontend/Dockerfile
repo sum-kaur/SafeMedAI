@@ -17,8 +17,8 @@ RUN yarn build
 # Production stage - serve with nginx
 FROM nginx:alpine
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx config template (Railway env var substitution)
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Copy built assets from builder
 COPY --from=builder /app/build /usr/share/nginx/html

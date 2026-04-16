@@ -17,7 +17,7 @@ server {
     location /api/ {
         # Railway provides internal DNS for service discovery
         # Use the backend service name from Railway
-        proxy_pass http://$BACKEND_URL/api/;
+        proxy_pass http://${BACKEND_URL}/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
