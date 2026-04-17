@@ -14,7 +14,7 @@ COPY . .
 # Build the application
 RUN yarn build
 
-# Production stage - serve with nginx
+# Production stage - serve with nginx (rebuild: 2026-04-17 fix api proxy)
 FROM nginx:alpine
 
 # Copy startup script
