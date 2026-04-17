@@ -1,14 +1,15 @@
 #!/bin/sh
 set -e
 
-# Remove default nginx config
-rm -f /etc/nginx/conf.d/default.conf
+# Remove all existing nginx configs to ensure clean state
+rm -f /etc/nginx/conf.d/*.conf
+rm -f /etc/nginx/sites-enabled/*
 
 # Generate nginx config deterministically
 cat > /etc/nginx/conf.d/default.conf << 'NGINX_EOF'
 server {
     listen 80;
-    server_name localhost;
+    server_name _;
     root /usr/share/nginx/html;
     index index.html;
 
@@ -16,13 +17,20 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
-    # API proxy - MUST come before SPA fallback
+    # API proxy - exact match for /api prefix
+    location = /api/health {
+        proxy_pass http://BACKEND_URL_PLACEHOLDER/api/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location /api/ {
         proxy_pass http://BACKEND_URL_PLACEHOLDER/api/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
