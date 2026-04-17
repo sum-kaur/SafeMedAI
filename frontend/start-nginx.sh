@@ -7,6 +7,11 @@ rm -f /etc/nginx/sites-enabled/*
 
 # Generate nginx config deterministically
 cat > /etc/nginx/conf.d/default.conf << 'NGINX_EOF'
+# Upstream backend - resolves at startup
+upstream backend {
+    server BACKEND_URL_PLACEHOLDER;
+}
+
 server {
     listen 80;
     server_name _;
@@ -19,7 +24,7 @@ server {
 
     # API proxy - exact match for /api prefix
     location = /api/health {
-        proxy_pass http://BACKEND_URL_PLACEHOLDER/api/health;
+        proxy_pass http://backend/api/health;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -28,7 +33,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://BACKEND_URL_PLACEHOLDER/api/;
+        proxy_pass http://backend/api/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
