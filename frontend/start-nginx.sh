@@ -57,5 +57,10 @@ echo "=== Generated nginx config ==="
 cat /etc/nginx/conf.d/default.conf
 echo "=== End of nginx config ==="
 
+# Test nginx configuration
+echo "Testing nginx configuration..."
+nginx -t
+
 # Start nginx
+echo "Starting nginx..."
 exec nginx -g 'daemon off;'
