@@ -73,20 +73,23 @@ export default function AlertsPage() {
                       const s = alertStyle(a.severity);
                       const AlertIcon = s.icon;
                       return (
-                        <div key={a.alert_id} className="flex items-start gap-4 p-5 rounded-xl transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', borderLeft: `4px solid ${s.border}`, boxShadow: '0 8px 24px rgba(31,36,33,0.04)' }} data-testid={`alert-${a.alert_id}`}>
-                          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.bg }}>
-                            <AlertIcon className="w-5 h-5" style={{ color: s.text }} />
-                          </div>
+                        <div key={a.alert_id} className="flex flex-col sm:flex-row sm:items-start gap-4 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', boxShadow: '0 12px 30px rgba(31,36,33,0.055)' }} data-testid={`alert-${a.alert_id}`}>
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: s.border }} />
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-surface-alt)' }}>
+                              <AlertIcon className="w-5 h-5" style={{ color: s.text }} />
+                            </div>
                           <div className="flex-1">
                             <p className="font-medium" style={{ color: 'var(--sma-text-primary)' }}>{a.title}</p>
                             <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>{a.message}</p>
                             <p className="text-xs mt-2" style={{ color: 'var(--sma-text-muted)' }}>{new Date(a.created_at).toLocaleString()}</p>
                           </div>
-                          <div className="flex gap-2 flex-shrink-0">
-                            <Button data-testid={`alert-view-${a.alert_id}`} onClick={() => navigate(`/results/${a.patient_id}`)} size="sm" className="h-8 rounded-lg text-xs gap-1.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0 sm:justify-end">
+                            <Button data-testid={`alert-view-${a.alert_id}`} onClick={() => navigate(`/results/${a.patient_id}`)} size="sm" variant="ghost" className="h-8 rounded-lg text-xs gap-1.5" style={{ color: 'var(--sma-brand)' }}>
                               Review <ArrowRight className="w-3.5 h-3.5" />
                             </Button>
-                            <Button data-testid={`alert-dismiss-${a.alert_id}`} onClick={() => markRead(a.alert_id)} variant="outline" size="sm" className="h-8 w-8 rounded-lg p-0" style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-muted)' }} aria-label="Mark reviewed"><Check className="w-4 h-4" /></Button>
+                            <Button data-testid={`alert-dismiss-${a.alert_id}`} onClick={() => markRead(a.alert_id)} variant="outline" size="sm" className="h-8 rounded-lg px-3 text-xs gap-1.5" style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }} aria-label="Mark reviewed"><Check className="w-3.5 h-3.5" /> Done</Button>
                           </div>
                         </div>
                       );

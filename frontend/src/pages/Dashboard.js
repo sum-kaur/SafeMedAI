@@ -154,7 +154,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
                 label="High Risk"
                 value={stats?.high_risk || 0}
                 color="var(--sma-risk-high-text)"
-                bg="var(--sma-risk-high-bg)"
+                bg="var(--sma-surface)"
                 compact
                 accentBorder="var(--sma-risk-high-border)"
                 onClick={() => navigate('/patients')}
@@ -164,7 +164,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
                 label="Open Tasks"
                 value={stats?.unread_alerts || 0}
                 color="var(--sma-risk-med-text)"
-                bg="var(--sma-risk-med-bg)"
+                bg="var(--sma-surface)"
                 compact
                 accentBorder="var(--sma-risk-med-border)"
                 onClick={() => navigate('/alerts')}
@@ -522,27 +522,40 @@ function PractitionerPatientCard({ patient: p, navigate }) {
   const isHighMed = p.latest_risk_level === 'high' || p.latest_risk_level === 'medium';
   const RIcon     = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
   const age       = p.dob ? Math.floor((Date.now() - new Date(p.dob)) / (365.25 * 24 * 3600 * 1000)) : null;
+  const riskLabel = p.latest_risk_level ? `${p.latest_risk_level.charAt(0).toUpperCase()}${p.latest_risk_level.slice(1)} risk` : null;
 
   return (
     <div
-      className="rounded-xl overflow-hidden cursor-pointer"
+      className="rounded-2xl overflow-hidden cursor-pointer"
       style={{
         backgroundColor: 'var(--sma-surface)',
-        border: isHighMed ? `1.5px solid ${c.border}` : '1px solid var(--sma-border)',
-        transition: 'box-shadow 0.15s',
+        border: '1px solid var(--sma-border)',
+        boxShadow: '0 10px 28px rgba(31,36,33,0.045)',
+        transition: 'box-shadow 0.15s, transform 0.15s',
       }}
       onClick={() => navigate(`/patients/${p.patient_id}`)}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+      onMouseEnter={e => {
+        e.currentTarget.style.boxShadow = '0 16px 34px rgba(31,36,33,0.08)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.boxShadow = '0 10px 28px rgba(31,36,33,0.045)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
       data-testid={`practitioner-patient-card-${p.patient_id}`}
     >
-      {isHighMed && <div className="h-0.5 w-full" style={{ backgroundColor: c.border }} />}
+      <div className="px-4 py-4 flex items-center gap-3">
+        {hasRisk && (
+          <div
+            className="w-1 self-stretch rounded-full flex-shrink-0"
+            style={{ backgroundColor: isHighMed ? c.border : 'var(--sma-risk-low-border)' }}
+          />
+        )}
 
-      <div className="px-4 py-3 flex items-center gap-3">
         {/* Avatar */}
         <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
-          style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)', color: hasRisk ? c.text : 'var(--sma-brand)' }}
+          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold"
+          style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-brand)' }}
         >
           {p.name?.[0]}
         </div>
@@ -555,8 +568,9 @@ function PractitionerPatientCard({ patient: p, navigate }) {
             </span>
             {hasRisk && (
               <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
-                style={{ backgroundColor: c.bg, color: c.text }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                title={riskLabel || undefined}
+                style={{ backgroundColor: 'var(--sma-surface)', color: c.text, border: `1px solid ${c.border}`, textTransform: 'capitalize' }}
               >
                 <RIcon className="w-3 h-3" />
                 {p.latest_risk_level} · {p.latest_risk_score}
@@ -583,6 +597,7 @@ function FamilyPatientCard({ patient: p, navigate }) {
   const RIcon      = p.latest_risk_level === 'high' ? AlertTriangle : p.latest_risk_level === 'medium' ? Shield : CheckCircle;
   const pFirstName = p.name?.split(' ')[0] || 'Your loved one';
   const destination = hasRisk ? `/results/${p.patient_id}` : `/upload/${p.patient_id}`;
+  const riskLabel = p.latest_risk_level ? `${p.latest_risk_level.charAt(0).toUpperCase()}${p.latest_risk_level.slice(1)} risk` : null;
 
   const riskMsg = {
     high:   `${pFirstName}'s medications include some that may cause side effects or interact in older adults. A GP review is needed urgently.`,
@@ -592,25 +607,36 @@ function FamilyPatientCard({ patient: p, navigate }) {
 
   return (
     <div
-      className="rounded-xl overflow-hidden cursor-pointer"
+      className="rounded-2xl overflow-hidden cursor-pointer"
       style={{
         backgroundColor: 'var(--sma-surface)',
-        border: isHighMed ? `1.5px solid ${c.border}` : '1px solid var(--sma-border)',
-        transition: 'box-shadow 0.15s',
+        border: '1px solid var(--sma-border)',
+        boxShadow: '0 10px 28px rgba(31,36,33,0.045)',
+        transition: 'box-shadow 0.15s, transform 0.15s',
       }}
       onClick={() => navigate(destination)}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+      onMouseEnter={e => {
+        e.currentTarget.style.boxShadow = '0 16px 34px rgba(31,36,33,0.08)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.boxShadow = '0 10px 28px rgba(31,36,33,0.045)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
       data-testid={`family-patient-card-${p.patient_id}`}
     >
-      {isHighMed && <div className="h-0.5 w-full" style={{ backgroundColor: c.border }} />}
-
       <div className="p-4">
         {/* Header row */}
         <div className="flex items-center gap-3 mb-3">
+          {hasRisk && (
+            <div
+              className="w-1 self-stretch rounded-full flex-shrink-0"
+              style={{ backgroundColor: isHighMed ? c.border : 'var(--sma-risk-low-border)' }}
+            />
+          )}
           <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
-            style={{ backgroundColor: hasRisk ? c.bg : 'var(--sma-surface-alt)', color: hasRisk ? c.text : 'var(--sma-brand)' }}
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+            style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-brand)' }}
           >
             {p.name?.[0]}
           </div>
@@ -619,12 +645,12 @@ function FamilyPatientCard({ patient: p, navigate }) {
               <span className="font-semibold text-sm" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{p.name}</span>
               {hasRisk && (
                 <span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
-                  style={{ backgroundColor: c.bg, color: c.text }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                  style={{ backgroundColor: 'var(--sma-surface)', color: c.text, border: `1px solid ${c.border}` }}
                   data-testid={`patient-risk-banner-${p.patient_id}`}
                 >
                   <RIcon className="w-3 h-3" />
-                  {p.latest_risk_level}
+                  {riskLabel}
                 </span>
               )}
             </div>
@@ -639,7 +665,7 @@ function FamilyPatientCard({ patient: p, navigate }) {
         {hasRisk && (
           <p
             className="text-sm leading-relaxed px-1"
-            style={{ color: c.text }}
+            style={{ color: 'var(--sma-text-secondary)' }}
             data-testid={`risk-explanation-${p.patient_id}`}
           >
             {riskMsg[p.latest_risk_level]}
@@ -679,18 +705,27 @@ function StatCard({ icon: Icon, label, value, color, bg, compact = false, accent
     <div
       className={`p-4 rounded-2xl${onClick ? ' cursor-pointer' : ''}`}
       style={{
-        backgroundColor: bg,
+        backgroundColor: bg || 'var(--sma-surface)',
         border: '1px solid var(--sma-border)',
-        ...(accentBorder ? { borderLeft: `3px solid ${accentBorder}` } : {}),
-        transition: onClick ? 'box-shadow 0.15s' : undefined,
+        boxShadow: '0 10px 28px rgba(31,36,33,0.04)',
+        ...(accentBorder ? { borderTop: `3px solid ${accentBorder}` } : {}),
+        transition: onClick ? 'box-shadow 0.15s, transform 0.15s' : undefined,
       }}
       onClick={onClick}
-      onMouseEnter={onClick ? (e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }) : undefined}
-      onMouseLeave={onClick ? (e => { e.currentTarget.style.boxShadow = 'none'; }) : undefined}
+      onMouseEnter={onClick ? (e => {
+        e.currentTarget.style.boxShadow = '0 16px 34px rgba(31,36,33,0.08)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+      }) : undefined}
+      onMouseLeave={onClick ? (e => {
+        e.currentTarget.style.boxShadow = '0 10px 28px rgba(31,36,33,0.04)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }) : undefined}
       data-testid={`stat-${label.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4 flex-shrink-0" style={{ color }} />
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--sma-surface-alt)' }}>
+          <Icon className="w-4 h-4" style={{ color }} />
+        </div>
         <p className="text-xs font-medium" style={{ color: 'var(--sma-text-muted)' }}>{label}</p>
         {onClick && <ChevronRight className="w-3.5 h-3.5 ml-auto" style={{ color: 'var(--sma-text-muted)' }} />}
       </div>
