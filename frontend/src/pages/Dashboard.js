@@ -122,10 +122,10 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
             <Button
               data-testid="add-patient-btn"
               onClick={() => navigate('/patients?new=1')}
-              className="h-9 px-5 rounded-xl font-medium text-sm gap-2"
+              className="h-9 px-5 rounded-lg font-medium text-sm gap-2"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
-              <Plus className="w-4 h-4" /> New Patient
+              <Plus className="w-4 h-4" /> New Case
             </Button>
           </div>
         </div>
@@ -138,10 +138,10 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
         ) : (
           <>
             <UploadFirstPanel
-              title="Upload a discharge summary"
+              title="Analyse a discharge summary"
               subtitle="Identify medication risk from a photo, PDF, or screenshot."
-              primaryLabel="Choose patient to upload"
-              secondaryLabel="New patient + upload"
+              primaryLabel="Select Patient"
+              secondaryLabel="New Case"
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="practitioner-upload-first"
@@ -151,7 +151,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <StatCard
                 icon={AlertTriangle}
-                label="High Risk Patients"
+                label="High Risk"
                 value={stats?.high_risk || 0}
                 color="var(--sma-risk-high-text)"
                 bg="var(--sma-risk-high-bg)"
@@ -161,7 +161,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
               />
               <StatCard
                 icon={Bell}
-                label="Unread Alerts"
+                label="Open Tasks"
                 value={stats?.unread_alerts || 0}
                 color="var(--sma-risk-med-text)"
                 bg="var(--sma-risk-med-bg)"
@@ -262,7 +262,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
                     className="h-9 px-5 rounded-xl font-medium text-sm"
                     style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                   >
-                    <Upload className="w-4 h-4 mr-2" /> Add Patient & Upload
+                    <Plus className="w-4 h-4 mr-2" /> New Case
                   </Button>
                 }
               />
@@ -301,10 +301,10 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
           <Button
             data-testid="add-patient-btn"
             onClick={() => navigate('/patients?new=1')}
-            className="h-9 px-4 rounded-xl text-sm font-medium gap-2"
+            className="h-9 px-4 rounded-lg text-sm font-medium gap-2"
             style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
           >
-            <Plus className="w-4 h-4" /> Add Loved One
+            <Plus className="w-4 h-4" /> Add Person
           </Button>
         </div>
 
@@ -316,10 +316,10 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
         ) : (
           <>
             <UploadFirstPanel
-              title="Upload a discharge summary"
+              title="Analyse a discharge summary"
               subtitle="Check medication risk for someone you care for."
-              primaryLabel="Choose loved one to upload"
-              secondaryLabel="Add loved one + upload"
+              primaryLabel="Select Person"
+              secondaryLabel="Add Person"
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="family-upload-first"
@@ -329,16 +329,16 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
             {highRiskPatients.length > 0 && (
               <div
                 className="mb-4 p-4 rounded-xl"
-                style={{ backgroundColor: 'var(--sma-risk-high-bg)', border: '1.5px solid var(--sma-risk-high-border)' }}
+                style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', borderLeft: '4px solid var(--sma-risk-high-border)' }}
                 data-testid="high-risk-alert-banner"
               >
                 <div className="flex gap-3">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--sma-risk-high-text)' }} />
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: 'var(--sma-risk-high-text)', fontFamily: 'Outfit' }}>
-                      Medication review needed urgently
+                    <p className="font-semibold text-sm" style={{ color: 'var(--sma-text-primary)', fontFamily: 'Outfit' }}>
+                      Urgent medication review
                     </p>
-                    <p className="text-sm mt-0.5 leading-relaxed" style={{ color: 'var(--sma-risk-high-text)' }}>
+                    <p className="text-sm mt-0.5 leading-relaxed" style={{ color: 'var(--sma-text-secondary)' }}>
                       <strong>{highRiskPatients.map(p => p.name.split(' ')[0]).join(' and ')}</strong> {highRiskPatients.length === 1 ? 'has' : 'have'} a high medication risk score. Please book a GP appointment as soon as possible.
                     </p>
                   </div>
@@ -350,13 +350,13 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
             {medRiskPatients.length > 0 && !medDismissed && (
               <div
                 className="mb-4 p-4 rounded-xl relative"
-                style={{ backgroundColor: 'var(--sma-risk-med-bg)', border: '1px solid var(--sma-risk-med-border)' }}
+                style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', borderLeft: '4px solid var(--sma-risk-med-border)' }}
                 data-testid="medium-risk-alert-banner"
               >
                 <button
                   onClick={() => setMedDismissed(true)}
                   className="absolute top-3 right-3 rounded p-0.5"
-                  style={{ color: 'var(--sma-risk-med-text)' }}
+                  style={{ color: 'var(--sma-text-muted)' }}
                   aria-label="Dismiss"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -364,10 +364,10 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
                 <div className="flex gap-3 pr-5">
                   <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--sma-risk-med-text)' }} />
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: 'var(--sma-risk-med-text)', fontFamily: 'Outfit' }}>
-                      Medication review recommended
+                    <p className="font-semibold text-sm" style={{ color: 'var(--sma-text-primary)', fontFamily: 'Outfit' }}>
+                      Review recommended
                     </p>
-                    <p className="text-sm mt-0.5" style={{ color: 'var(--sma-risk-med-text)' }}>
+                    <p className="text-sm mt-0.5" style={{ color: 'var(--sma-text-secondary)' }}>
                       <strong>{medRiskPatients.map(p => p.name.split(' ')[0]).join(' and ')}</strong> {medRiskPatients.length === 1 ? 'has' : 'have'} a medium risk score. Book a GP or pharmacist review in the next 1–2 weeks.
                     </p>
                   </div>
@@ -391,7 +391,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
               <EmptyState
                 icon={Heart}
                 title="No loved ones added yet"
-                subtitle="Add your loved one's details and upload their discharge summary to get started."
+                subtitle="Add your loved one's details and attach their discharge summary to get started."
                 action={
                   <Button
                     data-testid="family-add-patient-btn"
@@ -399,7 +399,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
                     className="h-10 px-6 rounded-xl font-medium text-sm gap-2"
                     style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                   >
-                    <Upload className="w-4 h-4" /> Add Loved One & Upload
+                    <Plus className="w-4 h-4" /> Add Person
                   </Button>
                 }
               />
@@ -417,7 +417,7 @@ function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navig
   return (
     <div
       className="mb-6 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-      style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}
+      style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', boxShadow: '0 10px 30px rgba(31,36,33,0.05)' }}
       data-testid={testId}
     >
       <div className="flex items-start gap-4">
@@ -440,16 +440,16 @@ function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navig
         <Button
           data-testid={`${testId}-upload-btn`}
           onClick={() => navigate('/patients')}
-          className="h-11 rounded-xl font-medium gap-2"
+          className="h-11 rounded-lg font-medium gap-2"
           style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
         >
-          <Upload className="w-4 h-4" /> {primaryLabel}
+          <Users className="w-4 h-4" /> {primaryLabel}
         </Button>
         <Button
           data-testid={`${testId}-new-btn`}
           onClick={() => navigate(newPatientPath)}
           variant="outline"
-          className="h-11 rounded-xl font-medium gap-2"
+          className="h-11 rounded-lg font-medium gap-2"
           style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }}
         >
           <Plus className="w-4 h-4" /> {secondaryLabel}

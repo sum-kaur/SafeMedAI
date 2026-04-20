@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, ArrowRight, Users, Loader2, Upload, FileText, X } from 'lucide-react';
+import { Search, ArrowRight, Users, Loader2, FileText, X, Plus } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
@@ -64,13 +64,13 @@ export default function PatientsPage() {
 
       if (files.length > 0) {
         const { results } = await uploadAndProcessDocuments(patientId, files, {
-          onUploaded: (documents) => toast.success(`${documents.length} file(s) uploaded`),
+          onUploaded: (documents) => toast.success(`${documents.length} file(s) received`),
         });
         if (results.some(r => r.status === 'success')) {
           toast.success('Risk assessment complete');
           navigate(`/results/${patientId}`);
         } else {
-          toast.error('Upload finished, but processing failed');
+          toast.error('File received, but analysis failed');
           navigate(`/upload/${patientId}`);
         }
       } else {
@@ -114,8 +114,8 @@ export default function PatientsPage() {
               }
             }}>
               <DialogTrigger asChild>
-                <Button data-testid="create-patient-btn" className="h-11 px-5 rounded-full font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                  <Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Add Patient & Upload'}
+                <Button data-testid="create-patient-btn" className="h-11 px-5 rounded-lg font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
+                  <Plus className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Case'}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg" data-testid="create-patient-dialog">
@@ -194,7 +194,7 @@ export default function PatientsPage() {
                     )}
                   </div>
                   <Button data-testid="save-patient-btn" onClick={handleCreate} disabled={creating} className="w-full h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing</> : <><Upload className="w-4 h-4 mr-2" /> {files.length > 0 ? 'Create & Analyse' : 'Create & Continue to Upload'}</>}
+                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing</> : <><FileText className="w-4 h-4 mr-2" /> {files.length > 0 ? 'Create & Analyse' : 'Create Case'}</>}
                   </Button>
                 </div>
               </DialogContent>
@@ -214,9 +214,9 @@ export default function PatientsPage() {
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
               <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'No loved ones found' : 'No patients found'}</h3>
-              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one, then upload their discharge summary' : 'Create a patient, then upload a discharge summary'}</p>
+              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one, then attach their discharge summary' : 'Create a patient, then attach a discharge summary'}</p>
               <Button data-testid="empty-create-upload-btn" onClick={() => setOpen(true)} className="mt-5 h-11 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                <Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Add Patient & Upload'}
+                <FileText className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Case'}
               </Button>
             </div>
           ) : (
@@ -254,7 +254,7 @@ export default function PatientsPage() {
                       className="h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-2"
                       style={{ backgroundColor: 'var(--sma-risk-low-bg)', color: 'var(--sma-brand)', border: '1px solid var(--sma-risk-low-border)' }}
                     >
-                      <Upload className="w-4 h-4" /> Upload
+                      <FileText className="w-4 h-4" /> Analyse
                     </button>
                     <ArrowRight className="w-5 h-5" style={{ color: 'var(--sma-text-muted)' }} />
                   </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Bell, AlertTriangle, Shield, CheckCircle, Check, Loader2 } from 'lucide-react';
+import { Bell, AlertTriangle, Shield, CheckCircle, Check, Loader2, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
@@ -50,8 +50,8 @@ export default function AlertsPage() {
         <div className="max-w-4xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Alerts</h1>
-              <p className="text-sm mt-1" style={{ color: 'var(--sma-text-muted)' }}>{unread.length} unread alert{unread.length !== 1 ? 's' : ''}</p>
+              <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Tasks</h1>
+              <p className="text-sm mt-1" style={{ color: 'var(--sma-text-muted)' }}>{unread.length} item{unread.length !== 1 ? 's' : ''} need review</p>
             </div>
           </div>
 
@@ -60,29 +60,33 @@ export default function AlertsPage() {
           ) : alerts.length === 0 ? (
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Bell className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
-              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No alerts</h3>
-              <p style={{ color: 'var(--sma-text-secondary)' }}>Alerts will appear here when risk assessments are completed</p>
+              <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No tasks</h3>
+              <p style={{ color: 'var(--sma-text-secondary)' }}>Risk review items will appear here after assessments are completed</p>
             </div>
           ) : (
             <div className="space-y-6">
               {unread.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Unread</p>
+                  <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Needs Review</p>
                   <div className="space-y-3">
                     {unread.map(a => {
                       const s = alertStyle(a.severity);
                       const AlertIcon = s.icon;
                       return (
-                        <div key={a.alert_id} className="flex items-start gap-4 p-5 rounded-xl transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: s.bg, border: `1px solid ${s.border}` }} data-testid={`alert-${a.alert_id}`}>
-                          <AlertIcon className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: s.text }} />
-                          <div className="flex-1">
-                            <p className="font-medium" style={{ color: s.text }}>{a.title}</p>
-                            <p className="text-sm mt-1" style={{ color: s.text, opacity: 0.8 }}>{a.message}</p>
-                            <p className="text-xs mt-2" style={{ color: s.text, opacity: 0.6 }}>{new Date(a.created_at).toLocaleString()}</p>
+                        <div key={a.alert_id} className="flex items-start gap-4 p-5 rounded-xl transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', borderLeft: `4px solid ${s.border}`, boxShadow: '0 8px 24px rgba(31,36,33,0.04)' }} data-testid={`alert-${a.alert_id}`}>
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.bg }}>
+                            <AlertIcon className="w-5 h-5" style={{ color: s.text }} />
                           </div>
-                          <div className="flex gap-2">
-                            <Button data-testid={`alert-view-${a.alert_id}`} onClick={() => navigate(`/results/${a.patient_id}`)} variant="ghost" size="sm" className="text-xs h-8" style={{ color: s.text }}>View</Button>
-                            <Button data-testid={`alert-dismiss-${a.alert_id}`} onClick={() => markRead(a.alert_id)} variant="ghost" size="sm" className="text-xs h-8" style={{ color: s.text }}><Check className="w-4 h-4" /></Button>
+                          <div className="flex-1">
+                            <p className="font-medium" style={{ color: 'var(--sma-text-primary)' }}>{a.title}</p>
+                            <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>{a.message}</p>
+                            <p className="text-xs mt-2" style={{ color: 'var(--sma-text-muted)' }}>{new Date(a.created_at).toLocaleString()}</p>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <Button data-testid={`alert-view-${a.alert_id}`} onClick={() => navigate(`/results/${a.patient_id}`)} size="sm" className="h-8 rounded-lg text-xs gap-1.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>
+                              Review <ArrowRight className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button data-testid={`alert-dismiss-${a.alert_id}`} onClick={() => markRead(a.alert_id)} variant="outline" size="sm" className="h-8 w-8 rounded-lg p-0" style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-muted)' }} aria-label="Mark reviewed"><Check className="w-4 h-4" /></Button>
                           </div>
                         </div>
                       );
@@ -92,7 +96,7 @@ export default function AlertsPage() {
               )}
               {read.length > 0 && (
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Previously Read</p>
+                  <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--sma-text-muted)' }}>Reviewed</p>
                   <div className="space-y-3">
                     {read.map(a => {
                       const s = alertStyle(a.severity);
@@ -104,7 +108,7 @@ export default function AlertsPage() {
                             <p className="font-medium text-sm" style={{ color: 'var(--sma-text-primary)' }}>{a.title}</p>
                             <p className="text-xs mt-1" style={{ color: 'var(--sma-text-muted)' }}>{a.message}</p>
                           </div>
-                          <Button data-testid={`alert-view-read-${a.alert_id}`} onClick={() => navigate(`/results/${a.patient_id}`)} variant="ghost" size="sm" className="text-xs h-8" style={{ color: 'var(--sma-text-muted)' }}>View</Button>
+                          <Button data-testid={`alert-view-read-${a.alert_id}`} onClick={() => navigate(`/results/${a.patient_id}`)} variant="ghost" size="sm" className="text-xs h-8" style={{ color: 'var(--sma-text-muted)' }}>Open</Button>
                         </div>
                       );
                     })}
