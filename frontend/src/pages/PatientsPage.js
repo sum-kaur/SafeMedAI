@@ -29,9 +29,10 @@ export default function PatientsPage() {
   const fetchPatients = async () => {
     try {
       const res = await axios.get(`${API}/patients`, { withCredentials: true });
-      setPatients(res.data);
+      setPatients(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch patients:', err);
+      setPatients([]);
     } finally {
       setLoading(false);
     }
