@@ -5,14 +5,12 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Users, FileText, AlertTriangle, Bell, Plus, CheckCircle,
-  Loader2, Shield, Download, Heart,
+  Loader2, Shield, Download, Heart, Upload,
   ChevronRight, X
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
-
-const API = getApiUrl('/api');
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -123,7 +121,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
             )}
             <Button
               data-testid="add-patient-btn"
-              onClick={() => navigate('/patients')}
+              onClick={() => navigate('/patients?new=1')}
               className="h-9 px-5 rounded-xl font-medium text-sm gap-2"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
@@ -139,6 +137,17 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
           </div>
         ) : (
           <>
+            <UploadFirstPanel
+              title="Upload a discharge summary"
+              subtitle="Identify medication risk from a photo, PDF, or screenshot."
+              primaryLabel="Upload for existing patient"
+              secondaryLabel="New patient + upload"
+              patient={sortedPatients[0]}
+              navigate={navigate}
+              newPatientPath="/patients?new=1"
+              testId="practitioner-upload-first"
+            />
+
             {/* Two clickable stat cards */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <StatCard
@@ -250,11 +259,11 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
                 action={
                   <Button
                     data-testid="add-patient-empty-btn"
-                    onClick={() => navigate('/patients')}
+                    onClick={() => navigate('/patients?new=1')}
                     className="h-9 px-5 rounded-xl font-medium text-sm"
                     style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                   >
-                    <Plus className="w-4 h-4 mr-2" /> Add Patient
+                    <Upload className="w-4 h-4 mr-2" /> Add Patient & Upload
                   </Button>
                 }
               />
@@ -292,7 +301,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
           </h1>
           <Button
             data-testid="add-patient-btn"
-            onClick={() => navigate('/patients')}
+            onClick={() => navigate('/patients?new=1')}
             className="h-9 px-4 rounded-xl text-sm font-medium gap-2"
             style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
           >
@@ -307,6 +316,17 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
           </div>
         ) : (
           <>
+            <UploadFirstPanel
+              title="Upload a discharge summary"
+              subtitle="Check medication risk for someone you care for."
+              primaryLabel="Upload for loved one"
+              secondaryLabel="Add loved one + upload"
+              patient={stats?.recent_patients?.[0]}
+              navigate={navigate}
+              newPatientPath="/patients?new=1"
+              testId="family-upload-first"
+            />
+
             {/* High-risk alert banner */}
             {highRiskPatients.length > 0 && (
               <div
@@ -377,11 +397,11 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
                 action={
                   <Button
                     data-testid="family-add-patient-btn"
-                    onClick={() => navigate('/patients')}
+                    onClick={() => navigate('/patients?new=1')}
                     className="h-10 px-6 rounded-xl font-medium text-sm gap-2"
                     style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                   >
-                    <Plus className="w-4 h-4" /> Add Loved One
+                    <Upload className="w-4 h-4" /> Add Loved One & Upload
                   </Button>
                 }
               />
@@ -390,6 +410,62 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
             <Disclaimer />
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, patient, navigate, newPatientPath, testId }) {
+  const uploadPath = patient?.patient_id ? `/upload/${patient.patient_id}` : newPatientPath;
+
+  return (
+    <div
+      className="mb-6 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+      style={{ backgroundColor: 'var(--sma-surface)', border: '1.5px solid var(--sma-brand)' }}
+      data-testid={testId}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: 'var(--sma-risk-low-bg)' }}
+        >
+          <Upload className="w-6 h-6" style={{ color: 'var(--sma-brand)' }} />
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--sma-brand)' }}>
+            First step
+          </p>
+          <h2 className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+            {title}
+          </h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
+            {subtitle}
+          </p>
+          {patient?.name && (
+            <p className="text-xs mt-2" style={{ color: 'var(--sma-text-muted)' }}>
+              Ready for {patient.name}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 md:flex-shrink-0">
+        <Button
+          data-testid={`${testId}-upload-btn`}
+          onClick={() => navigate(uploadPath)}
+          className="h-11 rounded-xl font-medium gap-2"
+          style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+        >
+          <Upload className="w-4 h-4" /> {primaryLabel}
+        </Button>
+        <Button
+          data-testid={`${testId}-new-btn`}
+          onClick={() => navigate(newPatientPath)}
+          variant="outline"
+          className="h-11 rounded-xl font-medium gap-2"
+          style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }}
+        >
+          <Plus className="w-4 h-4" /> {secondaryLabel}
+        </Button>
       </div>
     </div>
   );

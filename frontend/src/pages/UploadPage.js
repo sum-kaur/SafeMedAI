@@ -110,7 +110,7 @@ export default function UploadPage() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                {isFamily ? 'Upload Discharge Summary' : 'Upload Document'}
+                Upload Discharge Summary
               </h1>
               {patient && <p className="text-sm mt-1" style={{ color: 'var(--sma-text-muted)' }}>Patient: {patient.name} {patient.dob ? `| DOB: ${patient.dob}` : ''}</p>}
             </div>

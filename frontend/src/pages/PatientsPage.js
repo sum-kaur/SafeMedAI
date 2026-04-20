@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, ArrowRight, Users, Loader2 } from 'lucide-react';
+import { Search, ArrowRight, Users, Loader2, Upload } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
@@ -16,6 +16,7 @@ const API = getApiUrl('/api');
 
 export default function PatientsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const isFamily = user?.role === 'family_carer';
   const [patients, setPatients] = useState([]);
@@ -26,6 +27,12 @@ export default function PatientsPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => { fetchPatients(); }, []);
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   const fetchPatients = async () => {
     try {
@@ -50,10 +57,11 @@ export default function PatientsPage() {
     setCreating(true);
     try {
       const res = await axios.post(`${API}/patients`, form, { withCredentials: true });
-      toast.success('Patient created');
+      toast.success(isFamily ? 'Loved one added' : 'Patient created');
       setOpen(false);
+      setSearchParams({});
       setForm({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '', medical_history: '' });
-      navigate(`/patients/${res.data.patient_id}`);
+      navigate(`/upload/${res.data.patient_id}`);
     } catch (err) {
       toast.error('Failed to create patient');
     } finally {
@@ -72,16 +80,22 @@ export default function PatientsPage() {
         <div className="max-w-5xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'My Family' : 'Patients'}</h1>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={(nextOpen) => {
+              setOpen(nextOpen);
+              if (!nextOpen && searchParams.get('new') === '1') setSearchParams({});
+            }}>
               <DialogTrigger asChild>
                 <Button data-testid="create-patient-btn" className="h-11 px-5 rounded-full font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                  <Plus className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One' : 'Add Patient'}
+                  <Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Add Patient & Upload'}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md" data-testid="create-patient-dialog">
                 <DialogHeader>
                   <DialogTitle style={{ fontFamily: 'Outfit' }}>{isFamily ? 'Add Loved One' : 'New Patient'}</DialogTitle>
                 </DialogHeader>
+                <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
+                  Add the essentials now. The next screen uploads the discharge summary and checks medication risk.
+                </p>
                 <div className="space-y-4 mt-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
@@ -112,7 +126,7 @@ export default function PatientsPage() {
                     <Textarea id="medical_history" data-testid="patient-medical-history-input" value={form.medical_history} onChange={e => setForm({ ...form, medical_history: e.target.value })} placeholder={isFamily ? "e.g. dementia, diabetes, heart conditions, previous hospitalisations" : "Relevant medical background, diagnoses, allergies"} className="mt-1" rows={3} />
                   </div>
                   <Button data-testid="save-patient-btn" onClick={handleCreate} disabled={creating} className="w-full h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : isFamily ? 'Add Loved One' : 'Create Patient'}
+                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Create Patient & Upload'}</>}
                   </Button>
                 </div>
               </DialogContent>
@@ -132,7 +146,10 @@ export default function PatientsPage() {
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
               <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'No loved ones found' : 'No patients found'}</h3>
-              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one to get started' : 'Create a new patient to get started'}</p>
+              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one, then upload their discharge summary' : 'Create a patient, then upload a discharge summary'}</p>
+              <Button data-testid="empty-create-upload-btn" onClick={() => setOpen(true)} className="mt-5 h-11 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
+                <Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Add Patient & Upload'}
+              </Button>
             </div>
           ) : (
             <div className="space-y-3">
