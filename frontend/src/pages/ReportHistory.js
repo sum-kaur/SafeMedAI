@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, CheckCircle, Shield, ArrowRight, ArrowDown, ArrowUp, Minus, BarChart3, Loader2, Clock, Download, GitCompare } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 const riskColor = (level) => ({
   high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle },
@@ -32,8 +33,9 @@ export default function ReportHistory() {
   const fetchHistory = async () => {
     try {
       const res = await axios.get(`${API}/risk-results/${patientId}/history`, { withCredentials: true });
-      setResults(res.data);
-      if (res.data.length >= 2) { setSelectedA(res.data[1].result_id); setSelectedB(res.data[0].result_id); }
+      const history = Array.isArray(res.data) ? res.data : [];
+      setResults(history);
+      if (history.length >= 2) { setSelectedA(history[1].result_id); setSelectedB(history[0].result_id); }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };

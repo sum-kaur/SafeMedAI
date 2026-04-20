@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Upload, FileText, Image, X, Loader2, CheckCircle, AlertTriangle, Camera, Shield, BarChart3, MessageCircle, ArrowRight, Clock, Pill, Info } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 const riskColor = (level) => ({
   high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle },

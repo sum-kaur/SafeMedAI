@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Bell, FileText, Loader2, Save, Clock, Upload, Shield, BarChart3, Trash2, Download } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -168,8 +169,8 @@ function AuditLogViewer() {
     setLoading(true);
     try {
       const res = await axios.get(`${API}/audit-logs?limit=${limit}&offset=${page * limit}`, { withCredentials: true });
-      setLogs(res.data.logs);
-      setTotal(res.data.total);
+      setLogs(Array.isArray(res.data?.logs) ? res.data.logs : []);
+      setTotal(Number.isFinite(res.data?.total) ? res.data.total : 0);
     } catch (err) {
       console.error(err);
     } finally {

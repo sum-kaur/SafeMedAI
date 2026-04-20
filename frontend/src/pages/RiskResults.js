@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock, ExternalLink, BookOpen } from 'lucide-react';
 import axios from 'axios';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function RiskResults() {
   const { patientId } = useParams();

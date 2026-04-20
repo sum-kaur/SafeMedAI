@@ -1,17 +1,31 @@
 #!/bin/sh
 set -e
 
+if [ -z "${BACKEND_URL:-}" ]; then
+    echo "ERROR: BACKEND_URL is not set. Set it to your backend service host, for example safemed-backend:8000 or https://your-backend.up.railway.app"
+    exit 1
+fi
+
+# Accept either a bare host:port for Railway private networking or a public
+# http(s) URL. Strip any trailing path so proxy_pass always owns /api/.
+BACKEND_ORIGIN="${BACKEND_URL%/}"
+BACKEND_ORIGIN="${BACKEND_ORIGIN%/api}"
+case "$BACKEND_ORIGIN" in
+    http://*|https://*) ;;
+    *) BACKEND_ORIGIN="http://${BACKEND_ORIGIN}" ;;
+esac
+
+if [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ] && echo "$BACKEND_ORIGIN" | grep -q "$RAILWAY_PUBLIC_DOMAIN"; then
+    echo "ERROR: BACKEND_URL points at this frontend service (${RAILWAY_PUBLIC_DOMAIN}). Set BACKEND_URL to the backend service instead."
+    exit 1
+fi
+
 # Remove all existing nginx configs to ensure clean state
 rm -f /etc/nginx/conf.d/*.conf
 rm -f /etc/nginx/sites-enabled/*
 
 # Generate nginx config deterministically
 cat > /etc/nginx/conf.d/default.conf << 'NGINX_EOF'
-# Upstream backend - resolves at startup
-upstream backend {
-    server BACKEND_URL_PLACEHOLDER;
-}
-
 server {
     listen 80;
     server_name _;
@@ -24,18 +38,20 @@ server {
 
     # API proxy - exact match for /api prefix
     location = /api/health {
-        proxy_pass http://backend/api/health;
+        proxy_pass BACKEND_ORIGIN_PLACEHOLDER/api/health;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto https;
     }
 
     location /api/ {
-        proxy_pass http://backend/api/;
+        proxy_pass BACKEND_ORIGIN_PLACEHOLDER/api/;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
@@ -56,11 +72,12 @@ server {
 }
 NGINX_EOF
 
-# Substitute BACKEND_URL placeholder with actual value
-sed -i "s|BACKEND_URL_PLACEHOLDER|${BACKEND_URL}|g" /etc/nginx/conf.d/default.conf
+# Substitute backend placeholder with normalized origin.
+sed -i "s|BACKEND_ORIGIN_PLACEHOLDER|${BACKEND_ORIGIN}|g" /etc/nginx/conf.d/default.conf
 
 # Print generated config for verification
 echo "=== Generated nginx config ==="
+echo "Using BACKEND_ORIGIN=${BACKEND_ORIGIN}"
 cat /etc/nginx/conf.d/default.conf
 echo "=== End of nginx config ==="
 

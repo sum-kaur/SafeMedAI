@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, ArrowRight, Users, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function PatientsPage() {
   const navigate = useNavigate();
@@ -29,7 +30,13 @@ export default function PatientsPage() {
   const fetchPatients = async () => {
     try {
       const res = await axios.get(`${API}/patients`, { withCredentials: true });
-      setPatients(Array.isArray(res.data) ? res.data : []);
+      if (!Array.isArray(res.data)) {
+        console.error('Unexpected patients response:', res.data);
+        toast.error('Could not load patients. Please sign in again.');
+        setPatients([]);
+        return;
+      }
+      setPatients(res.data);
     } catch (err) {
       console.error('Failed to fetch patients:', err);
       setPatients([]);
@@ -54,7 +61,9 @@ export default function PatientsPage() {
     }
   };
 
-  const filtered = patients.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = Array.isArray(patients)
+    ? patients.filter(p => (p.name || '').toLowerCase().includes(search.toLowerCase()))
+    : [];
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--sma-bg)' }}>

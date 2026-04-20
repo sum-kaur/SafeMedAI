@@ -10,8 +10,9 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function PatientProfile() {
   const { patientId } = useParams();
@@ -71,7 +72,7 @@ export default function PatientProfile() {
   const fetchRelationships = async () => {
     try {
       const res = await axios.get(`${API}/care-relationships/${patientId}`, { withCredentials: true });
-      setRelationships(res.data);
+      setRelationships(Array.isArray(res.data) ? res.data : []);
     } catch (err) { /* ignore if no rels */ }
   };
 

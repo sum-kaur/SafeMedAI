@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Brain, Heart, Shield, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getApiUrl } from '@/lib/utils';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = getApiUrl('/api');
 
 export default function RoleSelection() {
   const { user, updateUser, demoLogin } = useAuth();
