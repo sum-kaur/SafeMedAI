@@ -151,6 +151,17 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
           </div>
         ) : (
           <>
+            <UploadFirstPanel
+              title="Analyse a discharge summary"
+              subtitle="Start here. Select a patient or create a new case, then attach the discharge summary to identify medication risk."
+              primaryLabel="Select Patient"
+              secondaryLabel="New Case"
+              navigate={navigate}
+              newPatientPath="/patients?new=1"
+              testId="practitioner-upload-first"
+              prominent
+            />
+
             <section className="mb-6">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
@@ -251,15 +262,6 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
               </DashboardPanel>
 
               <div className="space-y-4">
-                <UploadFirstPanel
-                  title="Analyse a discharge summary"
-                  subtitle="Identify medication risk from a photo, PDF, or screenshot."
-                  primaryLabel="Select Patient"
-                  secondaryLabel="New Case"
-                  navigate={navigate}
-                  newPatientPath="/patients?new=1"
-                  testId="practitioner-upload-first"
-                />
                 <CohortOverview stats={stats} />
                 <ClinicalActivity
                   stats={stats}
@@ -848,25 +850,29 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
   );
 }
 
-function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navigate, newPatientPath, testId }) {
+function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navigate, newPatientPath, testId, prominent = false }) {
   return (
     <div
-      className="mb-6 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-      style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)', boxShadow: '0 10px 30px rgba(31,36,33,0.05)' }}
+      className={`${prominent ? 'mb-7 rounded-2xl p-6 lg:p-7' : 'mb-6 rounded-xl p-5'} flex flex-col md:flex-row md:items-center justify-between gap-4`}
+      style={{
+        backgroundColor: 'var(--sma-surface)',
+        border: prominent ? '1px solid rgba(30,58,95,0.18)' : '1px solid var(--sma-border)',
+        boxShadow: prominent ? '0 18px 44px rgba(31,36,33,0.075)' : '0 10px 30px rgba(31,36,33,0.05)',
+      }}
       data-testid={testId}
     >
       <div className="flex items-start gap-4">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: 'var(--sma-risk-low-bg)' }}
+          className={`${prominent ? 'w-14 h-14' : 'w-12 h-12'} rounded-xl flex items-center justify-center flex-shrink-0`}
+          style={{ backgroundColor: prominent ? 'var(--sma-brand)' : 'var(--sma-risk-low-bg)' }}
         >
-          <Upload className="w-6 h-6" style={{ color: 'var(--sma-brand)' }} />
+          <Upload className={`${prominent ? 'w-7 h-7' : 'w-6 h-6'}`} style={{ color: prominent ? 'white' : 'var(--sma-brand)' }} />
         </div>
         <div>
-          <h2 className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
+          <h2 className={`${prominent ? 'text-2xl' : 'text-xl'} font-semibold`} style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
             {title}
           </h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
+          <p className={`${prominent ? 'text-base max-w-2xl' : 'text-sm'} mt-1`} style={{ color: 'var(--sma-text-secondary)' }}>
             {subtitle}
           </p>
         </div>
@@ -875,7 +881,7 @@ function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navig
         <Button
           data-testid={`${testId}-upload-btn`}
           onClick={() => navigate('/patients')}
-          className="h-11 rounded-lg font-medium gap-2"
+          className={`${prominent ? 'h-12 px-6 text-base' : 'h-11'} rounded-lg font-medium gap-2 transition-all hover:-translate-y-0.5`}
           style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
         >
           <Users className="w-4 h-4" /> {primaryLabel}
@@ -884,7 +890,7 @@ function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navig
           data-testid={`${testId}-new-btn`}
           onClick={() => navigate(newPatientPath)}
           variant="outline"
-          className="h-11 rounded-lg font-medium gap-2"
+          className={`${prominent ? 'h-12 px-5' : 'h-11'} rounded-lg font-medium gap-2 transition-all hover:-translate-y-0.5`}
           style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }}
         >
           <Plus className="w-4 h-4" /> {secondaryLabel}
