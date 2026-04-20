@@ -397,7 +397,7 @@ async def logout(request: Request):
     return response
 
 @api_router.post("/auth/demo-login")
-async def demo_login(request: Request):
+async def demo_login(request: Request, refresh: bool = False):
     body = await request.json()
     role = body.get("role", "medical_practitioner")
     if role not in ["medical_practitioner", "family_carer"]:
@@ -423,17 +423,20 @@ async def demo_login(request: Request):
     })
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
 
-    # Auto-seed fresh demo data every login so the demo always starts in a clean, known state
+    # Seed demo data once per demo account. Re-seeding on every login makes the
+    # Railway demo button slow because it performs multiple deletes/inserts.
     existing_patients = await db.patients.find({"created_by": user_id}, {"_id": 0, "patient_id": 1}).to_list(100)
-    if existing_patients:
+    if refresh and existing_patients:
         patient_ids = [p["patient_id"] for p in existing_patients]
         await db.patients.delete_many({"created_by": user_id})
         await db.documents.delete_many({"created_by": user_id})
         await db.parsed_summaries.delete_many({"patient_id": {"$in": patient_ids}})
         await db.risk_results.delete_many({"patient_id": {"$in": patient_ids}})
         await db.alerts.delete_many({"user_id": user_id})
+        existing_patients = []
     dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
-    await _insert_seed_records(user, dataset)
+    if not existing_patients:
+        await _insert_seed_records(user, dataset)
 
     response = JSONResponse(content=user)
     response.set_cookie(
@@ -1744,8 +1747,16 @@ async def startup():
     await db.users.create_index("user_id", unique=True)
     await db.users.create_index("email", unique=True)
     await db.patients.create_index("patient_id", unique=True)
+    await db.patients.create_index("created_by")
+    await db.patients.create_index("linked_users")
     await db.documents.create_index("document_id", unique=True)
+    await db.documents.create_index("created_by")
+    await db.documents.create_index("patient_id")
+    await db.parsed_summaries.create_index("patient_id")
     await db.risk_results.create_index("result_id", unique=True)
+    await db.risk_results.create_index("patient_id")
+    await db.alerts.create_index("user_id")
+    await db.alerts.create_index("patient_id")
     await db.audit_logs.create_index("created_at")
     await load_scoring_config()
     logger.info("SafeMedAI backend started")
