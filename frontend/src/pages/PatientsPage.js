@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, ArrowRight, Users, Loader2, Upload } from 'lucide-react';
+import { Search, ArrowRight, Users, Loader2, Upload, FileText, X } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
+import { uploadAndProcessDocuments } from '@/lib/uploadRisk';
 
 const API = getApiUrl('/api');
 
@@ -24,6 +25,7 @@ export default function PatientsPage() {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '', medical_history: '' });
+  const [files, setFiles] = useState([]);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => { fetchPatients(); }, []);
@@ -57,16 +59,40 @@ export default function PatientsPage() {
     setCreating(true);
     try {
       const res = await axios.post(`${API}/patients`, form, { withCredentials: true });
+      const patientId = res.data.patient_id;
       toast.success(isFamily ? 'Loved one added' : 'Patient created');
+
+      if (files.length > 0) {
+        const { results } = await uploadAndProcessDocuments(patientId, files, {
+          onUploaded: (documents) => toast.success(`${documents.length} file(s) uploaded`),
+        });
+        if (results.some(r => r.status === 'success')) {
+          toast.success('Risk assessment complete');
+          navigate(`/results/${patientId}`);
+        } else {
+          toast.error('Upload finished, but processing failed');
+          navigate(`/upload/${patientId}`);
+        }
+      } else {
+        navigate(`/upload/${patientId}`);
+      }
+
       setOpen(false);
       setSearchParams({});
       setForm({ name: '', dob: '', gender: '', emergency_contact: '', gp_details: '', gp_phone: '', medical_history: '' });
-      navigate(`/upload/${res.data.patient_id}`);
+      setFiles([]);
     } catch (err) {
-      toast.error('Failed to create patient');
+      toast.error(err.response?.data?.detail || 'Failed to create patient');
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleFileSelect = (e) => {
+    const selected = Array.from(e.target.files || []).filter(f =>
+      ['image/jpeg', 'image/png', 'image/heic', 'application/pdf'].includes(f.type) || f.name.match(/\.(jpg|jpeg|png|heic|pdf)$/i)
+    );
+    setFiles(selected);
   };
 
   const filtered = Array.isArray(patients)
@@ -82,19 +108,22 @@ export default function PatientsPage() {
             <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'My Family' : 'Patients'}</h1>
             <Dialog open={open} onOpenChange={(nextOpen) => {
               setOpen(nextOpen);
-              if (!nextOpen && searchParams.get('new') === '1') setSearchParams({});
+              if (!nextOpen) {
+                setFiles([]);
+                if (searchParams.get('new') === '1') setSearchParams({});
+              }
             }}>
               <DialogTrigger asChild>
                 <Button data-testid="create-patient-btn" className="h-11 px-5 rounded-full font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
                   <Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Add Patient & Upload'}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md" data-testid="create-patient-dialog">
+              <DialogContent className="sm:max-w-lg" data-testid="create-patient-dialog">
                 <DialogHeader>
                   <DialogTitle style={{ fontFamily: 'Outfit' }}>{isFamily ? 'Add Loved One' : 'New Patient'}</DialogTitle>
                 </DialogHeader>
                 <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
-                  Add the essentials now. The next screen uploads the discharge summary and checks medication risk.
+                  Add the essentials and attach a discharge summary to check medication risk.
                 </p>
                 <div className="space-y-4 mt-4">
                   <div>
@@ -125,8 +154,47 @@ export default function PatientsPage() {
                     <Label htmlFor="medical_history">{isFamily ? 'Medical History' : 'Past Medical History'}</Label>
                     <Textarea id="medical_history" data-testid="patient-medical-history-input" value={form.medical_history} onChange={e => setForm({ ...form, medical_history: e.target.value })} placeholder={isFamily ? "e.g. dementia, diabetes, heart conditions, previous hospitalisations" : "Relevant medical background, diagnoses, allergies"} className="mt-1" rows={3} />
                   </div>
+                  <div>
+                    <Label htmlFor="summary-file">Discharge Summary</Label>
+                    <label
+                      htmlFor="summary-file"
+                      className="mt-1 flex items-center justify-between gap-3 rounded-lg px-4 py-3 cursor-pointer"
+                      style={{ border: '1px dashed var(--sma-border)', backgroundColor: 'var(--sma-surface-alt)' }}
+                    >
+                      <span className="flex items-center gap-3 min-w-0">
+                        <FileText className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--sma-brand)' }} />
+                        <span className="text-sm truncate" style={{ color: 'var(--sma-text-secondary)' }}>
+                          {files.length > 0 ? `${files.length} file${files.length > 1 ? 's' : ''} selected` : 'Attach PDF or photo'}
+                        </span>
+                      </span>
+                      <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--sma-brand)' }}>
+                        Browse
+                      </span>
+                    </label>
+                    <input
+                      id="summary-file"
+                      data-testid="embedded-upload-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/heic,application/pdf,.jpg,.jpeg,.png,.heic,.pdf"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    {files.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {files.map((file, idx) => (
+                          <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-2 text-xs rounded-md px-2 py-1" style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-text-muted)' }}>
+                            <span className="truncate">{file.name}</span>
+                            <button type="button" onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))} aria-label={`Remove ${file.name}`}>
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Button data-testid="save-patient-btn" onClick={handleCreate} disabled={creating} className="w-full h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 mr-2" /> {isFamily ? 'Add Loved One & Upload' : 'Create Patient & Upload'}</>}
+                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing</> : <><Upload className="w-4 h-4 mr-2" /> {files.length > 0 ? 'Create & Analyse' : 'Create & Continue to Upload'}</>}
                   </Button>
                 </div>
               </DialogContent>
@@ -154,11 +222,16 @@ export default function PatientsPage() {
           ) : (
             <div className="space-y-3">
               {filtered.map(p => (
-                <button
+                <div
                   key={p.patient_id}
                   data-testid={`patient-row-${p.patient_id}`}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => navigate(`/patients/${p.patient_id}`)}
-                  className="w-full flex items-center justify-between p-5 rounded-xl shadow-sm transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-left"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') navigate(`/patients/${p.patient_id}`);
+                  }}
+                  className="w-full flex items-center justify-between gap-4 p-5 rounded-xl shadow-sm transition-all duration-200 hover:-translate-y-0.5 cursor-pointer text-left"
                   style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}
                 >
                   <div className="flex items-center gap-4">
@@ -170,8 +243,22 @@ export default function PatientsPage() {
                       <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>DOB: {p.dob || 'Not set'} {p.gender ? `| ${p.gender}` : ''}</p>
                     </div>
                   </div>
-                  <ArrowRight className="w-5 h-5" style={{ color: 'var(--sma-text-muted)' }} />
-                </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      data-testid={`patient-upload-${p.patient_id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/upload/${p.patient_id}`);
+                      }}
+                      className="h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-2"
+                      style={{ backgroundColor: 'var(--sma-risk-low-bg)', color: 'var(--sma-brand)', border: '1px solid var(--sma-risk-low-border)' }}
+                    >
+                      <Upload className="w-4 h-4" /> Upload
+                    </button>
+                    <ArrowRight className="w-5 h-5" style={{ color: 'var(--sma-text-muted)' }} />
+                  </div>
+                </div>
               ))}
             </div>
           )}

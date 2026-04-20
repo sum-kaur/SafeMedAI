@@ -140,9 +140,8 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
             <UploadFirstPanel
               title="Upload a discharge summary"
               subtitle="Identify medication risk from a photo, PDF, or screenshot."
-              primaryLabel="Upload for existing patient"
+              primaryLabel="Choose patient to upload"
               secondaryLabel="New patient + upload"
-              patient={sortedPatients[0]}
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="practitioner-upload-first"
@@ -319,9 +318,8 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
             <UploadFirstPanel
               title="Upload a discharge summary"
               subtitle="Check medication risk for someone you care for."
-              primaryLabel="Upload for loved one"
+              primaryLabel="Choose loved one to upload"
               secondaryLabel="Add loved one + upload"
-              patient={stats?.recent_patients?.[0]}
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="family-upload-first"
@@ -415,13 +413,11 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
   );
 }
 
-function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, patient, navigate, newPatientPath, testId }) {
-  const uploadPath = patient?.patient_id ? `/upload/${patient.patient_id}` : newPatientPath;
-
+function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, navigate, newPatientPath, testId }) {
   return (
     <div
-      className="mb-6 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
-      style={{ backgroundColor: 'var(--sma-surface)', border: '1.5px solid var(--sma-brand)' }}
+      className="mb-6 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+      style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}
       data-testid={testId}
     >
       <div className="flex items-start gap-4">
@@ -432,26 +428,18 @@ function UploadFirstPanel({ title, subtitle, primaryLabel, secondaryLabel, patie
           <Upload className="w-6 h-6" style={{ color: 'var(--sma-brand)' }} />
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--sma-brand)' }}>
-            First step
-          </p>
           <h2 className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
             {title}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
             {subtitle}
           </p>
-          {patient?.name && (
-            <p className="text-xs mt-2" style={{ color: 'var(--sma-text-muted)' }}>
-              Ready for {patient.name}
-            </p>
-          )}
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-2 md:flex-shrink-0">
         <Button
           data-testid={`${testId}-upload-btn`}
-          onClick={() => navigate(uploadPath)}
+          onClick={() => navigate('/patients')}
           className="h-11 rounded-xl font-medium gap-2"
           style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
         >

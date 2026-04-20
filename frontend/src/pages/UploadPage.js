@@ -7,6 +7,7 @@ import { Upload, FileText, Image, X, Loader2, CheckCircle, AlertTriangle, Camera
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
+import { uploadAndProcessDocuments } from '@/lib/uploadRisk';
 
 const API = getApiUrl('/api');
 
@@ -69,22 +70,13 @@ export default function UploadPage() {
     setUploading(true);
     setProcessResults([]);
     try {
-      const formData = new FormData();
-      files.forEach(f => formData.append('files', f));
-      const res = await axios.post(`${API}/upload/${patientId}`, formData, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success(`${res.data.documents.length} file(s) uploaded`);
-      setFiles([]);
-      setProcessing(true);
-      const results = [];
-      for (const doc of res.data.documents) {
-        if (doc.status === 'error') continue;
-        try {
-          const processRes = await axios.post(`${API}/process/${doc.document_id}`, {}, { withCredentials: true });
-          results.push({ doc_id: doc.document_id, status: 'success', data: processRes.data });
-        } catch (err) {
-          results.push({ doc_id: doc.document_id, status: 'error', error: err.response?.data?.detail || 'Processing failed' });
-        }
-      }
+      const { results } = await uploadAndProcessDocuments(patientId, files, {
+        onUploaded: (documents) => {
+          toast.success(`${documents.length} file(s) uploaded`);
+          setFiles([]);
+          setProcessing(true);
+        },
+      });
       setProcessResults(results);
       if (results.some(r => r.status === 'success')) {
         toast.success('Risk assessment complete');
