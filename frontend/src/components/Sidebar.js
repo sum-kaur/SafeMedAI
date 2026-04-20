@@ -62,31 +62,29 @@ export default function Sidebar() {
   const linkStyle = (isActive) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    paddingTop: '10px',
-    paddingBottom: '10px',
-    paddingRight: '16px',
-    paddingLeft: '13px',           // 16px - 3px to compensate for left border
-    borderRadius: isActive ? '0 8px 8px 0' : '8px',
-    borderLeft: isActive ? '3px solid var(--sma-brand)' : '3px solid transparent',
-    backgroundColor: isActive ? 'var(--sma-surface-alt)' : 'transparent',
+    gap: '10px',
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: isActive ? '1px solid var(--sma-border)' : '1px solid transparent',
+    boxShadow: isActive ? '0 8px 20px rgba(31,36,33,0.045)' : 'none',
+    backgroundColor: isActive ? 'var(--sma-surface)' : 'transparent',
     color: isActive ? 'var(--sma-brand)' : 'var(--sma-text-secondary)',
-    fontSize: '14px',
-    fontWeight: '500',
-    transition: 'background-color 0.15s, color 0.15s',
+    fontSize: '13px',
+    fontWeight: isActive ? '600' : '500',
+    transition: 'background-color 0.15s, color 0.15s, box-shadow 0.15s',
     textDecoration: 'none',
   });
 
   return (
-    <aside className="w-64 min-h-screen flex flex-col border-r" style={{ backgroundColor: 'var(--sma-surface)', borderColor: 'var(--sma-border)' }} data-testid="sidebar">
-      <div className="p-6 border-b" style={{ borderColor: 'var(--sma-border)' }}>
+    <aside className="w-64 min-h-screen flex flex-col border-r" style={{ backgroundColor: '#FBFAF7', borderColor: 'var(--sma-border)' }} data-testid="sidebar">
+      <div className="p-5 border-b" style={{ borderColor: 'var(--sma-border)' }}>
         <div className="flex items-center gap-2" data-testid="sidebar-logo">
-          <PillLogo size={32} />
-          <span className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>SafeMedAI</span>
+          <PillLogo size={30} />
+          <span className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>SafeMedAI</span>
         </div>
         {/* Role badge — neutral colours, no risk-colour borrowing */}
-        <div className="mt-3 flex items-center gap-2 p-2 rounded-lg" style={{
-          backgroundColor: 'var(--sma-surface-alt)',
+        <div className="mt-4 flex items-center gap-2 p-2 rounded-lg" style={{
+          backgroundColor: 'var(--sma-surface)',
           border: '1px solid var(--sma-border)',
         }}>
           {isPractitioner
@@ -98,7 +96,7 @@ export default function Sidebar() {
           </span>
         </div>
       </div>
-      <nav className="flex-1 p-3 space-y-0.5">
+      <nav className="flex-1 p-3 space-y-1.5">
         {links.map((link) => (
           <NavLink
             key={link.to}
@@ -106,19 +104,19 @@ export default function Sidebar() {
             data-testid={`nav-${link.label.toLowerCase().replace(/[^a-z]/g, '-')}`}
             style={({ isActive }) => linkStyle(isActive)}
             onMouseEnter={(e) => {
-              if (e.currentTarget.style.borderLeft === '3px solid transparent') {
-                e.currentTarget.style.backgroundColor = 'var(--sma-surface-alt)';
+              if (!e.currentTarget.getAttribute('aria-current')) {
+                e.currentTarget.style.backgroundColor = 'var(--sma-surface)';
                 e.currentTarget.style.color = 'var(--sma-text-primary)';
               }
             }}
             onMouseLeave={(e) => {
-              if (e.currentTarget.style.borderLeft === '3px solid transparent') {
+              if (!e.currentTarget.getAttribute('aria-current')) {
                 e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.color = 'var(--sma-text-secondary)';
               }
             }}
           >
-            <link.icon className="w-5 h-5 flex-shrink-0" />
+            <link.icon className="w-4 h-4 flex-shrink-0" />
             {link.label}
           </NavLink>
         ))}
