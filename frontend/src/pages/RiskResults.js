@@ -130,7 +130,7 @@ export default function RiskResults() {
                   ACB Score: <strong>{risk_result.total_score}</strong> | {risk_result.flagged_count} of {risk_result.medication_count} medications flagged
                 </p>
                 <p className="text-sm mt-1" style={{ color: riskStyle.text, opacity: 0.8 }}>
-                  Scoring Engine: {risk_result.scoring_engine} | Confidence: {Math.round((risk_result.confidence || 0) * 100)}%
+                  Calculator: {risk_result.scoring_engine || 'ACB'} | Confidence: {Math.round((risk_result.confidence || 0) * 100)}%
                 </p>
               </div>
               <div className="text-center p-4 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>

@@ -5,27 +5,27 @@
 @tailwind utilities;
 
 :root {
-  --sma-bg: #FAF9F6;
+  --sma-bg: #F7FCFF;
   --sma-surface: #FFFFFF;
-  --sma-surface-alt: #F3F1EC;
-  --sma-text-primary: #1F2421;
-  --sma-text-secondary: #5C6661;
-  --sma-text-muted: #8A938E;
+  --sma-surface-alt: #EEF8FF;
+  --sma-text-primary: #102033;
+  --sma-text-secondary: #4C6475;
+  --sma-text-muted: #7B91A2;
   --sma-text-inverse: #FFFFFF;
-  --sma-brand: #1E3A5F;
-  --sma-brand-hover: #152D4A;
-  --sma-accent: #C97A5E;
-  --sma-border: #E6E4DE;
-  --sma-border-focus: #1E3A5F;
-  --sma-risk-low-bg: #E8F0EC;
-  --sma-risk-low-border: #4E876C;
-  --sma-risk-low-text: #2A4D3D;
-  --sma-risk-med-bg: #FDF3E7;
-  --sma-risk-med-border: #D9944C;
-  --sma-risk-med-text: #7A5024;
-  --sma-risk-high-bg: #FCEEEB;
-  --sma-risk-high-border: #BA5A45;
-  --sma-risk-high-text: #753223;
+  --sma-brand: #168BD8;
+  --sma-brand-hover: #0E73B8;
+  --sma-accent: #13B8A6;
+  --sma-border: #D8EAF5;
+  --sma-border-focus: #168BD8;
+  --sma-risk-low-bg: #E9FDF7;
+  --sma-risk-low-border: #45C7A5;
+  --sma-risk-low-text: #087B64;
+  --sma-risk-med-bg: #FFF7E6;
+  --sma-risk-med-border: #F4B044;
+  --sma-risk-med-text: #8A5A08;
+  --sma-risk-high-bg: #FFF0F0;
+  --sma-risk-high-border: #F87171;
+  --sma-risk-high-text: #B42318;
 }
 
 body {
@@ -47,28 +47,28 @@ code {
 
 @layer base {
   :root {
-    --background: 40 20% 98%;
-    --foreground: 150 9% 13%;
+    --background: 202 100% 98%;
+    --foreground: 211 52% 13%;
     --card: 0 0% 100%;
     --card-foreground: 150 9% 13%;
     --popover: 0 0% 100%;
     --popover-foreground: 150 9% 13%;
-    --primary: 214 52% 24%;
+    --primary: 202 82% 47%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 36 18% 94%;
+    --secondary: 202 73% 97%;
     --secondary-foreground: 150 9% 13%;
-    --muted: 36 18% 94%;
-    --muted-foreground: 150 5% 55%;
-    --accent: 18 48% 58%;
+    --muted: 202 73% 97%;
+    --muted-foreground: 205 19% 56%;
+    --accent: 174 80% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 8 56% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 36 14% 88%;
-    --input: 36 14% 88%;
-    --ring: 163 31% 33%;
-    --chart-1: 163 31% 33%;
-    --chart-2: 18 48% 58%;
-    --chart-3: 36 18% 50%;
+    --border: 201 55% 90%;
+    --input: 201 55% 90%;
+    --ring: 202 82% 47%;
+    --chart-1: 202 82% 47%;
+    --chart-2: 174 80% 40%;
+    --chart-3: 42 90% 61%;
     --chart-4: 8 56% 50%;
     --chart-5: 150 9% 40%;
     --radius: 0.625rem;

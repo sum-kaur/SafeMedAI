@@ -115,8 +115,8 @@ async def get_current_user(request: Request):
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
-# ======================== MULTI-ENGINE SCORING ========================
-ACTIVE_ENGINE = os.environ.get("SCORING_ENGINE", "ACB")
+# ======================== ACB SCORING ========================
+ACTIVE_ENGINE = "ACB"
 
 ENGINES_REGISTRY = {
     "ACB": {
@@ -142,44 +142,6 @@ ENGINES_REGISTRY = {
         },
         "thresholds": {"low": [0, 2], "medium": [3, 5], "high": [6, 999]},
         "score_labels": {3: "definite", 2: "clinically_relevant", 1: "potential"},
-    },
-    "DBI": {
-        "name": "DBI",
-        "full_name": "Drug Burden Index",
-        "description": "Measures total drug burden from anticholinergic AND sedative medications combined. Higher DBI predicts impaired physical and cognitive function.",
-        "medications": {
-            "amitriptyline": 3, "doxepin": 3, "oxybutynin": 3, "chlorpromazine": 3,
-            "diazepam": 3, "temazepam": 3, "nitrazepam": 3, "oxazepam": 3,
-            "clonazepam": 3, "morphine": 3, "oxycodone": 3, "fentanyl": 3,
-            "quetiapine": 2, "olanzapine": 2, "risperidone": 2, "haloperidol": 2,
-            "mirtazapine": 2, "trazodone": 2, "pregabalin": 2, "gabapentin": 2,
-            "zolpidem": 2, "zopiclone": 2, "codeine": 2, "tramadol": 2,
-            "cetirizine": 2, "diphenhydramine": 2, "promethazine": 2,
-            "alprazolam": 1, "lorazepam": 1, "paroxetine": 1, "sertraline": 1,
-            "citalopram": 1, "amantadine": 1, "baclofen": 1, "carbamazepine": 1,
-            "prednisone": 1, "metoprolol": 1, "clonidine": 1,
-        },
-        "thresholds": {"low": [0, 3], "medium": [4, 7], "high": [8, 999]},
-        "score_labels": {3: "high_burden", 2: "moderate_burden", 1: "low_burden"},
-    },
-    "SEDLOAD": {
-        "name": "SEDLOAD",
-        "full_name": "Sedative Load",
-        "description": "Quantifies cumulative sedative exposure. High sedative load in elderly patients increases risk of falls, fractures, and excessive sedation.",
-        "medications": {
-            "diazepam": 3, "temazepam": 3, "nitrazepam": 3, "clonazepam": 3,
-            "phenobarbital": 3, "chloral hydrate": 3, "morphine": 3, "oxycodone": 3,
-            "fentanyl": 3, "methadone": 3, "chlorpromazine": 3, "thioridazine": 3,
-            "quetiapine": 2, "olanzapine": 2, "zolpidem": 2, "zopiclone": 2,
-            "mirtazapine": 2, "trazodone": 2, "doxepin": 2, "amitriptyline": 2,
-            "pregabalin": 2, "gabapentin": 2, "codeine": 2, "tramadol": 2,
-            "promethazine": 2, "hydroxyzine": 2, "diphenhydramine": 2,
-            "alprazolam": 1, "lorazepam": 1, "oxazepam": 1, "risperidone": 1,
-            "haloperidol": 1, "aripiprazole": 1, "cetirizine": 1, "loratadine": 1,
-            "clonidine": 1, "propranolol": 1, "baclofen": 1,
-        },
-        "thresholds": {"low": [0, 3], "medium": [4, 8], "high": [9, 999]},
-        "score_labels": {3: "primary_sedative", 2: "secondary_sedative", 1: "mild_sedating"},
     },
 }
 
@@ -209,7 +171,7 @@ async def load_scoring_config():
                 }},
                 upsert=True
             )
-    logger.info(f"Loaded {len(_scoring_caches)} scoring engines")
+    logger.info(f"Loaded {len(_scoring_caches)} ACB calculator config")
 
 def calculate_risk_score(medications: list, engine_name: str = None):
     engine = engine_name or ACTIVE_ENGINE
@@ -1291,7 +1253,7 @@ async def generate_pdf_report(result_id: str, request: Request):
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(60, 12, f"  {rl} RISK", new_x="LMARGIN", new_y="NEXT", fill=True)
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, f"ACB Score: {result.get('total_score', 0)} | Scoring Engine: {result.get('scoring_engine', 'ACB')} | Confidence: {round((result.get('confidence', 0)) * 100)}%", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, f"ACB Score: {result.get('total_score', 0)} | Calculator: {result.get('scoring_engine', 'ACB')} | Confidence: {round((result.get('confidence', 0)) * 100)}%", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 6, f"Medications: {result.get('medication_count', 0)} total, {result.get('flagged_count', 0)} flagged", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
 
@@ -1412,10 +1374,10 @@ async def set_active_engine(request: Request):
     await db.audit_logs.insert_one({
         "log_id": f"log_{uuid.uuid4().hex[:12]}", "user_id": user["user_id"],
         "action": "switch_engine", "resource_type": "scoring_config", "resource_id": engine_name,
-        "details": f"Switched active scoring engine to {engine_name} ({ENGINES_REGISTRY[engine_name]['full_name']})",
+        "details": f"Confirmed active calculator as {engine_name} ({ENGINES_REGISTRY[engine_name]['full_name']})",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    return {"message": f"Active engine set to {engine_name}", "active_engine": engine_name}
+    return {"message": f"Active calculator set to {engine_name}", "active_engine": engine_name}
 
 @api_router.get("/admin/scoring-config")
 async def get_scoring_config(request: Request, engine: str = None):
@@ -1628,7 +1590,7 @@ async def export_risk_results_csv(patient_id: str, request: Request):
     patient = await db.patients.find_one({"patient_id": patient_id}, {"_id": 0})
     buf = StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["Result ID", "Date", "Scoring Engine", "Total Score", "Risk Level", "Medications Total", "Flagged", "Confidence", "Flagged Medications"])
+    writer.writerow(["Result ID", "Date", "Calculator", "Total Score", "Risk Level", "Medications Total", "Flagged", "Confidence", "Flagged Medications"])
     for r in results:
         flagged = "; ".join([f"{rf.get('medication')}(score:{rf.get('score',rf.get('acb_score','?'))})" for rf in r.get("risk_factors", [])])
         writer.writerow([

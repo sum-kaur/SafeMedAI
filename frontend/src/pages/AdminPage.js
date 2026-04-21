@@ -57,7 +57,7 @@ export default function AdminPage() {
     try {
       await axios.put(`${getApiUrl('/api/')}admin/engines/active`, { engine }, { withCredentials: true });
       setActiveEngine(engine);
-      toast.success(`Active scoring engine switched to ${engine}`);
+      toast.success(`Active calculator set to ${engine}`);
       fetchEngines();
     } catch (err) {
       toast.error('Failed to switch engine');
@@ -124,17 +124,17 @@ export default function AdminPage() {
         <div className="max-w-5xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Scoring Engine Configuration</h1>
-              <p className="text-sm mt-1" style={{ color: 'var(--sma-text-muted)' }}>Manage multiple scoring frameworks and medication databases</p>
+              <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>ACB Calculator Configuration</h1>
+              <p className="text-sm mt-1" style={{ color: 'var(--sma-text-muted)' }}>Manage the Anticholinergic Cognitive Burden medication database</p>
             </div>
           </div>
 
-          {/* Engine Selector */}
+          {/* Calculator Summary */}
           <div className="rounded-xl shadow-sm p-6 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
             <h2 className="text-xl font-medium mb-4 flex items-center gap-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-              <Zap className="w-5 h-5" style={{ color: 'var(--sma-accent)' }} /> Scoring Engines
+              <Zap className="w-5 h-5" style={{ color: 'var(--sma-accent)' }} /> Active Calculator
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {engines.map((eng) => (
                 <div
                   key={eng.name}
@@ -149,7 +149,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-semibold text-base" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{eng.name}</p>
                     {eng.name === activeEngine && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>Active</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>Active ACB Calculator</span>
                     )}
                   </div>
                   <p className="text-xs font-medium" style={{ color: 'var(--sma-brand)' }}>{eng.full_name}</p>
@@ -163,7 +163,7 @@ export default function AdminPage() {
                       className="mt-3 h-8 rounded-full text-xs w-full"
                       style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                     >
-                      {switching ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Set as Active Engine'}
+                      {switching ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Set as Active Calculator'}
                     </Button>
                   )}
                 </div>

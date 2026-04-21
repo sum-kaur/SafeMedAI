@@ -23,10 +23,10 @@ export default function RoleSelection() {
       title: 'Medical Practitioner',
       desc: 'GP, pharmacist, nurse practitioner, care coordinator, or discharge support clinician',
       features: [
-        'Clinical risk scoring with ACB / DBI / Sedative Load analysis',
+        'Clinical risk scoring with ACB analysis',
         'Detailed medication extraction and scoring breakdown',
         'Clinical Q&A grounded in patient documents',
-        'Patient management, scoring engine configuration',
+        'Patient management and ACB calculator configuration',
       ],
       color: 'var(--sma-brand)',
       bg: 'var(--sma-risk-low-bg)',

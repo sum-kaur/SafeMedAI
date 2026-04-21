@@ -119,36 +119,29 @@ export default function LandingPage() {
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section
         className="relative overflow-hidden"
-        style={{ background: 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)', minHeight: '90vh', display: 'flex', alignItems: 'center' }}
+        style={{ background: 'linear-gradient(180deg, #F7FCFF 0%, #EAF7FF 58%, #FFFFFF 100%)', minHeight: '90vh', display: 'flex', alignItems: 'center' }}
       >
-        {/* Ambient glows */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div style={{ position: 'absolute', top: '-60px', left: '10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(59,130,246,0.14) 0%, transparent 70%)', borderRadius: '50%' }} />
-          <div style={{ position: 'absolute', top: '20%', right: '5%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(6,182,212,0.10) 0%, transparent 70%)', borderRadius: '50%' }} />
-          <div style={{ position: 'absolute', bottom: '-80px', left: '30%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(239,68,68,0.07) 0%, transparent 70%)', borderRadius: '50%' }} />
-        </div>
-
         <div className="max-w-6xl mx-auto px-6 py-20 relative z-10 w-full">
           <div className="max-w-3xl mx-auto text-center">
             {/* Label badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8" style={{ backgroundColor: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)' }}>
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-xs font-semibold tracking-wide" style={{ color: '#93C5FD' }}>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8" style={{ backgroundColor: '#E6F6FF', border: '1px solid #B9E5FA' }}>
+              <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+              <span className="text-xs font-semibold tracking-wide" style={{ color: '#0E73B8' }}>
                 AI-Powered Medication Safety
               </span>
             </div>
 
             <h1
               className="font-bold leading-tight mb-6"
-              style={{ fontFamily: 'Outfit', fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: 'white', letterSpacing: '-0.02em' }}
+              style={{ fontFamily: 'Outfit', fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: '#102033', letterSpacing: '0' }}
             >
               Reducing Medication Harm{' '}
-              <span style={{ background: 'linear-gradient(135deg, #60A5FA, #06B6D4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span style={{ background: 'linear-gradient(135deg, #168BD8, #13B8A6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 for Seniors
               </span>
             </h1>
 
-            <p className="text-lg leading-relaxed mb-10" style={{ color: '#94A3B8', maxWidth: '600px', margin: '0 auto 2.5rem' }}>
+            <p className="text-lg leading-relaxed mb-10" style={{ color: '#4C6475', maxWidth: '600px', margin: '0 auto 2.5rem' }}>
               AI-powered discharge summary analysis that flags medication risks, empowers clinicians with actionable insights, and keeps families informed.
             </p>
 
@@ -159,7 +152,7 @@ export default function LandingPage() {
                 onClick={() => handleDemoLogin('medical_practitioner')}
                 disabled={!!demoLoading}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:-translate-y-0.5"
-                style={{ background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', boxShadow: '0 4px 24px rgba(59,130,246,0.4)' }}
+                style={{ background: 'linear-gradient(135deg, #168BD8, #13B8A6)', color: 'white', boxShadow: '0 8px 28px rgba(22,139,216,0.24)' }}
               >
                 {demoLoading === 'medical_practitioner'
                   ? <Loader2 className="w-5 h-5 animate-spin" />
@@ -172,7 +165,7 @@ export default function LandingPage() {
                 onClick={() => handleDemoLogin('family_carer')}
                 disabled={!!demoLoading}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:-translate-y-0.5"
-                style={{ backgroundColor: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.35)', color: '#93C5FD' }}
+                style={{ backgroundColor: '#FFFFFF', border: '1px solid #B9E5FA', color: '#0E73B8', boxShadow: '0 6px 20px rgba(22,139,216,0.10)' }}
               >
                 {demoLoading === 'family_carer'
                   ? <Loader2 className="w-5 h-5 animate-spin" />
@@ -182,13 +175,13 @@ export default function LandingPage() {
               </button>
             </div>
 
-            <p className="text-xs" style={{ color: '#475569' }}>
+            <p className="text-xs" style={{ color: '#7B91A2' }}>
               No account needed · Decision support only · Not a substitute for professional medical advice
             </p>
 
             {/* Scroll cue */}
             <div className="flex justify-center mt-16 animate-bounce">
-              <ChevronDown className="w-6 h-6" style={{ color: '#475569' }} />
+              <ChevronDown className="w-6 h-6" style={{ color: '#7B91A2' }} />
             </div>
           </div>
         </div>
@@ -199,7 +192,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold tracking-widest mb-3" style={{ color: '#3B82F6' }}>SIMPLE PROCESS</p>
-            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '-0.02em' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '0' }}>
               From discharge summary to actionable insight
             </h2>
           </div>
@@ -218,7 +211,7 @@ export default function LandingPage() {
                 step: '02',
                 icon: Zap,
                 title: 'Analyse',
-                desc: 'AI extracts medications and calculates a risk score using evidence-based clinical scoring engines (ACB, DBI, Sedative Load).',
+                desc: 'AI extracts medications and calculates a risk score using the evidence-based ACB calculator.',
                 color: '#06B6D4',
                 bg: '#ECFEFF',
               },
@@ -258,7 +251,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold tracking-widest mb-3" style={{ color: '#3B82F6' }}>ROLE-BASED DESIGN</p>
-            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '-0.02em' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '0' }}>
               Two portals, one mission
             </h2>
             <p className="text-base mt-3 max-w-xl mx-auto" style={{ color: '#64748B' }}>
@@ -284,13 +277,13 @@ export default function LandingPage() {
                 </p>
                 <ul className="space-y-3">
                   {[
-                    'ACB, DBI & Sedative Load risk scoring',
+                    'ACB risk scoring',
                     'Detailed medication extraction from summaries',
                     'Structured recommendations with evidence links',
                     'Patient management and risk timeline',
                     'Clinical Q&A grounded in patient documents',
                   ].map((f, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm" style={{ color: '#334155' }}>
+                    <li key={i} className="flex items-start gap-3 text-sm" style={{ color: '#4C6475' }}>
                       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: '#DBEAFE' }}>
                         <CheckCircle className="w-3 h-3" style={{ color: '#3B82F6' }} />
                       </div>
@@ -334,7 +327,7 @@ export default function LandingPage() {
                     'Emergency contacts and action prompts',
                     'Urgent alerts when review is needed',
                   ].map((f, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm" style={{ color: '#334155' }}>
+                    <li key={i} className="flex items-start gap-3 text-sm" style={{ color: '#4C6475' }}>
                       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: '#FEE2E2' }}>
                         <CheckCircle className="w-3 h-3" style={{ color: '#EF4444' }} />
                       </div>
@@ -363,18 +356,18 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold tracking-widest mb-3" style={{ color: '#3B82F6' }}>CLINICAL FOUNDATION</p>
-            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '-0.02em' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '0' }}>
               Built on clinical evidence
             </h2>
             <p className="text-base mt-3 max-w-xl mx-auto" style={{ color: '#64748B' }}>
-              SafeMedAI's risk engines are based on validated, peer-reviewed clinical scoring frameworks
+              SafeMedAI's risk calculator is based on a validated, peer-reviewed clinical scoring framework
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
             {[
               { value: '65+', label: 'Target age group', sub: 'Seniors after hospital discharge', color: '#3B82F6', bg: '#EFF6FF' },
-              { value: '3', label: 'Scoring engines', sub: 'ACB · DBI · Sedative Load', color: '#06B6D4', bg: '#ECFEFF' },
+              { value: '1', label: 'Risk calculator', sub: 'ACB only', color: '#06B6D4', bg: '#ECFEFF' },
               { value: 'AI', label: 'Document extraction', sub: 'Vision AI + fallback parser', color: '#10B981', bg: '#ECFDF5' },
             ].map((stat, i) => (
               <div
@@ -389,28 +382,18 @@ export default function LandingPage() {
                   <span className="text-2xl font-black" style={{ fontFamily: 'Outfit', color: stat.color }}>{stat.value}</span>
                 </div>
                 <p className="font-bold text-base mb-1" style={{ fontFamily: 'Outfit', color: '#0F172A' }}>{stat.label}</p>
-                <p className="text-xs" style={{ color: '#94A3B8' }}>{stat.sub}</p>
+                <p className="text-xs" style={{ color: '#4C6475' }}>{stat.sub}</p>
               </div>
             ))}
           </div>
 
           {/* Scoring engine details */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {[
               {
                 title: 'Anticholinergic Cognitive Burden (ACB)',
-                desc: 'Scores medications 0–3 based on anticholinergic potency. High ACB scores (≥3) are linked to increased dementia risk in older adults.',
+                desc: 'Scores medications 0-3 based on anticholinergic potency. High ACB scores are linked to increased dementia risk in older adults.',
                 color: '#3B82F6',
-              },
-              {
-                title: 'Drug Burden Index (DBI)',
-                desc: 'Measures the cumulative exposure to sedative and anticholinergic medications. Higher DBI is associated with functional impairment.',
-                color: '#06B6D4',
-              },
-              {
-                title: 'Sedative Load Score',
-                desc: 'Quantifies sedative medication burden using a 0–2 scale per drug. Total scores indicate risk of falls, confusion, and reduced cognition.',
-                color: '#8B5CF6',
               },
             ].map((engine, i) => (
               <div key={i} className="p-6 rounded-2xl" style={{ backgroundColor: 'white', border: '1px solid #E2E8F0' }}>
@@ -426,26 +409,22 @@ export default function LandingPage() {
       {/* ── MISSION / CTA ────────────────────────────────────────────── */}
       <section
         className="py-24 relative overflow-hidden"
-        style={{ background: 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)' }}
+        style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #EAF7FF 100%)' }}
       >
-        {/* Ambient glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 65%)', borderRadius: '50%' }} />
-        </div>
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
           <div className="flex justify-center mb-6">
             <PillLogo size={56} />
           </div>
           <h2
             className="font-bold mb-5"
-            style={{ fontFamily: 'Outfit', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: 'white', letterSpacing: '-0.02em' }}
+            style={{ fontFamily: 'Outfit', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#102033', letterSpacing: '0' }}
           >
             On a mission to eliminate{' '}
-            <span style={{ background: 'linear-gradient(135deg, #60A5FA, #06B6D4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <span style={{ background: 'linear-gradient(135deg, #168BD8, #13B8A6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               preventable medication harm
             </span>
           </h2>
-          <p className="text-base leading-relaxed mb-10" style={{ color: '#94A3B8', maxWidth: '520px', margin: '0 auto 2.5rem' }}>
+          <p className="text-base leading-relaxed mb-10" style={{ color: '#4C6475', maxWidth: '520px', margin: '0 auto 2.5rem' }}>
             Every year, thousands of seniors are harmed by medication errors after leaving hospital. SafeMedAI gives clinicians and families the tools to catch these risks early.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -454,7 +433,7 @@ export default function LandingPage() {
               onClick={() => handleDemoLogin('medical_practitioner')}
               disabled={!!demoLoading}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:-translate-y-0.5"
-              style={{ background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', boxShadow: '0 4px 24px rgba(59,130,246,0.35)' }}
+              style={{ background: 'linear-gradient(135deg, #168BD8, #13B8A6)', color: 'white', boxShadow: '0 8px 28px rgba(22,139,216,0.24)' }}
             >
               {demoLoading === 'medical_practitioner' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
               Try the Practitioner Demo
@@ -463,7 +442,7 @@ export default function LandingPage() {
               onClick={() => handleDemoLogin('family_carer')}
               disabled={!!demoLoading}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:-translate-y-0.5"
-              style={{ backgroundColor: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#93C5FD' }}
+              style={{ backgroundColor: '#FFFFFF', border: '1px solid #B9E5FA', color: '#0E73B8' }}
             >
               {demoLoading === 'family_carer' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Heart className="w-5 h-5" />}
               Try the Family Demo
@@ -473,19 +452,19 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="py-10 border-t" style={{ backgroundColor: '#0F172A', borderColor: '#1E293B' }}>
+      <footer className="py-10 border-t" style={{ backgroundColor: '#F7FCFF', borderColor: '#D8EAF5' }}>
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <PillLogo size={28} />
-            <span className="text-base font-semibold" style={{ fontFamily: 'Outfit', color: '#E2E8F0' }}>SafeMedAI</span>
+            <span className="text-base font-semibold" style={{ fontFamily: 'Outfit', color: '#102033' }}>SafeMedAI</span>
           </div>
-          <p className="text-xs text-center" style={{ color: '#475569' }}>
+          <p className="text-xs text-center" style={{ color: '#7B91A2' }}>
             Decision support only. Does not replace professional medical judgment.{' '}
-            <span style={{ color: '#334155' }}>© {new Date().getFullYear()} SafeMedAI</span>
+            <span style={{ color: '#4C6475' }}>© {new Date().getFullYear()} SafeMedAI</span>
           </p>
           <div className="flex items-center gap-4">
-            <Shield className="w-4 h-4" style={{ color: '#334155' }} />
-            <span className="text-xs" style={{ color: '#475569' }}>Healthcare-grade security</span>
+            <Shield className="w-4 h-4" style={{ color: '#168BD8' }} />
+            <span className="text-xs" style={{ color: '#7B91A2' }}>Healthcare-grade security</span>
           </div>
         </div>
       </footer>
