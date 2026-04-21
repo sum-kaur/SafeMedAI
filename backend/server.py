@@ -338,6 +338,16 @@ class CareRelationshipCreate(BaseModel):
     relationship_type: str = "carer"
 
 # ======================== HEALTH CHECK ========================
+@app.get("/")
+async def root_status():
+    """Friendly response for humans who open the backend service URL."""
+    return {
+        "ok": True,
+        "service": "SafeMedAI API",
+        "message": "Backend is running. Open the frontend Railway URL for the website.",
+        "health": "/api/health",
+    }
+
 @api_router.get("/health")
 async def health_check():
     """Railway health check endpoint - unauthenticated."""
