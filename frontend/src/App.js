@@ -11,7 +11,6 @@ import Dashboard from "@/pages/Dashboard";
 import PatientsPage from "@/pages/PatientsPage";
 import PatientProfile from "@/pages/PatientProfile";
 import UploadPage from "@/pages/UploadPage";
-import RiskResults from "@/pages/RiskResults";
 import ChatPage from "@/pages/ChatPage";
 import AlertsPage from "@/pages/AlertsPage";
 import AdminPage from "@/pages/AdminPage";
@@ -32,7 +31,7 @@ function AppRouter() {
       <Route path="/patients" element={<ProtectedRoute requireRole><PatientsPage /></ProtectedRoute>} />
       <Route path="/patients/:patientId" element={<ProtectedRoute requireRole><PatientProfile /></ProtectedRoute>} />
       <Route path="/upload/:patientId" element={<ProtectedRoute requireRole><UploadPage /></ProtectedRoute>} />
-      <Route path="/results/:patientId" element={<ProtectedRoute requireRole><RiskResults /></ProtectedRoute>} />
+      <Route path="/results/:patientId" element={<ProtectedRoute requireRole><PatientProfile /></ProtectedRoute>} />
       <Route path="/chat/:patientId" element={<ProtectedRoute requireRole><ChatPage /></ProtectedRoute>} />
       <Route path="/alerts" element={<ProtectedRoute requireRole><AlertsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute requireRole><AdminPage /></ProtectedRoute>} />

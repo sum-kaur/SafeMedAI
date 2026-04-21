@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, BarChart3, MessageCircle, FileText, AlertTriangle, CheckCircle, Shield, Loader2, Phone, Stethoscope, Pencil, X, Save, Download, UserPlus, Trash2, Clock, Users } from 'lucide-react';
+import { Upload, MessageCircle, FileText, AlertTriangle, CheckCircle, Shield, Loader2, Phone, Stethoscope, Pencil, X, Save, Download, UserPlus, Trash2, Clock, Users, Pill, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -27,6 +27,8 @@ export default function PatientProfile() {
   const [relForm, setRelForm] = useState({ user_email: '', relationship_type: 'carer' });
   const [addingRel, setAddingRel] = useState(false);
   const [exportingMeds, setExportingMeds] = useState(false);
+  const [latestRiskDetails, setLatestRiskDetails] = useState(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => { fetchPatient(); fetchRelationships(); }, [patientId]);
 
@@ -34,6 +36,17 @@ export default function PatientProfile() {
     try {
       const res = await axios.get(`${API}/patients/${patientId}`, { withCredentials: true });
       setData(res.data);
+      if (res.data.risk_results?.length > 0) {
+        try {
+          const latest = await axios.get(`${API}/risk-results/${patientId}/latest`, { withCredentials: true });
+          setLatestRiskDetails(latest.data?.risk_result ? latest.data : null);
+        } catch (detailErr) {
+          console.error(detailErr);
+          setLatestRiskDetails(null);
+        }
+      } else {
+        setLatestRiskDetails(null);
+      }
       setForm({
         name: res.data.patient?.name || '',
         dob: res.data.patient?.dob || '',
@@ -109,6 +122,30 @@ export default function PatientProfile() {
     finally { setExportingMeds(false); }
   };
 
+  const handleDownloadPdf = async () => {
+    const resultId = latestRiskDetails?.risk_result?.result_id || latestRisk?.result_id;
+    if (!resultId) return;
+    setDownloadingPdf(true);
+    try {
+      const res = await axios.get(`${API}/reports/${resultId}/pdf`, {
+        withCredentials: true,
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `SafeMedAI_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('PDF download failed');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   const riskStyle = (level) => ({
     high: { bg: 'var(--sma-risk-high-bg)', border: 'var(--sma-risk-high-border)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle },
     medium: { bg: 'var(--sma-risk-med-bg)', border: 'var(--sma-risk-med-border)', text: 'var(--sma-risk-med-text)', icon: Shield },
@@ -125,6 +162,11 @@ export default function PatientProfile() {
   const { patient, documents, risk_results, alerts } = data || {};
   const latestRisk = risk_results?.[0];
   const rs = latestRisk ? riskStyle(latestRisk.risk_level) : null;
+  const embeddedRisk = latestRiskDetails?.risk_result || latestRisk;
+  const embeddedSummary = latestRiskDetails?.parsed_summary;
+  const embeddedRecommendations = latestRiskDetails?.recommendations || [];
+  const embeddedStyle = embeddedRisk ? riskStyle(embeddedRisk.risk_level) : null;
+  const EmbeddedRiskIcon = embeddedStyle?.icon || Shield;
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--sma-bg)' }}>
@@ -144,14 +186,9 @@ export default function PatientProfile() {
                 <Upload className="w-4 h-4 mr-2" /> Upload Documents
               </Button>
               {risk_results?.length > 0 && (
-                <>
-                  <Button data-testid="view-results-btn" onClick={() => navigate(`/results/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
-                    <BarChart3 className="w-4 h-4 mr-2" /> View Results
-                  </Button>
-                  <Button data-testid="view-history-btn" onClick={() => navigate(`/history/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-text-secondary)', color: 'var(--sma-text-secondary)' }}>
-                    <Clock className="w-4 h-4 mr-2" /> History
-                  </Button>
-                </>
+                <Button data-testid="view-history-btn" onClick={() => navigate(`/history/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-text-secondary)', color: 'var(--sma-text-secondary)' }}>
+                  <Clock className="w-4 h-4 mr-2" /> History
+                </Button>
               )}
               <Button data-testid="chat-btn" onClick={() => navigate(`/chat/${patientId}`)} variant="outline" className="h-11 rounded-full font-medium" style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}>
                 <MessageCircle className="w-4 h-4 mr-2" /> Ask Questions
@@ -234,7 +271,7 @@ export default function PatientProfile() {
 
               {/* Latest Risk */}
               {latestRisk && rs && (
-                <div className="rounded-xl shadow-sm p-6 cursor-pointer transition-all duration-200 hover:-translate-y-0.5" onClick={() => navigate(`/results/${patientId}`)} style={{ backgroundColor: rs.bg, border: `2px solid ${rs.border}` }} data-testid="latest-risk-card">
+                <div className="rounded-xl shadow-sm p-6" style={{ backgroundColor: rs.bg, border: `2px solid ${rs.border}` }} data-testid="latest-risk-card">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm uppercase tracking-[0.15em] font-semibold" style={{ color: rs.text }}>Latest Risk Assessment</p>
                     <rs.icon className="w-6 h-6" style={{ color: rs.text }} />
@@ -246,7 +283,81 @@ export default function PatientProfile() {
             </div>
 
             {/* Timeline */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
+              {embeddedRisk && embeddedStyle && (
+                <div className="rounded-xl shadow-sm p-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid="embedded-risk-assessment">
+                  <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4 mb-5">
+                    <div>
+                      <h2 className="text-lg font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Risk Assessment</h2>
+                      <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold" style={{ backgroundColor: embeddedStyle.bg, color: embeddedStyle.text }}>
+                        <EmbeddedRiskIcon className="w-4 h-4" />
+                        {embeddedRisk.risk_level?.toUpperCase()} Risk
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button data-testid="download-pdf-btn" onClick={handleDownloadPdf} disabled={downloadingPdf} variant="outline" className="h-10 rounded-full" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
+                        {downloadingPdf ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />} Download PDF
+                      </Button>
+                      <Button data-testid="ask-about-results-btn" onClick={() => navigate(`/chat/${patientId}`)} variant="outline" className="h-10 rounded-full" style={{ borderColor: 'var(--sma-accent)', color: 'var(--sma-accent)' }}>
+                        <MessageCircle className="w-4 h-4 mr-2" /> Ask Questions
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_140px] gap-4 mb-5 rounded-xl p-5" style={{ backgroundColor: embeddedStyle.bg, border: `1px solid ${embeddedStyle.border}` }}>
+                    <div>
+                      <p className="text-base font-semibold" style={{ color: embeddedStyle.text }}>
+                        ACB Score: {embeddedRisk.total_score} | {embeddedRisk.flagged_count} of {embeddedRisk.medication_count} medications flagged
+                      </p>
+                      <p className="text-sm mt-2 leading-relaxed" style={{ color: embeddedStyle.text }}>
+                        {embeddedRisk.explanation}
+                      </p>
+                    </div>
+                    <div className="rounded-xl p-4 text-center self-start" style={{ backgroundColor: 'rgba(255,255,255,0.62)' }}>
+                      <p className="text-4xl font-bold" style={{ fontFamily: 'Outfit', color: embeddedStyle.text }}>{embeddedRisk.total_score}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: embeddedStyle.text }}>Total ACB</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--sma-surface-alt)' }}>
+                      <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--sma-text-primary)' }}>
+                        <Pill className="w-4 h-4" style={{ color: 'var(--sma-brand)' }} /> Medication Review
+                      </h3>
+                      <div className="space-y-2">
+                        {(embeddedSummary?.medications || []).slice(0, 4).map((med, i) => {
+                          const flagged = embeddedRisk.risk_factors?.find(rf => rf.medication?.toLowerCase() === med.name?.toLowerCase());
+                          return (
+                            <div key={`${med.name}-${i}`} className="flex items-center justify-between gap-3 text-sm">
+                              <span style={{ color: flagged ? embeddedStyle.text : 'var(--sma-text-primary)' }}>{med.name}</span>
+                              <span className="text-xs" style={{ color: 'var(--sma-text-muted)' }}>{flagged ? `ACB ${flagged.acb_score}` : med.dose || 'Continuing'}</span>
+                            </div>
+                          );
+                        })}
+                        {!(embeddedSummary?.medications || []).length && (
+                          <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>Medication detail will appear after document processing.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--sma-surface-alt)' }}>
+                      <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--sma-text-primary)' }}>Next Steps</h3>
+                      <div className="space-y-2">
+                        {embeddedRecommendations.slice(0, 3).map((rec, i) => (
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <ArrowRight className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--sma-brand)' }} />
+                            <span style={{ color: 'var(--sma-text-secondary)' }}>{rec.text}</span>
+                          </div>
+                        ))}
+                        {!embeddedRecommendations.length && (
+                          <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>No recommendations recorded for this assessment.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-xl shadow-sm p-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
                 <h2 className="text-lg font-medium mb-4" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Activity Timeline</h2>
                 {(!documents?.length && !risk_results?.length) ? (
@@ -260,7 +371,7 @@ export default function PatientProfile() {
                     {risk_results?.map((r) => {
                       const s = riskStyle(r.risk_level);
                       return (
-                        <div key={r.result_id} className="flex items-start gap-4 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-surface-alt)' }} onClick={() => navigate(`/results/${patientId}`)} data-testid={`timeline-risk-${r.result_id}`}>
+                        <div key={r.result_id} className="flex items-start gap-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--sma-surface-alt)' }} data-testid={`timeline-risk-${r.result_id}`}>
                           <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: s.bg }}>
                             <s.icon className="w-5 h-5" style={{ color: s.text }} />
                           </div>
