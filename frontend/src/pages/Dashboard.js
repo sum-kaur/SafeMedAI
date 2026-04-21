@@ -693,7 +693,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
             className="h-9 px-4 rounded-lg text-sm font-medium gap-2"
             style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
           >
-            <Plus className="w-4 h-4" /> Add Person
+            <Plus className="w-4 h-4" /> Add Loved One
           </Button>
         </div>
 
@@ -708,7 +708,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
               title="Analyse medication documents"
               subtitle="Attach a discharge summary, personal medication list, nursing home/group home chart, or dispensing history."
               primaryLabel="Select Person"
-              secondaryLabel="Add Person"
+              secondaryLabel="Add Loved One"
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="family-upload-first"
@@ -788,7 +788,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
                     className="h-10 px-6 rounded-xl font-medium text-sm gap-2"
                     style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                   >
-                    <Plus className="w-4 h-4" /> Add Person
+                    <Plus className="w-4 h-4" /> Add Loved One
                   </Button>
                 }
               />
