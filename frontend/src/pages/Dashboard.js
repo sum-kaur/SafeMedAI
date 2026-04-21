@@ -5,11 +5,10 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Users, FileText, AlertTriangle, Bell, Plus, CheckCircle,
-  Loader2, Shield, Download, Heart, Upload, Phone, CalendarPlus,
+  Loader2, Shield, Heart, Upload, Phone, CalendarPlus,
   ChevronRight, X
 } from 'lucide-react';
 import axios from 'axios';
-import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
 
 export default function Dashboard() {
@@ -17,7 +16,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
   const isPractitioner = user?.role === 'medical_practitioner';
 
   useEffect(() => { fetchStats(); }, []);
@@ -33,33 +31,13 @@ export default function Dashboard() {
     }
   };
 
-  const handleExportPatients = async () => {
-    setExporting(true);
-    try {
-      const res = await axios.get(`${getApiUrl('/api/')}export/patients`, { withCredentials: true, responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `patients_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast.success('Patients exported');
-    } catch {
-      toast.error('Export failed');
-    } finally {
-      setExporting(false);
-    }
-  };
-
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--sma-bg)' }}>
       <Sidebar />
       <main className="flex-1 overflow-auto" data-testid="dashboard-main">
         {isPractitioner ? (
           <PractitionerDashboardV2
-            stats={stats} loading={loading} exporting={exporting}
-            onExport={handleExportPatients}
+            stats={stats} loading={loading}
             navigate={navigate} user={user}
           />
         ) : (
@@ -73,7 +51,7 @@ export default function Dashboard() {
 }
 
 /* ======================== PRACTITIONER DASHBOARD V2 ======================== */
-function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate, user }) {
+function PractitionerDashboardV2({ stats, loading, navigate, user }) {
   const cleanName = (user?.name || '').replace(/^Dr\.?\s+/i, '').trim();
   const firstName = cleanName.split(' ')[0] || 'Doctor';
   const hour = new Date().getHours();
@@ -110,25 +88,12 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
               Review high-priority patients, recent analyses, and follow-up actions.
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {stats?.total_patients > 0 && (
-              <Button
-                data-testid="export-patients-btn"
-                onClick={onExport}
-                disabled={exporting}
-                variant="outline"
-                className="h-10 px-4 rounded-lg font-medium text-sm gap-2 transition-all hover:-translate-y-0.5"
-                style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }}
-              >
-                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Export CSV
-              </Button>
-            )}
+          <div className="flex items-center gap-2 flex-nowrap">
             <Button
               data-testid="select-patient-btn"
               onClick={() => navigate('/patients')}
               variant="outline"
-              className="h-10 px-4 rounded-lg font-medium text-sm gap-2 transition-all hover:-translate-y-0.5"
+              className="h-10 px-4 rounded-lg font-medium text-sm gap-2 whitespace-nowrap transition-all hover:-translate-y-0.5"
               style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-brand)', backgroundColor: 'var(--sma-surface)' }}
             >
               <Users className="w-4 h-4" /> Select Patient
@@ -136,7 +101,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
             <Button
               data-testid="add-patient-btn"
               onClick={() => navigate('/patients?new=1')}
-              className="h-10 px-5 rounded-lg font-medium text-sm gap-2 transition-all hover:-translate-y-0.5"
+              className="h-10 px-5 rounded-lg font-medium text-sm gap-2 whitespace-nowrap transition-all hover:-translate-y-0.5"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
               <Plus className="w-4 h-4" /> New Patient
@@ -280,7 +245,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
 }
 
 /* ======================== PRACTITIONER DASHBOARD ======================== */
-function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, user }) {
+function PractitionerDashboard({ stats, loading, navigate, user }) {
   // Strip any "Dr" prefix — the greeting template adds it explicitly
   const cleanName = (user?.name || '').replace(/^Dr\.?\s+/i, '').trim();
   const firstName = cleanName.split(' ')[0] || 'Doctor';
@@ -312,24 +277,11 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
               )}
             </p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {stats?.total_patients > 0 && (
-              <Button
-                data-testid="export-patients-btn"
-                onClick={onExport}
-                disabled={exporting}
-                variant="outline"
-                className="h-9 px-4 rounded-xl font-medium text-sm gap-2"
-                style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-text-secondary)' }}
-              >
-                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Export CSV
-              </Button>
-            )}
+          <div className="flex items-center gap-3 flex-nowrap">
             <Button
               data-testid="add-patient-btn"
               onClick={() => navigate('/patients?new=1')}
-              className="h-9 px-5 rounded-lg font-medium text-sm gap-2"
+              className="h-9 px-5 rounded-lg font-medium text-sm gap-2 whitespace-nowrap"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
               <Plus className="w-4 h-4" /> New Patient
