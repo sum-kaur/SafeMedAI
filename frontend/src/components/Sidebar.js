@@ -78,9 +78,9 @@ export default function Sidebar() {
   return (
     <aside className="w-64 min-h-screen flex flex-col border-r" style={{ backgroundColor: '#FBFAF7', borderColor: 'var(--sma-border)' }} data-testid="sidebar">
       <div className="p-5 border-b" style={{ borderColor: 'var(--sma-border)' }}>
-        <div className="flex items-center gap-2" data-testid="sidebar-logo">
-          <PillLogo size={30} />
-          <span className="text-lg font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>SafeMedAI</span>
+        <div className="flex items-center gap-3" data-testid="sidebar-logo">
+          <PillLogo size={40} />
+          <span className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>SafeMedAI</span>
         </div>
         {/* Role badge — neutral colours, no risk-colour borrowing */}
         <div className="mt-4 flex items-center gap-2 p-2 rounded-lg" style={{
