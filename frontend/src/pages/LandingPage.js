@@ -77,10 +77,10 @@ export default function LandingPage() {
         className="sticky top-0 z-50 border-b"
         style={{ backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: '#E2E8F0' }}
       >
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3" data-testid="logo">
-            <PillLogo size={52} />
-            <span className="text-2xl font-semibold" style={{ fontFamily: 'Outfit', color: '#0F172A' }}>SafeMedAI</span>
+        <div className="max-w-6xl mx-auto px-6 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-4" data-testid="logo">
+            <PillLogo size={76} />
+            <span className="text-3xl font-semibold" style={{ fontFamily: 'Outfit', color: '#0F172A' }}>SafeMedAI</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             {['How It Works', 'Portals', 'Evidence'].map((item) => (
