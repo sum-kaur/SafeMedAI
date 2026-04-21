@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Header, Query, Response, Request
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Header, Query, Response, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -369,7 +369,7 @@ async def logout(request: Request):
     return response
 
 @api_router.post("/auth/demo-login")
-async def demo_login(request: Request, refresh: bool = False):
+async def demo_login(request: Request, background_tasks: BackgroundTasks, refresh: bool = False):
     body = await request.json()
     role = body.get("role", "medical_practitioner")
     if role not in ["medical_practitioner", "family_carer"]:
@@ -395,29 +395,9 @@ async def demo_login(request: Request, refresh: bool = False):
     })
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
 
-    # Seed demo data once per demo account. Re-seeding on every login makes the
-    # Railway demo button slow because it performs multiple deletes/inserts.
-    existing_count = await db.patients.count_documents({"created_by": user_id})
-    existing_patients = []
-    if existing_count:
-        for seed_patient in (SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY)["patients"]:
-            if seed_patient.get("gp_phone"):
-                await db.patients.update_many(
-                    {"created_by": user_id, "name": seed_patient["name"], "gp_phone": {"$in": [None, ""]}},
-                    {"$set": {"gp_phone": seed_patient["gp_phone"]}}
-                )
-    if refresh and existing_count:
-        existing_patients = await db.patients.find({"created_by": user_id}, {"_id": 0, "patient_id": 1}).to_list(100)
-        patient_ids = [p["patient_id"] for p in existing_patients]
-        await db.patients.delete_many({"created_by": user_id})
-        await db.documents.delete_many({"created_by": user_id})
-        await db.parsed_summaries.delete_many({"patient_id": {"$in": patient_ids}})
-        await db.risk_results.delete_many({"patient_id": {"$in": patient_ids}})
-        await db.alerts.delete_many({"user_id": user_id})
-        existing_count = 0
-    dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
-    if not existing_count:
-        await _insert_seed_records(user, dataset)
+    # Keep demo login snappy: set the session immediately and seed/patch demo
+    # data after the response. The dashboard can show its normal loading state.
+    background_tasks.add_task(ensure_demo_data, user, role, refresh)
 
     response = JSONResponse(content=user)
     response.set_cookie(
@@ -1186,6 +1166,35 @@ async def _insert_seed_records(user, dataset):
                 "read": False, "created_at": datetime.now(timezone.utc).isoformat()
             })
     return patients
+
+async def ensure_demo_data(user, role: str, refresh: bool = False):
+    """Seed or patch demo data outside the login response path."""
+    user_id = user["user_id"]
+    dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
+    try:
+        existing_count = await db.patients.count_documents({"created_by": user_id})
+        if refresh and existing_count:
+            existing_patients = await db.patients.find({"created_by": user_id}, {"_id": 0, "patient_id": 1}).to_list(100)
+            patient_ids = [p["patient_id"] for p in existing_patients]
+            await db.patients.delete_many({"created_by": user_id})
+            await db.documents.delete_many({"created_by": user_id})
+            await db.parsed_summaries.delete_many({"patient_id": {"$in": patient_ids}})
+            await db.risk_results.delete_many({"patient_id": {"$in": patient_ids}})
+            await db.alerts.delete_many({"user_id": user_id})
+            existing_count = 0
+
+        if not existing_count:
+            await _insert_seed_records(user, dataset)
+            return
+
+        for seed_patient in dataset["patients"]:
+            if seed_patient.get("gp_phone"):
+                await db.patients.update_many(
+                    {"created_by": user_id, "name": seed_patient["name"], "gp_phone": {"$in": [None, ""]}},
+                    {"$set": {"gp_phone": seed_patient["gp_phone"]}}
+                )
+    except Exception as e:
+        logger.error(f"Demo data preparation failed for {user_id}: {e}")
 
 @api_router.post("/seed")
 async def seed_data(request: Request, force: bool = False):
