@@ -77,10 +77,10 @@ export default function LandingPage() {
         className="sticky top-0 z-50 border-b"
         style={{ backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderColor: '#E2E8F0' }}
       >
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5" data-testid="logo">
-            <PillLogo size={36} />
-            <span className="text-xl font-semibold" style={{ fontFamily: 'Outfit', color: '#0F172A' }}>SafeMedAI</span>
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3" data-testid="logo">
+            <PillLogo size={52} />
+            <span className="text-2xl font-semibold" style={{ fontFamily: 'Outfit', color: '#0F172A' }}>SafeMedAI</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             {['How It Works', 'Portals', 'Evidence'].map((item) => (
@@ -412,8 +412,8 @@ export default function LandingPage() {
         style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #EAF7FF 100%)' }}
       >
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <div className="flex justify-center mb-6">
-            <PillLogo size={56} />
+          <div className="flex justify-center mb-7">
+            <PillLogo size={96} />
           </div>
           <h2
             className="font-bold mb-5"
@@ -455,7 +455,7 @@ export default function LandingPage() {
       <footer className="py-10 border-t" style={{ backgroundColor: '#F7FCFF', borderColor: '#D8EAF5' }}>
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <PillLogo size={28} />
+            <PillLogo size={40} />
             <span className="text-base font-semibold" style={{ fontFamily: 'Outfit', color: '#102033' }}>SafeMedAI</span>
           </div>
           <p className="text-xs text-center" style={{ color: '#7B91A2' }}>
