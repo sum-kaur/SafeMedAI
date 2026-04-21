@@ -123,7 +123,7 @@ export default function PatientsPage() {
                   <DialogTitle style={{ fontFamily: 'Outfit' }}>{isFamily ? 'Add Loved One' : 'New Patient'}</DialogTitle>
                 </DialogHeader>
                 <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
-                  Add the essentials and attach a discharge summary to check medication risk.
+                  Add the essentials and attach a discharge summary, medication list, care home chart, or dispensing history to check medication risk.
                 </p>
                 <div className="space-y-4 mt-4">
                   <div>
@@ -155,7 +155,7 @@ export default function PatientsPage() {
                     <Textarea id="medical_history" data-testid="patient-medical-history-input" value={form.medical_history} onChange={e => setForm({ ...form, medical_history: e.target.value })} placeholder={isFamily ? "e.g. dementia, diabetes, heart conditions, previous hospitalisations" : "Relevant medical background, diagnoses, allergies"} className="mt-1" rows={3} />
                   </div>
                   <div>
-                    <Label htmlFor="summary-file">Discharge Summary</Label>
+                    <Label htmlFor="summary-file">Medication Documents</Label>
                     <label
                       htmlFor="summary-file"
                       className="mt-1 flex items-center justify-between gap-3 rounded-lg px-4 py-3 cursor-pointer"
@@ -214,7 +214,7 @@ export default function PatientsPage() {
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Users className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
               <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'No loved ones found' : 'No patients found'}</h3>
-              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one, then attach their discharge summary' : 'Create a patient, then attach a discharge summary'}</p>
+              <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one, then attach their medication documents' : 'Create a patient, then attach medication documents'}</p>
               <Button data-testid="empty-create-upload-btn" onClick={() => setOpen(true)} className="mt-5 h-11 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
                 <FileText className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Patient'}
               </Button>
@@ -267,3 +267,4 @@ export default function PatientsPage() {
     </div>
   );
 }
+

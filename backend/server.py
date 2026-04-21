@@ -387,17 +387,26 @@ async def demo_login(request: Request, refresh: bool = False):
 
     # Seed demo data once per demo account. Re-seeding on every login makes the
     # Railway demo button slow because it performs multiple deletes/inserts.
-    existing_patients = await db.patients.find({"created_by": user_id}, {"_id": 0, "patient_id": 1}).to_list(100)
-    if refresh and existing_patients:
+    existing_count = await db.patients.count_documents({"created_by": user_id})
+    existing_patients = []
+    if existing_count:
+        for seed_patient in (SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY)["patients"]:
+            if seed_patient.get("gp_phone"):
+                await db.patients.update_many(
+                    {"created_by": user_id, "name": seed_patient["name"], "gp_phone": {"$in": [None, ""]}},
+                    {"$set": {"gp_phone": seed_patient["gp_phone"]}}
+                )
+    if refresh and existing_count:
+        existing_patients = await db.patients.find({"created_by": user_id}, {"_id": 0, "patient_id": 1}).to_list(100)
         patient_ids = [p["patient_id"] for p in existing_patients]
         await db.patients.delete_many({"created_by": user_id})
         await db.documents.delete_many({"created_by": user_id})
         await db.parsed_summaries.delete_many({"patient_id": {"$in": patient_ids}})
         await db.risk_results.delete_many({"patient_id": {"$in": patient_ids}})
         await db.alerts.delete_many({"user_id": user_id})
-        existing_patients = []
+        existing_count = 0
     dataset = SEED_DATA_PRACTITIONER if role == "medical_practitioner" else SEED_DATA_FAMILY
-    if not existing_patients:
+    if not existing_count:
         await _insert_seed_records(user, dataset)
 
     response = JSONResponse(content=user)
@@ -690,8 +699,8 @@ async def extract_with_llm(content: str, is_text: bool = False):
         return simple_discharge_extraction(content) if is_text else _empty
 
     system_msg = (
-        "You are a medical document extraction system. Extract structured information from hospital "
-        "discharge summaries. Return ONLY valid JSON with these fields:\n"
+        "You are a medical document extraction system. Extract structured medication and care information from hospital "
+        "discharge summaries, personal medication lists, nursing home or group home medication charts, and dispensing history documents. Return ONLY valid JSON with these fields:\n"
         '{"patient_name": "string or null", "discharge_date": "string or null", "diagnosis": "string or null", '
         '"medications": [{"name": "string", "dose": "string or null", "frequency": "string or null", '
         '"route": "string or null", "is_new": true, "is_ceased": false, "is_changed": false}], '
@@ -706,7 +715,7 @@ async def extract_with_llm(content: str, is_text: bool = False):
         if is_text:
             messages = [
                 {"role": "system", "content": system_msg},
-                {"role": "user", "content": f"Extract structured discharge summary data from this text:\n\n{content}"}
+                {"role": "user", "content": f"Extract structured medication document data from this text. The source may be a discharge summary, personal medication list, nursing home/group home chart, or dispensing history:\n\n{content}"}
             ]
         else:
             # Image — use Vision API
@@ -714,7 +723,7 @@ async def extract_with_llm(content: str, is_text: bool = False):
                 {"role": "system", "content": system_msg},
                 {"role": "user", "content": [
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{content}"}},
-                    {"type": "text", "text": "Extract structured discharge summary data from this hospital document image."}
+                    {"type": "text", "text": "Extract structured medication document data from this image. The source may be a discharge summary, personal medication list, nursing home/group home chart, or dispensing history."}
                 ]}
             ]
         response = await asyncio.to_thread(
@@ -779,7 +788,8 @@ async def get_latest_risk(patient_id: str, request: Request):
     )
     role = user.get("role", "family_carer")
     recommendations = result.get(f"recommendations_{role}", result.get("recommendations_family", []))
-    return {"risk_result": result, "parsed_summary": summary, "recommendations": recommendations}
+    patient = await db.patients.find_one({"patient_id": patient_id}, {"_id": 0})
+    return {"risk_result": result, "parsed_summary": summary, "recommendations": recommendations, "patient": patient}
 
 # ======================== CHAT / Q&A ========================
 @api_router.get("/chat/{patient_id}/messages")
@@ -801,7 +811,7 @@ async def send_chat_message(patient_id: str, body: ChatMessage, request: Request
     if patient:
         context_parts.append(f"Patient: {patient.get('name')}, Allergies: {patient.get('allergies', [])}")
     for s in summaries:
-        context_parts.append(f"Discharge Summary - Diagnosis: {s.get('diagnosis')}, Medications: {json.dumps(s.get('medications', []))}, Instructions: {s.get('discharge_instructions')}, Follow-up: {s.get('follow_up')}")
+        context_parts.append(f"Medication Documents - Diagnosis: {s.get('diagnosis')}, Medications: {json.dumps(s.get('medications', []))}, Instructions: {s.get('discharge_instructions')}, Follow-up: {s.get('follow_up')}")
     for r in risk_results:
         context_parts.append(f"Risk Assessment - Score: {r.get('total_score')}, Level: {r.get('risk_level')}, Factors: {json.dumps(r.get('risk_factors', []))}")
     context = "\n".join(context_parts)
@@ -917,36 +927,42 @@ SEED_DATA_PRACTITIONER = {
             "name": "Patricia Nguyen", "dob": "1946-04-12", "gender": "Female",
             "emergency_contact": "James Nguyen (Son) - 0411 234 567",
             "gp_details": "Dr Anita Sharma - Northside Family Practice",
+            "gp_phone": "03 9123 4567",
             "allergies": ["Penicillin"], "medical_history": "Overactive bladder, Depression, Chronic low back pain, Insomnia, GERD",
         },
         {
             "name": "Harold Okafor", "dob": "1942-11-03", "gender": "Male",
             "emergency_contact": "Grace Okafor (Wife) - 0422 345 678",
             "gp_details": "Dr Thomas Liu - Central Medical Group",
+            "gp_phone": "03 9234 5678",
             "allergies": ["Sulfonamides"], "medical_history": "Heart failure (HFrEF), AF, Chronic pain, Anxiety disorder",
         },
         {
             "name": "Beverley O'Brien", "dob": "1954-07-29", "gender": "Female",
             "emergency_contact": "Sean O'Brien (Husband) - 0433 456 789",
             "gp_details": "Dr Priya Patel - Riverside Health Clinic",
+            "gp_phone": "03 9345 6789",
             "allergies": [], "medical_history": "Type 2 Diabetes, Hypertension, Mild depression",
         },
         {
             "name": "Clive Papadopoulos", "dob": "1950-02-14", "gender": "Male",
             "emergency_contact": "Elena Papadopoulos (Wife) - 0444 567 890",
             "gp_details": "Dr Marcus Webb - Eastside Family Practice",
+            "gp_phone": "03 9456 7890",
             "allergies": [], "medical_history": "Hypertension, Hyperlipidaemia, Mild osteoarthritis",
         },
         {
             "name": "Shirley Mahmoud", "dob": "1957-09-18", "gender": "Female",
             "emergency_contact": "Omar Mahmoud (Son) - 0455 678 901",
             "gp_details": "Dr Sarah Wilson - Greenfield Medical Centre",
+            "gp_phone": "03 9567 8901",
             "allergies": ["Codeine"], "medical_history": "Insomnia, GERD, Chronic back pain, Mild anxiety",
         },
         {
             "name": "Victor Osei", "dob": "1951-08-14", "gender": "Male",
             "emergency_contact": "Abena Osei (Wife) - 0466 789 012",
             "gp_details": "Dr Helen Park - Southgate Medical Centre",
+            "gp_phone": "03 9678 9012",
             "allergies": [], "medical_history": "Coronary artery disease (post-CABG 2019), Hypertension, Hypercholesterolaemia, Type 2 Diabetes (diet-controlled)",
         },
     ],
@@ -1053,12 +1069,14 @@ SEED_DATA_FAMILY = {
             "name": "June Walsh", "dob": "1948-03-14", "gender": "Female",
             "emergency_contact": "Olivia Taylor (Daughter) - 0412 111 222",
             "gp_details": "Dr Kevin Barrett - Hillside Medical Centre",
+            "gp_phone": "03 9789 0123",
             "allergies": [], "medical_history": "Alzheimer's dementia (moderate), Urinary incontinence, Hypertension, Osteoporosis, History of falls",
         },
         {
             "name": "Brian Walsh", "dob": "1945-11-27", "gender": "Male",
             "emergency_contact": "Olivia Taylor (Daughter) - 0412 111 222",
             "gp_details": "Dr Kevin Barrett - Hillside Medical Centre",
+            "gp_phone": "03 9789 0123",
             "allergies": ["Penicillin"], "medical_history": "Chronic heart failure (HFpEF), Type 2 Diabetes, Osteoarthritis both knees, Mild CKD",
         },
     ],
@@ -1309,7 +1327,7 @@ async def generate_pdf_report(result_id: str, request: Request):
     if summary:
         if summary.get('diagnosis') or summary.get('discharge_instructions'):
             pdf.set_font("Helvetica", "B", 14)
-            pdf.cell(0, 10, "Discharge Summary", new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(0, 10, "Medication Document Details", new_x="LMARGIN", new_y="NEXT")
             pdf.set_font("Helvetica", "", 10)
             if summary.get('diagnosis'):
                 pdf.multi_cell(0, 5, f"Diagnosis: {summary['diagnosis']}")
@@ -1726,3 +1744,4 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     client.close()
+

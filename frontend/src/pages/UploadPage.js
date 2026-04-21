@@ -102,7 +102,7 @@ export default function UploadPage() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                Analyse Discharge Summary
+                Analyse Medication Documents
               </h1>
               {patient && <p className="text-sm mt-1" style={{ color: 'var(--sma-text-muted)' }}>Patient: {patient.name} {patient.dob ? `| DOB: ${patient.dob}` : ''}</p>}
             </div>
@@ -113,7 +113,7 @@ export default function UploadPage() {
             )}
           </div>
           <p className="text-base mb-6" style={{ color: 'var(--sma-text-secondary)' }}>
-            {isFamily ? 'Attach a hospital discharge summary photo or PDF to get a medication risk score' : 'Attach a discharge summary photo, screenshot, or PDF for analysis'}
+            {isFamily ? 'Attach a discharge summary, personal medication list, nursing home/group home chart, or dispensing history to get a medication risk score' : 'Attach a discharge summary, medication list, care home chart, dispensing history, photo, screenshot, or PDF for analysis'}
           </p>
 
           {/* Inline New Risk Score Result */}
@@ -134,7 +134,7 @@ export default function UploadPage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="w-12 h-12 mb-4" style={{ color: 'var(--sma-brand)' }} />
-                <p className="text-lg font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Drop discharge summary here</p>
+                <p className="text-lg font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Drop medication documents here</p>
                 <p className="text-sm mb-4" style={{ color: 'var(--sma-text-muted)' }}>or browse files</p>
                 <div className="flex items-center gap-4 flex-wrap justify-center">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium" style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-text-secondary)' }}><Image className="w-4 h-4" /> JPG, PNG</div>
@@ -147,7 +147,7 @@ export default function UploadPage() {
                   <Camera className="w-5 h-5 mr-2" /> Scan with Camera
                 </Button>
                 <input ref={cameraInputRef} type="file" data-testid="camera-input" className="hidden" accept="image/*" capture="environment" onChange={handleFileSelect} />
-                <p className="text-xs mt-2 text-center" style={{ color: 'var(--sma-text-muted)' }}>Use your phone camera to capture a discharge summary directly</p>
+                <p className="text-xs mt-2 text-center" style={{ color: 'var(--sma-text-muted)' }}>Use your phone camera to capture a discharge summary, medication list, care home chart, or dispensing history</p>
               </div>
               {files.length > 0 && (
                 <div className="mt-6 space-y-3">
@@ -167,7 +167,7 @@ export default function UploadPage() {
                   <Button data-testid="upload-submit-btn" onClick={handleUpload} disabled={uploading || processing} className="w-full h-14 text-lg rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
                     {uploading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Preparing...</> :
                      processing ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Analysing...</> :
-                     'Analyse Summary'}
+                     'Analyse Documents'}
                   </Button>
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function UploadPage() {
             <div className="mt-8 text-center p-8 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid="processing-state">
               <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" style={{ color: 'var(--sma-brand)' }} />
               <p className="text-lg font-medium" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                {uploading ? 'Preparing files...' : 'Analysing discharge summary...'}
+                {uploading ? 'Preparing files...' : 'Analysing medication documents...'}
               </p>
               <p className="text-sm mt-2" style={{ color: 'var(--sma-text-muted)' }}>
                 {processing ? 'Extracting medications, calculating risk score, and generating recommendations' : 'Securely preparing your files'}
@@ -190,7 +190,7 @@ export default function UploadPage() {
           {/* Analyse Another after results */}
           {hasNewResults && processResults.some(r => r.status === 'success') && (
             <Button data-testid="upload-another-btn" onClick={() => setProcessResults([])} variant="outline" className="w-full h-12 rounded-xl font-medium mt-4" style={{ borderColor: 'var(--sma-brand)', color: 'var(--sma-brand)' }}>
-              <FileText className="w-4 h-4 mr-2" /> Analyse Another Summary
+              <FileText className="w-4 h-4 mr-2" /> Analyse More Documents
             </Button>
           )}
 
@@ -209,7 +209,7 @@ export default function UploadPage() {
           {!loadingPrev && prevDocs.length > 0 && (
             <div className="mt-8 rounded-xl shadow-sm p-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid="previous-documents-section">
               <h2 className="text-lg font-medium mb-4 flex items-center gap-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                <Clock className="w-5 h-5" style={{ color: 'var(--sma-brand)' }} /> Previous Summaries
+                <Clock className="w-5 h-5" style={{ color: 'var(--sma-brand)' }} /> Previous Documents
               </h2>
               <div className="space-y-2">
                 {prevDocs.map((d) => (
@@ -355,3 +355,4 @@ function InlineRiskScore({ result, isFamily, navigate, patientId }) {
     </div>
   );
 }
+

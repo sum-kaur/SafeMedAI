@@ -141,7 +141,7 @@ export default function PatientProfile() {
             </div>
             <div className="flex gap-3 flex-wrap">
               <Button data-testid="upload-doc-btn" onClick={() => navigate(`/upload/${patientId}`)} className="h-11 rounded-full font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                <Upload className="w-4 h-4 mr-2" /> Upload Summary
+                <Upload className="w-4 h-4 mr-2" /> Upload Documents
               </Button>
               {risk_results?.length > 0 && (
                 <>
@@ -253,7 +253,7 @@ export default function PatientProfile() {
                   <div className="text-center py-12">
                     <Upload className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--sma-text-muted)' }} />
                     <p style={{ color: 'var(--sma-text-secondary)' }}>No documents uploaded yet</p>
-                    <Button data-testid="timeline-upload-btn" onClick={() => navigate(`/upload/${patientId}`)} className="mt-4 h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>Upload Discharge Summary</Button>
+                    <Button data-testid="timeline-upload-btn" onClick={() => navigate(`/upload/${patientId}`)} className="mt-4 h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>Upload Medication Documents</Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -375,3 +375,4 @@ export default function PatientProfile() {
     </div>
   );
 }
+

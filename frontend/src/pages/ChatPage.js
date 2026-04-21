@@ -104,7 +104,7 @@ export default function ChatPage() {
               <div className="text-center py-12 animate-fade-in">
                 <Bot className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-brand)' }} />
                 <h2 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>
-                  {isPractitioner ? 'Ask about this patient\'s medications and risk' : 'Ask about the discharge summary'}
+                  {isPractitioner ? 'Ask about this patient\'s medications and risk' : 'Ask about the medication documents'}
                 </h2>
                 <p className="text-sm mb-6" style={{ color: 'var(--sma-text-muted)' }}>Try one of these questions to get started:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
@@ -170,7 +170,7 @@ export default function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isPractitioner ? "Ask a clinical question about this patient..." : "Ask about the discharge summary in plain language..."}
+                placeholder={isPractitioner ? "Ask a clinical question about this patient..." : "Ask about the medication documents in plain language..."}
                 className="min-h-[60px] max-h-[120px] resize-none rounded-xl text-base"
                 style={{ borderColor: 'var(--sma-border)' }}
               />
@@ -193,3 +193,4 @@ export default function ChatPage() {
     </div>
   );
 }
+

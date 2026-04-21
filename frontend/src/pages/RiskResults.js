@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock, ExternalLink, BookOpen } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock, ExternalLink, BookOpen, Phone, CalendarPlus } from 'lucide-react';
 import axios from 'axios';
 import { getApiUrl } from '@/lib/utils';
 
@@ -45,14 +45,14 @@ export default function RiskResults() {
         <div className="max-w-3xl mx-auto text-center py-16">
           <Shield className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
           <h2 className="text-2xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>No Risk Results Yet</h2>
-          <p style={{ color: 'var(--sma-text-secondary)' }}>Upload a discharge summary to generate a risk assessment</p>
-          <Button data-testid="upload-from-results-btn" onClick={() => navigate(`/upload/${patientId}`)} className="mt-4 h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>Upload Summary</Button>
+          <p style={{ color: 'var(--sma-text-secondary)' }}>Upload medication documents to generate a risk assessment</p>
+          <Button data-testid="upload-from-results-btn" onClick={() => navigate(`/upload/${patientId}`)} className="mt-4 h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>Upload Documents</Button>
         </div>
       </main>
     </div>
   );
 
-  const { risk_result, parsed_summary, recommendations } = data;
+  const { risk_result, parsed_summary, recommendations, patient } = data;
 
   const handleDownloadPdf = async () => {
     setDownloading(true);
@@ -117,6 +117,27 @@ export default function RiskResults() {
               </Button>
             </div>
           </div>
+
+          {!isPractitioner && (risk_result.risk_level === 'high' || risk_result.risk_level === 'medium') && (
+            <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }} data-testid="patient-appointment-actions">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-base font-semibold" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Book a GP medication review</h2>
+                  <p className="text-sm mt-1" style={{ color: 'var(--sma-text-secondary)' }}>
+                    GP call number: <span style={{ color: 'var(--sma-brand)', fontWeight: 600 }}>{patient?.gp_phone || 'not added'}</span>
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button data-testid="call-gp-display-btn" variant="outline" className="h-10 rounded-lg" style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-brand)' }}>
+                    <Phone className="w-4 h-4 mr-2" /> {patient?.gp_phone ? `Call ${patient.gp_phone}` : 'Add GP Number'}
+                  </Button>
+                  <Button data-testid="add-to-calendar-demo-btn" className="h-10 rounded-lg" style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}>
+                    <CalendarPlus className="w-4 h-4 mr-2" /> Add to Calendar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Risk Score Card */}
           <div className="rounded-xl p-8 mb-6" style={{ backgroundColor: riskStyle.bg, border: `2px solid ${riskStyle.border}` }} data-testid="risk-score-card">
@@ -285,7 +306,7 @@ export default function RiskResults() {
           {/* Discharge Info */}
           {parsed_summary && (
             <div className="rounded-xl shadow-sm p-6 mb-6" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
-              <h2 className="text-lg font-medium mb-4" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Discharge Summary Details</h2>
+              <h2 className="text-lg font-medium mb-4" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>Medication Document Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {parsed_summary.diagnosis && (
                   <div><p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--sma-text-muted)' }}>Diagnosis</p><p className="text-sm mt-1" style={{ color: 'var(--sma-text-primary)' }}>{parsed_summary.diagnosis}</p></div>
@@ -314,3 +335,4 @@ export default function RiskResults() {
     </div>
   );
 }
+

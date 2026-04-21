@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Users, FileText, AlertTriangle, Bell, Plus, CheckCircle,
-  Loader2, Shield, Download, Heart, Upload,
+  Loader2, Shield, Download, Heart, Upload, Phone, CalendarPlus,
   ChevronRight, X
 } from 'lucide-react';
 import axios from 'axios';
@@ -152,8 +152,8 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
         ) : (
           <>
             <UploadFirstPanel
-              title="Analyse a discharge summary"
-              subtitle="Start here. Select a patient or create a new patient, then attach the discharge summary to identify medication risk."
+              title="Analyse medication documents"
+              subtitle="Start here. Select a patient or create a new patient, then attach a discharge summary, medication list, care home chart, or dispensing history."
               primaryLabel="Select Patient"
               secondaryLabel="New Patient"
               navigate={navigate}
@@ -196,7 +196,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
                   icon={FileText}
                   count={awaitingAnalysis.length}
                   label="Cases awaiting analysis"
-                  detail={awaitingAnalysis.length > 0 ? 'Attach a discharge summary' : 'All recent cases have a score'}
+                  detail={awaitingAnalysis.length > 0 ? 'Attach medication documents' : 'All recent cases have a score'}
                   tone="neutral"
                   onClick={() => navigate('/patients')}
                   testId="priority-awaiting-analysis"
@@ -237,7 +237,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
                           key={p.patient_id}
                           patient={p}
                           navigate={navigate}
-                          reason={p.latest_risk_level ? 'Recent analysis completed' : 'Awaiting discharge summary'}
+                          reason={p.latest_risk_level ? 'Recent analysis completed' : 'Awaiting medication documents'}
                         />
                       )) : <QuietEmptyLine text="No recent analyses yet." />}
                     </QueueSection>
@@ -246,7 +246,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
                   <EmptyState
                     icon={Users}
                     title="No patients yet"
-                    subtitle="Add a patient and attach a discharge summary to begin risk analysis."
+                    subtitle="Add a patient and attach medication documents to begin risk analysis."
                     action={
                       <Button
                         data-testid="add-patient-empty-btn"
@@ -345,8 +345,8 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
         ) : (
           <>
             <UploadFirstPanel
-              title="Analyse a discharge summary"
-              subtitle="Identify medication risk from a photo, PDF, or screenshot."
+              title="Analyse medication documents"
+              subtitle="Identify medication risk from a discharge summary, medication list, care home chart, dispensing history, photo, PDF, or screenshot."
               primaryLabel="Select Patient"
               secondaryLabel="New Patient"
               navigate={navigate}
@@ -662,7 +662,7 @@ function ClinicalActivity({ stats, patients, urgentPatients, followUpPatients, n
               icon={FileText}
               tone={p.latest_risk_level || 'neutral'}
               title={p.name}
-              detail={p.latest_risk_level ? `${p.latest_risk_level} medication risk` : 'Awaiting discharge summary'}
+              detail={p.latest_risk_level ? `${p.latest_risk_level} medication risk` : 'Awaiting medication documents'}
               onClick={() => navigate(p.latest_risk_level ? `/patients/${p.patient_id}` : `/upload/${p.patient_id}`)}
             />
           )) : <QuietEmptyLine text="No analyses yet." />}
@@ -753,8 +753,8 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
         ) : (
           <>
             <UploadFirstPanel
-              title="Analyse a discharge summary"
-              subtitle="Check medication risk for someone you care for."
+              title="Analyse medication documents"
+              subtitle="Attach a discharge summary, personal medication list, nursing home/group home chart, or dispensing history."
               primaryLabel="Select Person"
               secondaryLabel="Add Person"
               navigate={navigate}
@@ -805,7 +805,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
                       Review recommended
                     </p>
                     <p className="text-sm mt-0.5" style={{ color: 'var(--sma-text-secondary)' }}>
-                      <strong>{medRiskPatients.map(p => p.name.split(' ')[0]).join(' and ')}</strong> {medRiskPatients.length === 1 ? 'has' : 'have'} a medium risk score. Book a GP or pharmacist review in the next 1–2 weeks.
+                      <strong>{medRiskPatients.map(p => p.name.split(' ')[0]).join(' and ')}</strong> {medRiskPatients.length === 1 ? 'has' : 'have'} a medium risk score. Book a GP or pharmacist review in the next 1-2 weeks.
                     </p>
                   </div>
                 </div>
@@ -828,7 +828,7 @@ function FamilyDashboard({ stats, loading, navigate, user }) {
               <EmptyState
                 icon={Heart}
                 title="No loved ones added yet"
-                subtitle="Add your loved one's details and attach their discharge summary to get started."
+                subtitle="Add your loved one's details and attach medication documents to get started."
                 action={
                   <Button
                     data-testid="family-add-patient-btn"
@@ -1042,7 +1042,7 @@ function FamilyPatientCard({ patient: p, navigate }) {
 
   const riskMsg = {
     high:   `${pFirstName}'s medications include some that may cause side effects or interact in older adults. A GP review is needed urgently.`,
-    medium: `${pFirstName}'s medications may need checking. A GP or pharmacist review is recommended in the next 1–2 weeks.`,
+    medium: `${pFirstName}'s medications may need checking. A GP or pharmacist review is recommended in the next 1-2 weeks.`,
     low:    `${pFirstName}'s current medications appear low risk. Keep attending scheduled follow-up appointments.`,
   };
 
@@ -1104,15 +1104,47 @@ function FamilyPatientCard({ patient: p, navigate }) {
 
         {/* Risk explanation */}
         {hasRisk && (
-          <p
-            className="text-sm leading-relaxed px-1"
-            style={{ color: 'var(--sma-text-secondary)' }}
-            data-testid={`risk-explanation-${p.patient_id}`}
-          >
-            {riskMsg[p.latest_risk_level]}
-          </p>
+          <>
+            <p
+              className="text-sm leading-relaxed px-1"
+              style={{ color: 'var(--sma-text-secondary)' }}
+              data-testid={`risk-explanation-${p.patient_id}`}
+            >
+              {riskMsg[p.latest_risk_level]}
+            </p>
+            {isHighMed && <AppointmentActions patient={p} />}
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+function AppointmentActions({ patient: p }) {
+  const gpPhone = p.gp_phone || 'GP number not added';
+
+  return (
+    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid={`appointment-actions-${p.patient_id}`}>
+      <button
+        type="button"
+        onClick={(e) => e.stopPropagation()}
+        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg text-xs font-semibold"
+        style={{ backgroundColor: 'var(--sma-surface-alt)', color: 'var(--sma-brand)', border: '1px solid var(--sma-border)' }}
+        data-testid={`gp-call-number-${p.patient_id}`}
+      >
+        <Phone className="w-3.5 h-3.5" />
+        {p.gp_phone ? `Call GP: ${gpPhone}` : gpPhone}
+      </button>
+      <button
+        type="button"
+        onClick={(e) => e.stopPropagation()}
+        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg text-xs font-semibold"
+        style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
+        data-testid={`add-calendar-${p.patient_id}`}
+      >
+        <CalendarPlus className="w-3.5 h-3.5" />
+        Add to Calendar
+      </button>
     </div>
   );
 }
@@ -1209,3 +1241,4 @@ const riskColor = (level) => ({
   medium: { bg: 'var(--sma-risk-med-bg)',   border: 'var(--sma-risk-med-border)',   text: 'var(--sma-risk-med-text)' },
   low:    { bg: 'var(--sma-risk-low-bg)',   border: 'var(--sma-risk-low-border)',   text: 'var(--sma-risk-low-text)' },
 }[level] || { bg: 'var(--sma-surface-alt)', border: 'var(--sma-border)', text: 'var(--sma-text-secondary)' });
+

@@ -91,7 +91,7 @@ export default function ReportHistory() {
             <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--sma-surface)', border: '1px solid var(--sma-border)' }}>
               <Clock className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--sma-text-muted)' }} />
               <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit' }}>No assessment history</h3>
-              <p style={{ color: 'var(--sma-text-secondary)' }}>Upload discharge summaries to build a risk history</p>
+              <p style={{ color: 'var(--sma-text-secondary)' }}>Upload medication documents to build a risk history</p>
             </div>
           ) : (
             <>
@@ -232,3 +232,4 @@ function MedDiffSection({ title, meds, color, bg }) {
     </div>
   );
 }
+

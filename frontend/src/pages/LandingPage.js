@@ -142,7 +142,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-lg leading-relaxed mb-10" style={{ color: '#4C6475', maxWidth: '600px', margin: '0 auto 2.5rem' }}>
-              AI-powered discharge summary analysis that flags medication risks, empowers clinicians with actionable insights, and keeps families informed.
+              AI-powered medication document analysis that flags medication risks, empowers clinicians with actionable insights, and keeps families informed.
             </p>
 
             {/* Demo CTA */}
@@ -193,7 +193,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <p className="text-sm font-semibold tracking-widest mb-3" style={{ color: '#3B82F6' }}>SIMPLE PROCESS</p>
             <h2 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'Outfit', color: '#0F172A', letterSpacing: '0' }}>
-              From discharge summary to actionable insight
+              From medication documents to actionable insight
             </h2>
           </div>
 
@@ -203,7 +203,7 @@ export default function LandingPage() {
                 step: '01',
                 icon: FileText,
                 title: 'Upload',
-                desc: 'Snap a photo, screenshot, or upload a PDF of the hospital discharge summary. No special format required.',
+                desc: 'Snap a photo, screenshot, or upload a PDF of the discharge summary, personal medication list, care home chart, or dispensing history. No special format required.',
                 color: '#3B82F6',
                 bg: '#EFF6FF',
               },
@@ -323,7 +323,7 @@ export default function LandingPage() {
                   {[
                     'Plain-language risk explanations',
                     'Safe escalation guidance and clear next steps',
-                    'Ask questions about the discharge summary',
+                    'Ask questions about medication documents',
                     'Emergency contacts and action prompts',
                     'Urgent alerts when review is needed',
                   ].map((f, i) => (
@@ -471,3 +471,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
