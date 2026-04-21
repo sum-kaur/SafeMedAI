@@ -115,7 +115,7 @@ export default function PatientsPage() {
             }}>
               <DialogTrigger asChild>
                 <Button data-testid="create-patient-btn" className="h-11 px-5 rounded-lg font-medium transition-all duration-200 hover:-translate-y-0.5" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                  <Plus className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Case'}
+                  <Plus className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Patient'}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg" data-testid="create-patient-dialog">
@@ -194,7 +194,7 @@ export default function PatientsPage() {
                     )}
                   </div>
                   <Button data-testid="save-patient-btn" onClick={handleCreate} disabled={creating} className="w-full h-11 rounded-full" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing</> : <><FileText className="w-4 h-4 mr-2" /> {files.length > 0 ? 'Create & Analyse' : 'Create Case'}</>}
+                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing</> : <><FileText className="w-4 h-4 mr-2" /> {files.length > 0 ? 'Create & Analyse' : 'Create Patient'}</>}
                   </Button>
                 </div>
               </DialogContent>
@@ -216,7 +216,7 @@ export default function PatientsPage() {
               <h3 className="text-xl font-medium mb-2" style={{ fontFamily: 'Outfit', color: 'var(--sma-text-primary)' }}>{isFamily ? 'No loved ones found' : 'No patients found'}</h3>
               <p style={{ color: 'var(--sma-text-secondary)' }}>{isFamily ? 'Add a loved one, then attach their discharge summary' : 'Create a patient, then attach a discharge summary'}</p>
               <Button data-testid="empty-create-upload-btn" onClick={() => setOpen(true)} className="mt-5 h-11 rounded-full font-medium" style={{ backgroundColor: 'var(--sma-brand)', color: 'var(--sma-text-inverse)' }}>
-                <FileText className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Case'}
+                <FileText className="w-4 h-4 mr-2" /> {isFamily ? 'Add Person' : 'New Patient'}
               </Button>
             </div>
           ) : (

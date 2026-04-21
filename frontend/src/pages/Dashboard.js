@@ -139,7 +139,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
               className="h-10 px-5 rounded-lg font-medium text-sm gap-2 transition-all hover:-translate-y-0.5"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
-              <Plus className="w-4 h-4" /> New Case
+              <Plus className="w-4 h-4" /> New Patient
             </Button>
           </div>
         </div>
@@ -153,9 +153,9 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
           <>
             <UploadFirstPanel
               title="Analyse a discharge summary"
-              subtitle="Start here. Select a patient or create a new case, then attach the discharge summary to identify medication risk."
+              subtitle="Start here. Select a patient or create a new patient, then attach the discharge summary to identify medication risk."
               primaryLabel="Select Patient"
-              secondaryLabel="New Case"
+              secondaryLabel="New Patient"
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="practitioner-upload-first"
@@ -254,7 +254,7 @@ function PractitionerDashboardV2({ stats, loading, exporting, onExport, navigate
                         className="h-10 px-5 rounded-lg font-medium text-sm"
                         style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                       >
-                        <Plus className="w-4 h-4 mr-2" /> New Case
+                        <Plus className="w-4 h-4 mr-2" /> New Patient
                       </Button>
                     }
                   />
@@ -332,7 +332,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
               className="h-9 px-5 rounded-lg font-medium text-sm gap-2"
               style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
             >
-              <Plus className="w-4 h-4" /> New Case
+              <Plus className="w-4 h-4" /> New Patient
             </Button>
           </div>
         </div>
@@ -348,7 +348,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
               title="Analyse a discharge summary"
               subtitle="Identify medication risk from a photo, PDF, or screenshot."
               primaryLabel="Select Patient"
-              secondaryLabel="New Case"
+              secondaryLabel="New Patient"
               navigate={navigate}
               newPatientPath="/patients?new=1"
               testId="practitioner-upload-first"
@@ -469,7 +469,7 @@ function PractitionerDashboard({ stats, loading, exporting, onExport, navigate, 
                     className="h-9 px-5 rounded-xl font-medium text-sm"
                     style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
                   >
-                    <Plus className="w-4 h-4 mr-2" /> New Case
+                    <Plus className="w-4 h-4 mr-2" /> New Patient
                   </Button>
                 }
               />
