@@ -73,7 +73,7 @@ function PractitionerDashboardV2({ stats, loading, navigate, user }) {
   return (
     <div className="px-5 py-6 lg:px-8 lg:py-8">
       <div className="max-w-7xl mx-auto animate-fade-in">
-        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5 mb-7">
+        <div className="mb-7">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--sma-text-muted)' }}>
               {today}
@@ -87,25 +87,6 @@ function PractitionerDashboardV2({ stats, loading, navigate, user }) {
             <p className="text-sm mt-2" style={{ color: 'var(--sma-text-secondary)' }}>
               Review high-priority patients, recent analyses, and follow-up actions.
             </p>
-          </div>
-          <div className="flex items-center gap-2 flex-nowrap">
-            <Button
-              data-testid="select-patient-btn"
-              onClick={() => navigate('/patients')}
-              variant="outline"
-              className="h-10 px-4 rounded-lg font-medium text-sm gap-2 whitespace-nowrap transition-all hover:-translate-y-0.5"
-              style={{ borderColor: 'var(--sma-border)', color: 'var(--sma-brand)', backgroundColor: 'var(--sma-surface)' }}
-            >
-              <Users className="w-4 h-4" /> Select Patient
-            </Button>
-            <Button
-              data-testid="add-patient-btn"
-              onClick={() => navigate('/patients?new=1')}
-              className="h-10 px-5 rounded-lg font-medium text-sm gap-2 whitespace-nowrap transition-all hover:-translate-y-0.5"
-              style={{ backgroundColor: 'var(--sma-brand)', color: 'white' }}
-            >
-              <Plus className="w-4 h-4" /> New Patient
-            </Button>
           </div>
         </div>
 
