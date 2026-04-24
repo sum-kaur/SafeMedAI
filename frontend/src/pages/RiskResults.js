@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertTriangle, CheckCircle, Shield, Pill, ArrowRight, MessageCircle, FileDown, Loader2, Info, Clock, ExternalLink, BookOpen, Phone, CalendarPlus } from 'lucide-react';
 import axios from 'axios';
 import { getApiUrl } from '@/lib/utils';
+import { normaliseRecommendations } from '@/lib/recommendations';
 
 const API = getApiUrl('/api');
 
@@ -53,6 +54,7 @@ export default function RiskResults() {
   );
 
   const { risk_result, parsed_summary, recommendations, patient } = data;
+  const displayRecommendations = normaliseRecommendations(recommendations, isPractitioner);
 
   const handleDownloadPdf = async () => {
     setDownloading(true);
@@ -234,7 +236,7 @@ export default function RiskResults() {
                   {isPractitioner ? 'Clinical Recommendations' : 'What To Do Next'}
                 </h2>
                 <div className="space-y-3">
-                  {recommendations?.map((rec, i) => {
+                  {displayRecommendations?.map((rec, i) => {
                     const recColors = {
                       urgent: { bg: 'var(--sma-risk-high-bg)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle },
                       warning: { bg: 'var(--sma-risk-high-bg)', text: 'var(--sma-risk-high-text)', icon: AlertTriangle },

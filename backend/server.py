@@ -253,7 +253,7 @@ def generate_recommendations(risk_result: dict, role: str):
             ]
         elif risk_level == "medium":
             recs = [
-                {"type": "action", "text": "GP medication review recommended within 1-2 weeks"},
+                {"type": "action", "text": "Primary care medication review recommended within 1-2 weeks"},
                 {"type": "action", "text": "Consider pharmacist medication reconciliation at next visit"},
                 {"type": "flag", "text": "Monitor for anticholinergic side effects"},
                 {"type": "info", "text": "Review if all current medications are still clinically indicated"},
@@ -262,7 +262,7 @@ def generate_recommendations(risk_result: dict, role: str):
         else:
             recs = [
                 {"type": "info", "text": "Low anticholinergic burden identified"},
-                {"type": "action", "text": "Routine medication review at next GP visit"},
+                {"type": "action", "text": "Routine medication review at the next planned clinical follow-up"},
                 {"type": "info", "text": "Continue standard post-discharge follow-up plan"},
             ]
     else:

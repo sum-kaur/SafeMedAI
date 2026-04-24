@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/utils';
 import { uploadAndProcessDocuments } from '@/lib/uploadRisk';
+import { normaliseRecommendations } from '@/lib/recommendations';
 
 const API = getApiUrl('/api');
 
@@ -263,7 +264,10 @@ function InlineRiskScore({ result, isFamily, navigate, patientId }) {
   const summary = result.summary;
   const c = riskColor(rr.risk_level);
   const RIcon = c.icon;
-  const recommendations = isFamily ? rr.recommendations_family : rr.recommendations_practitioner;
+  const recommendations = normaliseRecommendations(
+    isFamily ? rr.recommendations_family : rr.recommendations_practitioner,
+    !isFamily
+  );
 
   return (
     <div className="mb-6 space-y-4 animate-fade-in" data-testid="inline-risk-score">

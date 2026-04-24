@@ -11,12 +11,15 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getApiUrl } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { normaliseRecommendations } from '@/lib/recommendations';
 
 const API = getApiUrl('/api');
 
 export default function PatientProfile() {
   const { patientId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -164,7 +167,8 @@ export default function PatientProfile() {
   const rs = latestRisk ? riskStyle(latestRisk.risk_level) : null;
   const embeddedRisk = latestRiskDetails?.risk_result || latestRisk;
   const embeddedSummary = latestRiskDetails?.parsed_summary;
-  const embeddedRecommendations = latestRiskDetails?.recommendations || [];
+  const isPractitioner = user?.role === 'medical_practitioner';
+  const embeddedRecommendations = normaliseRecommendations(latestRiskDetails?.recommendations || [], isPractitioner);
   const embeddedStyle = embeddedRisk ? riskStyle(embeddedRisk.risk_level) : null;
   const EmbeddedRiskIcon = embeddedStyle?.icon || Shield;
 
@@ -341,7 +345,9 @@ export default function PatientProfile() {
                     </div>
 
                     <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--sma-surface-alt)' }}>
-                      <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--sma-text-primary)' }}>Next Steps</h3>
+                      <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--sma-text-primary)' }}>
+                        {isPractitioner ? 'Clinical Actions' : 'Next Steps'}
+                      </h3>
                       <div className="space-y-2">
                         {embeddedRecommendations.slice(0, 3).map((rec, i) => (
                           <div key={i} className="flex items-start gap-2 text-sm">
@@ -350,7 +356,9 @@ export default function PatientProfile() {
                           </div>
                         ))}
                         {!embeddedRecommendations.length && (
-                          <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>No recommendations recorded for this assessment.</p>
+                          <p className="text-sm" style={{ color: 'var(--sma-text-muted)' }}>
+                            {isPractitioner ? 'No clinical actions recorded for this assessment.' : 'No recommendations recorded for this assessment.'}
+                          </p>
                         )}
                       </div>
                     </div>
