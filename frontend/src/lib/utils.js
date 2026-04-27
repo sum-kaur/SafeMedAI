@@ -15,6 +15,10 @@ export function getApiBaseUrl() {
   if (envUrl && envUrl.trim() !== '') {
     return envUrl.replace(/\/$/, ''); // Remove trailing slash
   }
+  const runtimeUrl = window.__SAFE_MED_CONFIG__?.apiBaseUrl;
+  if (runtimeUrl && runtimeUrl.trim() !== '') {
+    return runtimeUrl.replace(/\/$/, '');
+  }
   // Default for local dev or relative for production
   return window.location.origin === 'http://localhost:3000'
     ? 'http://localhost:8000'

@@ -362,6 +362,10 @@ async def get_me(request: Request):
 @api_router.post("/auth/logout")
 async def logout(request: Request):
     session_token = request.cookies.get("session_token")
+    if not session_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header[7:]
     if session_token:
         await db.user_sessions.delete_many({"session_token": session_token})
     response = JSONResponse(content={"message": "Logged out"})
@@ -399,7 +403,7 @@ async def demo_login(request: Request, background_tasks: BackgroundTasks, refres
     # data after the response. The dashboard can show its normal loading state.
     background_tasks.add_task(ensure_demo_data, user, role, refresh)
 
-    response = JSONResponse(content=user)
+    response = JSONResponse(content={"user": user, "session_token": session_token})
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=session_token,

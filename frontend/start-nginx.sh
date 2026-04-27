@@ -24,6 +24,13 @@ fi
 rm -f /etc/nginx/conf.d/*.conf
 rm -f /etc/nginx/sites-enabled/*
 
+# Publish backend origin for the frontend bundle as a runtime config fallback.
+cat > /usr/share/nginx/html/runtime-config.js << RUNTIME_EOF
+window.__SAFE_MED_CONFIG__ = {
+    apiBaseUrl: "${BACKEND_ORIGIN}"
+};
+RUNTIME_EOF
+
 # Generate nginx config deterministically
 cat > /etc/nginx/conf.d/default.conf << 'NGINX_EOF'
 server {
